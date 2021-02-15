@@ -1,0 +1,7 @@
+.markerTooltip {
+    
+    border: none;
+    box-shadow: none;
+    background-color: transparent;
+    transform: rotate(20deg);
+}
