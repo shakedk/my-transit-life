@@ -2,75 +2,87 @@ import {
   MapContainer,
   Polyline,
   MapConsumer,
-  FeatureGroup,
   Marker,
-  Tooltip,
   Pane,
   useMapEvents,
 } from "react-leaflet";
-import React, { useState } from "react";
-import { Icon, Popup } from "leaflet";
+import React, { useState, useMemo } from "react";
+import { Icon, Point } from "leaflet";
 import "leaflet/dist/leaflet.css";
 
-import styles from "./map.module.css";
 import { polyline, stops } from "./r60 path";
-import { Badge } from "theme-ui";
+// import { polyline, stops } from "./rNycF path";
+import StopLabel from "./stopLabel";
+import { Stop } from "./types";
 
-const reverseCoordinates = (
-  coordsArr: [number, number][]
-): [number, number][] => {
-  return coordsArr.map((coord) => [coord[1], coord[0]]);
-};
 const middleOfRoute = Math.round(polyline.length / 2);
 
-function StopLabels(stops) {
+interface stopLabelsProps {
+  stops: Stop[]
+}
+
+const  StopLabels = ({stops}: stopLabelsProps) => {
   const [labels, setLabels] = useState(null);
+
   const map = useMapEvents({
     moveend() {
       setLabels(
-        stops.stops.map((stop) => {
+        stops.map((stop: Stop) => {
           const xyPos = map.latLngToLayerPoint([stop.stop_lat, stop.stop_lon]);
           return (
-            <Badge
+            <StopLabel
               key={stop.stop_id}
-              sx={{
-                zIndex: 200,
-                position: "absolute",
-                height: 30,
-                padding: 0,
-                top: xyPos.y,
-                left: xyPos.x,
-                fontSize: 10,
-                fontFamily: "Gill",
-                color: "black",
-                // transform: "rotate(50deg)"
-              }}
-              color="white"
-              bg="transparent"
-            >
-              {/* {stop.stop_name} */}
-              {"\u2022"}
-            </Badge>
+              xyPos={xyPos}
+              stop={stop}
+            />
           );
         })
       );
     },
   });
   return labels === null ? null : (
-    <Pane name="stop-labels" style={{ zIndex: 200 }}>
+    <Pane name="stop-labels" style={{ zIndex: 200, cursor: "default" }}>
       {labels}
     </Pane>
   );
 }
 
+/**
+ * Lat Lon markers, leave here for testing lat lon vs. xy positions
+ */
+const markers = stops.map((stop) => {
+  return (
+    <Marker
+      key={stop.stop_id}
+      position={[stop.stop_lat, stop.stop_lon]}
+      icon={
+        new Icon({
+          iconUrl: "/point.svg",
+          iconSize: [50, 50],
+        })
+      }
+      zIndexOffset={200}
+    >
+      {/* <Tooltip permanent className={styles.markerTooltip}>
+      {stop.stop_name}
+    </Tooltip> */}
+    </Marker>
+  );
+});
+
 const RouteMap = () => {
+  const reversePolyLine = useMemo((): [number, number][] => {
+    return polyline.map((coord) => [coord[1], coord[0]]);
+  }, [polyline]);
+
   return (
     <MapContainer
       id="map"
-      center={reverseCoordinates(polyline)[middleOfRoute]}
+      center={reversePolyLine[middleOfRoute]}
       zoom={12}
       zoomSnap={0.1}
       scrollWheelZoom={false}
+      doubleClickZoom={false}
       dragging={false}
       zoomControl={false}
       attributionControl={false}
@@ -78,23 +90,25 @@ const RouteMap = () => {
         background: "pink",
         height: 1754,
         width: 1240,
-        // border: "50px white solid",
+        border: "50px GhostWhite solid",
       }}
     >
       <MapConsumer>
         {(map) => {
-          map.fitBounds(reverseCoordinates(polyline), { maxZoom: 11.5 });
+          map.fitBounds(reversePolyLine, { maxZoom: 11.5
+           });
           return (
-            <Pane name="route-path" style={{ zIndex: 100 }}>
+            <Pane name="route-path" style={{ zIndex: 100, cursor: "default" }}>
               <Polyline
                 pathOptions={{ color: "white", weight: 10 }}
-                positions={reverseCoordinates(polyline)}
+                positions={reversePolyLine}
               />
+              {markers}
             </Pane>
           );
         }}
       </MapConsumer>
-      <StopLabels stops={stops} />
+      <StopLabels stops={stops}/>
     </MapContainer>
   );
 };

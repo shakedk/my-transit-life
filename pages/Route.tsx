@@ -1,6 +1,6 @@
 import dynamic from "next/dynamic";
 import React from "react";
-import { Badge, Container, Image } from "theme-ui";
+import { Badge, Image } from "theme-ui";
 
 export default function Page() {
   const Map = React.useMemo(
@@ -48,7 +48,7 @@ export default function Page() {
           left: 140,
         }}
       ></Image>
-      <Map/>;
+      <Map/>
     </>
   );
 }
