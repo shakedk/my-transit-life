@@ -1,7 +1,9 @@
-.markerTooltip {
+/* .markerTooltip {
     
     border: none;
     box-shadow: none;
     background-color: transparent;
-    transform: rotate(20deg);
-}
+    font-size: 10px;
+    font-family: 'verdana';
+    color: red;
+} */
