@@ -1,14 +1,18 @@
 .container {
-  display: flex;
-  flex-direction: column;
+  /* display: flex;
+  flex-direction: row; */
   height: 1000px;
-  width: 1000px
+  width: 800px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  grid-auto-rows: 100px;
 }
 
 .button {
   background-color: lightblue;
   font-weight: bold;
-  margin: 30px;
+  /* margin: 10px; */
   height: 100px;
   width: 300px;
 }
