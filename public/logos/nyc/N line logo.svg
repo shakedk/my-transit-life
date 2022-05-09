@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   version="1.0"
+   width="74.900002"
+   height="74.900002"
+   viewBox="0 0 74.9 74.9"
+   id="svg3310"
+   xml:space="preserve"><defs
+   id="defs9" /><metadata
+   id="metadata10"><rdf:RDF><cc:Work
+       rdf:about=""><dc:format>image/svg+xml</dc:format><dc:type
+         rdf:resource="http://purl.org/dc/dcmitype/StillImage" /><dc:title /></cc:Work></rdf:RDF></metadata>
+<circle
+   cx="36.972"
+   cy="37.450001"
+   r="28.563"
+   transform="translate(0.478,-7.6294e-7)"
+   id="circle"
+   style="fill:#f0ab00" />
+<g
+   id="routenum"
+   style="fill:#ffffff"><path
+     d="m 28.456,25.657 h 4.059 l 9.867,16.731 h 0.066 V 25.657 h 4.026 V 49.153 H 42.415 L 32.548,32.422 H 32.482 V 49.153 H 28.456 V 25.657"
+     inkscape:connector-curvature="0"
+     id="path2985"
+     style="fill:#ffffff" /></g>
+</svg>
