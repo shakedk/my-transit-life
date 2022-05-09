@@ -1,38 +1,41 @@
 import {
   MapContainer,
   Polyline,
-  MapConsumer,
-  Marker,
   Pane,
   useMapEvents,
+  TileLayer,
 } from "react-leaflet";
-import React, { useState, useMemo } from "react";
-import { Icon, Point } from "leaflet";
+import React, { useState, useMemo, useEffect } from "react";
+
 import "leaflet/dist/leaflet.css";
+import "leaflet-offline";
 
-import { polyline, stops } from "./r60 path";
-// import { polyline, stops } from "./rNycF path";
-import StopLabel from "./stopLabel";
-import { Stop } from "./types";
+import StopLabel, { StopType } from "./stopLabel";
+import PropTypes from "prop-types";
 
-const middleOfRoute = Math.round(polyline.length / 2);
-
-interface stopLabelsProps {
-  stops: Stop[]
-}
-
-const  StopLabels = ({stops}: stopLabelsProps) => {
+const StopLabels = ({ stops }) => {
   const [labels, setLabels] = useState(null);
+  const getLocation = (x: number, y: number, pointPositions: any[]) => {
+    const xyPos = [x + 10, y - 20];
 
+    pointPositions.push(xyPos);
+    return xyPos;
+  };
+
+  const pointPositions = [];
   const map = useMapEvents({
     moveend() {
       setLabels(
-        stops.map((stop: Stop) => {
+        stops.map((stop) => {
           const xyPos = map.latLngToLayerPoint([stop.stop_lat, stop.stop_lon]);
+          const mapPixelOrigin = map.getPixelOrigin();
+          const [xPos, yPos] = getLocation(xyPos.x, xyPos.y, pointPositions);
           return (
             <StopLabel
+              pointPositions={pointPositions}
               key={stop.stop_id}
-              xyPos={xyPos}
+              xPos={xPos}
+              yPos={yPos}
               stop={stop}
             />
           );
@@ -40,43 +43,81 @@ const  StopLabels = ({stops}: stopLabelsProps) => {
       );
     },
   });
+  // Labels wont load until we solve the fit bounds issue
   return labels === null ? null : (
-    <Pane name="stop-labels" style={{ zIndex: 200, cursor: "default" }}>
+    <Pane name="stop-labels" style={{ zIndex: 5000, cursor: "default" }}>
       {labels}
     </Pane>
   );
-}
+};
 
-/**
- * Lat Lon markers, leave here for testing lat lon vs. xy positions
- */
-const markers = stops.map((stop) => {
-  return (
-    <Marker
-      key={stop.stop_id}
-      position={[stop.stop_lat, stop.stop_lon]}
-      icon={
-        new Icon({
-          iconUrl: "/point.svg",
-          iconSize: [50, 50],
-        })
-      }
-      zIndexOffset={200}
-    >
-      {/* <Tooltip permanent className={styles.markerTooltip}>
-      {stop.stop_name}
-    </Tooltip> */}
-    </Marker>
-  );
-});
+const getTileLayer = (tileLayerName) => {
+  switch (tileLayerName) {
+    case "StamenToner":
+      return (
+        <TileLayer
+          opacity={0.2}
+          attribution='Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          url="https://stamen-tiles-{s}.a.ssl.fastly.net/toner/{z}/{x}/{y}{r}.png"
+          subdomains="abcd"
+          minZoom={0}
+          maxZoom={20}
+        />
+      );
+    default:
+      break;
+  }
+};
+StopLabels.propTypes = {
+  stops: PropTypes.arrayOf(StopType),
+};
 
-const RouteMap = () => {
+const RouteMap = ({
+  polyline,
+  stops,
+  backgroundColor,
+  tileLayerName,
+  pathColor,
+  mapZoom,
+}) => {
+  /**
+   * Lat Lon markers, leave here for testing lat lon vs. xy positions
+   */
+  // const markers = stops.map((stop) => {
+  //   return (
+  //     <Marker
+  //       key={stop.stop_id}
+  //       position={[stop.stop_lat, stop.stop_lon]}
+  //       icon={
+  //         new Icon({
+  //           iconUrl: "/point.svg",
+  //           iconSize: [50, 50],
+  //         })
+  //       }
+  //       zIndexOffset={200}
+  //     >
+  //       {/* <Tooltip permanent className={styles.markerTooltip}>
+  //     {stop.stop_name}
+  //   </Tooltip> */}
+  //     </Marker>
+  //   );
+  // });
+  const middleOfRoute = Math.round(polyline.length / 2);
   const reversePolyLine = useMemo((): [number, number][] => {
     return polyline.map((coord) => [coord[1], coord[0]]);
   }, [polyline]);
 
+  const [map, setMap] = useState(null);
+
+  useEffect(() => {
+    if (map) {
+      map.fitBounds(reversePolyLine, { maxZoom: mapZoom });
+    }
+  }, [map]);
+
   return (
     <MapContainer
+      ref={setMap}
       id="map"
       center={reversePolyLine[middleOfRoute]}
       zoom={12}
@@ -87,30 +128,48 @@ const RouteMap = () => {
       zoomControl={false}
       attributionControl={false}
       style={{
-        background: "pink",
-        height: 1754,
-        width: 1240,
-        border: "50px GhostWhite solid",
+        background: backgroundColor || "transparent",
+        height: "100%",
+        width: "100%",
       }}
     >
-      <MapConsumer>
-        {(map) => {
-          map.fitBounds(reversePolyLine, { maxZoom: 11.5
-           });
-          return (
-            <Pane name="route-path" style={{ zIndex: 100, cursor: "default" }}>
-              <Polyline
-                pathOptions={{ color: "white", weight: 10 }}
-                positions={reversePolyLine}
-              />
-              {markers}
-            </Pane>
-          );
-        }}
-      </MapConsumer>
-      <StopLabels stops={stops}/>
+      {getTileLayer(tileLayerName)}
+      <Pane name="route-path" style={{ zIndex: 499, cursor: "default" }}>
+        <Polyline
+          pathOptions={{ color: pathColor, weight: 10 }}
+          positions={reversePolyLine}
+          smoothFactor={5}
+        />
+        {/* {markers} */}
+      </Pane>
+
+      <Pane name="stop-dots" style={{ zIndex: 500, cursor: "default" }}>
+        <StopLabels stops={stops} />
+      </Pane>
     </MapContainer>
   );
+};
+
+RouteMap.prototypes = {
+  // Should be [number, number][]
+  polyline: PropTypes.arrayOf(
+    PropTypes.arrayOf(function (props, propName, componentName) {
+      if (
+        !Array.isArray(props.TWO_NUMBERS) ||
+        props.TWO_NUMBERS.length != 2 ||
+        !props.TWO_NUMBERS.every(Number.isInteger)
+      ) {
+        return new Error(`${propName} needs to be an array of two numbers`);
+      }
+
+      return null;
+    }).isRequired
+  ),
+  stops: PropTypes.arrayOf(StopType).isRequired,
+  backgroundColor: PropTypes.string,
+  tileLayerName: PropTypes.oneOf(["StamenToner", null]),
+  pathColor: PropTypes.string,
+  mapZoom: PropTypes.number,
 };
 
 export default RouteMap;

@@ -1,0 +1,61 @@
+{
+  "polyline": [
+    [-0.019885, 51.582965],
+    [-0.04115, 51.586919],
+    [-0.060241, 51.588108],
+    [-0.072584, 51.58333],
+    [-0.106825, 51.564158],
+    [-0.103324, 51.54635],
+    [-0.123194, 51.530663],
+    [-0.1323, 51.528344],
+    [-0.138321, 51.524951],
+    [-0.141903, 51.515224],
+    [-0.142787, 51.506947],
+    [-0.143102, 51.496359],
+    [-0.133761, 51.489097],
+    [-0.124204, 51.485743],
+    [-0.122644, 51.472184],
+    [-0.114888, 51.462618]
+  ],
+
+  "stops": [
+    {
+      "stop_id": "HUBBRX",
+      "stop_name": "Brixton",
+      "stop_lat": 51.462961,
+      "stop_lon": -0.114531
+    },
+    {
+      "stop_id": "HUBWHC",
+      "stop_name": "Walthamstow Central",
+      "stop_lat": 51.582948,
+      "stop_lon": -0.019842
+    }
+  ],
+
+  "backgroundColor": "#008FC9",
+
+  "tileLayerName": "StamenToner",
+
+  "pathColor": "Snow",
+
+  "font": "Helvetica",
+  "routeTitleSize": 100,
+  "routeName": "Victoria Line",
+
+  "routeDesc": "",
+
+  "numberOfStopsText": "NUMBER OF STATIONS: 16",
+
+  "locationText": "LONDON, UK",
+  "launchDateText": "SINCE SEPTEMBER 1, 1968",
+
+  "agencyLogoPath": "./logos/tfl/Victoria Line Logo.svg",
+
+  "agencyLogoWidth": 250,
+  "agencyLogoHeight": 131,
+  "agencyLogoTop": 15,
+  "agencyLogoRight": -35,
+
+  "mapZoom": 12.5
+}
