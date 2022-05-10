@@ -44,18 +44,17 @@ export default function Page(props) {
     ]
   );
 
-  const getDescriptionDetailElement = (detail: string) => (
-    <div className={styles.descriptionDetail}>
+  const getDescriptionDetailElement = (detail: string, isFirst: boolean) => (
+    <div>
       <Badge
         sx={{
           zIndex: 100,
           fontSize: 18,
           fontWeight: "normal",
           padding: 0,
-          paddingBottom: 1,
+          paddingBottom: isFirst? 2 : 1,
           fontFamily: routeDesignConfig.font,
         }}
-        p={4}
         color="black"
         bg="transparent"
       >
@@ -100,19 +99,11 @@ export default function Page(props) {
                     >
                       {routeDesignConfig.logoPath ? (
                         <Image
-                          // src={"./metropoline.svg"}
-                          // src={"./Dankal Logo.png"}
-                          // src={"./victoria.svg"}
-                          // src={"./N line logo.svg"}
                           src={routeDesignConfig.logoPath}
                           sx={{
-                            // zIndex: 100,
-                            // position: "absolute",
                             width: routeDesignConfig.logoWidth || 140,
                             height: routeDesignConfig.logoHeight || 140,
-                            // overflow: 'hidden',
-                            // top: 75,
-                            // left: 600,
+
                           }}
                         ></Image>
                       ) : null}
@@ -148,10 +139,10 @@ export default function Page(props) {
                     </div>
                   </div>
                   <div className={styles.descriptionDetails}>
-                    {getDescriptionDetailElement(routeDesignConfig.numberOfStopsText)}
-                    {getDescriptionDetailElement(routeDesignConfig.locationText)}
+                    {getDescriptionDetailElement(routeDesignConfig.numberOfStopsText, true)}
+                    {getDescriptionDetailElement(routeDesignConfig.locationText, false)}
                     <br />
-                    {getDescriptionDetailElement(routeDesignConfig.launchDateText)}
+                    {getDescriptionDetailElement(routeDesignConfig.launchDateText, false)}
                   </div>
                   <div className={styles.divider}></div>
                 </div>
