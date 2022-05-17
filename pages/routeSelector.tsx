@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import styles from "./routeSelector.module.css";
 import { server } from "../config";
+import Head from "next/head";
 
 export async function getServerSideProps(context) {
   const routeList = await fetch(`${server}/api/listOfRoutes`);
@@ -22,27 +23,38 @@ export default function routeSelector(props) {
     tflCircle: "London Circle Line",
   };
 
+  function getButtonsForLink(link: string) {
+    return (
+      <div className={styles.container}>
+        {routeList.map((transitRoute) => {
+          return (
+            <Link key={transitRoute} href={`${link}${transitRoute}`}>
+              <a target="_blank">
+                <button className={styles.button}>
+                  {Object.keys(routeMap).includes(transitRoute)
+                    ? routeMap[transitRoute]
+                    : transitRoute}
+                </button>
+              </a>
+              {/* </div> */}
+            </Link>
+          );
+        })}
+      </div>
+    );
+  }
   const routeList = props.data.routeList;
   return (
-    <div className={styles.container}>
-      {routeList.map((transitRoute) => {
-        return (
-          <Link
-            key={transitRoute}
-            href={"/posterGeoLogo?routeID=" + transitRoute}
-          >
-            {/* <div > */}
-            <a target="_blank">
-              <button className={styles.button}>
-                {Object.keys(routeMap).includes(transitRoute)
-                  ? routeMap[transitRoute]
-                  : transitRoute}
-              </button>
-            </a>
-            {/* </div> */}
-          </Link>
-        );
-      })}
-    </div>
+    <>
+      <Head>
+        <title>RouteSelector</title>
+      </Head>
+      <h1>Geo WITH Logo</h1>
+      {getButtonsForLink('/posters/posterGeoLogo?routeID=')}
+      <h1>Geo WITHOUT Logo</h1>
+      {getButtonsForLink('/posters/posterGeoNoLogo?routeID=')}
+      <h1>Full Psoter + Logo</h1>
+      {getButtonsForLink('/posters/posterFullMapLogo?routeID=')}
+    </>
   );
 }

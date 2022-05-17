@@ -4,6 +4,7 @@ import {
   Pane,
   useMapEvents,
   TileLayer,
+  Marker,
 } from "react-leaflet";
 import React, { useState, useMemo, useEffect } from "react";
 
@@ -12,8 +13,9 @@ import "leaflet-offline";
 
 import StopLabel, { StopType } from "./stopLabel";
 import PropTypes from "prop-types";
+import { Icon } from "leaflet";
 
-const StopLabels = ({ stops }) => {
+const StopLabels = ({ stops, font }) => {
   const [labels, setLabels] = useState(null);
   const getLocation = (x: number, y: number, pointPositions: any[]) => {
     const xyPos = [x + 10, y - 20];
@@ -37,6 +39,7 @@ const StopLabels = ({ stops }) => {
               xPos={xPos}
               yPos={yPos}
               stop={stop}
+              font={font}
             />
           );
         })
@@ -79,29 +82,33 @@ const RouteMap = ({
   tileLayerName,
   pathColor,
   mapZoom,
+  font,
+  showGeoLayer,
+  smoothFactor,
+  showMarkers
 }) => {
   /**
    * Lat Lon markers, leave here for testing lat lon vs. xy positions
    */
-  // const markers = stops.map((stop) => {
-  //   return (
-  //     <Marker
-  //       key={stop.stop_id}
-  //       position={[stop.stop_lat, stop.stop_lon]}
-  //       icon={
-  //         new Icon({
-  //           iconUrl: "/point.svg",
-  //           iconSize: [50, 50],
-  //         })
-  //       }
-  //       zIndexOffset={200}
-  //     >
-  //       {/* <Tooltip permanent className={styles.markerTooltip}>
-  //     {stop.stop_name}
-  //   </Tooltip> */}
-  //     </Marker>
-  //   );
-  // });
+  const markers = stops.map((stop) => {
+    return (
+      <Marker
+        key={stop.stop_id}
+        position={[stop.stop_lat, stop.stop_lon]}
+        icon={
+          new Icon({
+            iconUrl: "/point.svg",
+            iconSize: [300, 300],
+          })
+        }
+        zIndexOffset={500}
+      >
+        {/* <Tooltip permanent className={styles.markerTooltip}>
+      {stop.stop_name}
+    </Tooltip> */}
+      </Marker>
+    );
+  });
   const middleOfRoute = Math.round(polyline.length / 2);
   const reversePolyLine = useMemo((): [number, number][] => {
     return polyline.map((coord) => [coord[1], coord[0]]);
@@ -133,18 +140,18 @@ const RouteMap = ({
         width: "100%",
       }}
     >
-      {getTileLayer(tileLayerName)}
+      {showGeoLayer ? getTileLayer(tileLayerName) : null}
       <Pane name="route-path" style={{ zIndex: 499, cursor: "default" }}>
         <Polyline
           pathOptions={{ color: pathColor, weight: 10 }}
           positions={reversePolyLine}
-          smoothFactor={5}
+          smoothFactor={smoothFactor}
         />
-        {/* {markers} */}
+        {showMarkers && markers}
       </Pane>
 
       <Pane name="stop-dots" style={{ zIndex: 500, cursor: "default" }}>
-        <StopLabels stops={stops} />
+        <StopLabels stops={stops} font={font} />
       </Pane>
     </MapContainer>
   );
@@ -170,6 +177,17 @@ RouteMap.prototypes = {
   tileLayerName: PropTypes.oneOf(["StamenToner", null]),
   pathColor: PropTypes.string,
   mapZoom: PropTypes.number,
+  font:  PropTypes.string,
+  showGeoLayer: PropTypes.bool,
+  smoothFactor: PropTypes.number,
+  showMarkers: PropTypes.bool
 };
+
+RouteMap.defaultProps = {
+  showGeoLayer: true,
+  smoothFactor: 5,
+  showMarkers: false
+  
+}
 
 export default RouteMap;

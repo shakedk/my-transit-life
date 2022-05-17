@@ -5,7 +5,7 @@
 
   "pathColor": "Snow",
 
-  "font": "Helvetica",
+  "font": "Johnston",
   "routeTitleSize": 100,
   "routeType": "Line",
 
@@ -18,11 +18,11 @@
   "locationText": "LONDON, UK",
   "launchDateText": "SINCE 1863",
 
-  "agencyLogoPath": "../../logos/tfl/Circle Line Logo.svg",
+  "agencyLogoPath": "../../logos/tfl/Circle Line Logo Inverted.svg",
 
-  "agencyLogoWidth": 250,
-  "agencyLogoHeight": 131,
-  "agencyLogoTop": 15,
-  "agencyLogoRight": -35,
+  "agencyLogoWidth": 350,
+  "agencyLogoHeight": 231,
+  "agencyLogoTop": 1050,
+  "agencyLogoRight": 0,
   "mapZoom": 13
 }

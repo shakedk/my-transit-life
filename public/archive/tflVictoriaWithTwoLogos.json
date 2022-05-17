@@ -41,7 +41,9 @@
 
   "font": "Helvetica",
 
-  "routeName": "Victoria Line",
+  "routeType": "Line",
+
+  "routeName": "Victoria",
 
   "routeDesc": "",
 
@@ -50,11 +52,11 @@
   "locationText": "LONDON, UK",
   "launchDateText": "SINCE SEPTEMBER 1, 1968",
 
-  "logoPath": "./logos/tfl/Victoria Line Logo.svg",
+  "logoPath": "../../logos/tfl/Victoria Line Logo.svg",
   "logoHeight": 120,
   "logoWidth": 220,
 
-  "agencyLogoPath": "./logos/tfl/TFL underground logo.svg",
+  "agencyLogoPath": "../../logos/tfl/TFL underground logo.svg",
 
   "agencyLogoWidth": 212,
   "agencyLogoHeight": 110,

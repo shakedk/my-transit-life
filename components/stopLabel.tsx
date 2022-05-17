@@ -7,7 +7,7 @@ import MoveableHelper from "moveable-helper";
 
 import useDimensions from "react-cool-dimensions";
 
-const StopLabel = ({ xPos, yPos, stop, pointPositions }) => {
+const StopLabel = ({ xPos, yPos, stop, pointPositions, font }) => {
   const ref = useRef(null);
   const { width, height } = useDimensions({ ref });
   pointPositions.push([width, height]);
@@ -26,8 +26,8 @@ const StopLabel = ({ xPos, yPos, stop, pointPositions }) => {
           padding: 0,
           top: yPos, // For some reason, it puts the points the correct location compared to lat lon
           left: xPos,
-          fontSize: 30,
-          fontFamily: "Helvetica",
+          fontSize: 40,
+          fontFamily: font || "Helvetica",
           color: "#FFFFFF",
         }}
         bg="transparent"
@@ -68,6 +68,7 @@ StopLabel.propTypes = {
     stop_id: PropTypes.string.isRequired,
     stop_name: PropTypes.string.isRequired,
   }),
+  font: PropTypes.string,
   pointPositions: PropTypes.any.isRequired,
 };
 export default StopLabel;

@@ -31,31 +31,5 @@
       "stop_lat": 51.582948,
       "stop_lon": -0.019842
     }
-  ],
-
-  "backgroundColor": "#008FC9",
-
-  "tileLayerName": "StamenToner",
-
-  "pathColor": "Snow",
-
-  "font": "Helvetica",
-  "routeTitleSize": 100,
-  "routeName": "Victoria Line",
-
-  "routeDesc": "",
-
-  "numberOfStopsText": "NUMBER OF STATIONS: 16",
-
-  "locationText": "LONDON, UK",
-  "launchDateText": "SINCE SEPTEMBER 1, 1968",
-
-  "agencyLogoPath": "./logos/tfl/Victoria Line Logo.svg",
-
-  "agencyLogoWidth": 250,
-  "agencyLogoHeight": 131,
-  "agencyLogoTop": 15,
-  "agencyLogoRight": -35,
-
-  "mapZoom": 12.5
+  ]
 }

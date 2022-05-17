@@ -3,9 +3,9 @@ import React from "react";
 import { Badge, Image, Text } from "theme-ui";
 import { useRouter } from "next/router";
 import styles from "./posterGeoLogo.module.css";
-import { server } from "../config";
+import { server } from "../../config";
 
-import TransitLifeCredit from "../components/tranitLifeCredit";
+import TransitLifeCredit from "../../components/tranitLifeCredit";
 import Head from "next/head";
 
 export async function getServerSideProps(context) {
@@ -33,7 +33,7 @@ export default function Page(props) {
   const Map = React.useMemo(
     () =>
       dynamic(
-        () => import("../components/map"), // replace '@components/map' with your component's location
+        () => import("../../components/map"), // replace '@components/map' with your component's location
         {
           loading: () => <p>A map is loading</p>,
           ssr: false, // This line is important. It's what prevents server-side render
@@ -49,10 +49,10 @@ export default function Page(props) {
       <Badge
         sx={{
           zIndex: 100,
-          fontSize: 18,
+          fontSize: routeDesignConfig.lineDetailsFontSize || 18,
           fontWeight: "normal",
           padding: 0,
-          paddingBottom: isFirst? 2 : 1,
+          paddingBottom: isFirst ? 2 : 1,
           fontFamily: routeDesignConfig.font,
         }}
         color="black"
@@ -90,20 +90,14 @@ export default function Page(props) {
                 </div>
                 <div className={styles.title}>
                   <div className={styles.lineDetails}>
-                    <div
-                      className={
-                        routeDesignConfig.logoPath
-                          ? styles.lineNameAndLogo
-                          : styles.lineNameNoLogo
-                      }
-                    >
+                    <div className={styles.lineNameAndLogo}>
                       {routeDesignConfig.logoPath ? (
                         <Image
                           src={routeDesignConfig.logoPath}
                           sx={{
+                            padding: routeDesignConfig.logoPadding || 0,
                             width: routeDesignConfig.logoWidth || 140,
                             height: routeDesignConfig.logoHeight || 140,
-
                           }}
                         ></Image>
                       ) : null}
@@ -113,36 +107,30 @@ export default function Page(props) {
                           fontSize: routeDesignConfig.routeTitleSize || 60,
                           padding: 0,
                           fontFamily: routeDesignConfig.font,
-                          color: routeDesignConfig.routeTitleColor || "black",
+                          color: "black",
                         }}
                         p={4}
                         color="black"
                         bg="transparent"
                       >
-                        {routeDesignConfig.routeName}
-                      </Badge>
-                    </div>
-                    <div className={styles.lineDesc}>
-                      <Badge
-                        sx={{
-                          zIndex: 100,
-                          fontSize: 60,
-                          padding: 0,
-                          fontFamily: routeDesignConfig.font,
-                        }}
-                        p={4}
-                        color="black"
-                        bg="transparent"
-                      >
-                        {routeDesignConfig.routeDesc}
+                        {`${routeDesignConfig.routeType} ${routeDesignConfig.routeDesc}`}
                       </Badge>
                     </div>
                   </div>
                   <div className={styles.descriptionDetails}>
-                    {getDescriptionDetailElement(routeDesignConfig.numberOfStopsText, true)}
-                    {getDescriptionDetailElement(routeDesignConfig.locationText, false)}
+                    {getDescriptionDetailElement(
+                      routeDesignConfig.numberOfStopsText,
+                      true
+                    )}
+                    {getDescriptionDetailElement(
+                      routeDesignConfig.locationText,
+                      false
+                    )}
                     <br />
-                    {getDescriptionDetailElement(routeDesignConfig.launchDateText, false)}
+                    {getDescriptionDetailElement(
+                      routeDesignConfig.launchDateText,
+                      false
+                    )}
                   </div>
                   <div className={styles.divider}></div>
                 </div>
@@ -155,6 +143,7 @@ export default function Page(props) {
                   tileLayerName={routeDesignConfig.tileLayerName}
                   pathColor={routeDesignConfig.pathColor}
                   mapZoom={routeDesignConfig.mapZoom}
+                  font={routeData.font}
                 />
               </div>
               <div className={styles.transitLifeCred}>

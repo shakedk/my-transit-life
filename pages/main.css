@@ -1,1 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@500&display=swap');
+
+@font-face {
+    font-family: "Johnston";
+    src: url("/fonts/johnston-itc-std-bold.otf");
+    font-style: bold;
+    font-weight: 800;
+    font-display: swap;
+  }
