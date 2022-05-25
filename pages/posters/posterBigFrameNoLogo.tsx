@@ -2,7 +2,7 @@ import dynamic from "next/dynamic";
 import React from "react";
 import { Badge, Image, Text } from "theme-ui";
 import { useRouter } from "next/router";
-import styles from "./posterGeoLogo.module.css";
+import styles from "./posterBigFrameNoLogo.module.css";
 import { server } from "../../config";
 
 import TransitLifeCredit from "../../components/tranitLifeCredit";
@@ -13,7 +13,7 @@ export async function getServerSideProps(context) {
     `${server}/api/routeData?routeID=${context.query.routeID}`
   );
   const routeDesignConfig = await fetch(
-    `${server}/api/routeDesignConfigGeoLogo?routeID=${context.query.routeID}`
+    `${server}/api/routeDesignConfigFullMapLogo?routeID=${context.query.routeID}`
   );
   return {
     props: {
@@ -49,13 +49,12 @@ export default function Page(props) {
       <Badge
         sx={{
           zIndex: 100,
-          fontSize: routeDesignConfig.lineDetailsFontSize || 18,
+          fontSize: routeDesignConfig.lineDetailsFontSize || 30,
           fontWeight: "normal",
           padding: 0,
-          paddingBottom: isFirst ? 2 : 1,
+          paddingBottom: 2,
           fontFamily: routeDesignConfig.font,
         }}
-        color="black"
         bg="transparent"
       >
         {detail}
@@ -72,61 +71,50 @@ export default function Page(props) {
               <title>{routeID}</title>
             </Head>
             <div className={styles.posterContainer}>
-              <div className={styles.header}>
-                <div
-                  style={{
-                    position: "absolute",
-                    top: `${routeDesignConfig.agencyLogoTop}px`,
-                    right: `${routeDesignConfig.agencyLogoRight}px`,
-                  }}
-                >
-                  <Image
-                    src={routeDesignConfig.agencyLogoPath}
-                    sx={{
-                      width: routeDesignConfig.agencyLogoWidth,
-                      height: routeDesignConfig.agencyLogoHeight,
-                    }}
-                  ></Image>
-                </div>
+              <div
+                className={styles.mapContainer}
+                style={{
+                  position: "relative",
+                }}
+              >
+                <Map
+                  multiPolyLine={routeData.multiPolyLine}
+                  showGeoLayer={false}
+                  stops={routeData.stops}
+                  backgroundColor={routeDesignConfig.backgroundColor}
+                  tileLayerName={routeDesignConfig.tileLayerName}
+                  pathColor={routeDesignConfig.pathColor}
+                  mapZoom={routeDesignConfig.mapZoom + 0.5} //As we have more space to show the route
+                  font={routeDesignConfig.font}
+                  smoothFactor={8}
+                  showMarkers
+                />
+              </div>
+              <div
+                className={styles.header}
+                style={{ backgroundColor: routeDesignConfig.backgroundColor }}
+              >
                 <div className={styles.title}>
                   <div className={styles.lineDetails}>
-                    <div className={styles.lineNameAndLogo}>
-                      {routeDesignConfig.logoPath ? (
-                        <Image
-                          src={routeDesignConfig.logoPath}
-                          sx={{
-                            padding: routeDesignConfig.logoPadding || 0,
-                            width: routeDesignConfig.logoWidth || 140,
-                            height: routeDesignConfig.logoHeight || 140,
-                          }}
-                        ></Image>
-                      ) : (
-                        <div
-                          className={styles.lineName}
-                          style={{
-                            color: routeDesignConfig.backgroundColor,
-                            fontFamily: routeDesignConfig.font,
-                            fontSize: routeDesignConfig.routeTitleSize || 80,
-                          }}
-                        >
-                          {" "}
-                          {routeDesignConfig.routeName}
-                        </div>
-                      )}
-                      <Badge
-                        sx={{
-                          zIndex: 100,
-                          fontSize: routeDesignConfig.routeTitleSize || 60,
-                          padding: 0,
+                    <div className={styles.lineNameNoLogo}>
+                      <div
+                        className={styles.lineName}
+                        style={{
                           fontFamily: routeDesignConfig.font,
-                          color: "black",
+                          fontSize: routeDesignConfig.routeTitleSize || 80,
                         }}
-                        p={4}
-                        color="black"
-                        bg="transparent"
+                      >
+                        {routeDesignConfig.routeName}
+                      </div>
+                      <div
+                        className={styles.lineTypeDesc}
+                        style={{
+                          fontFamily: routeDesignConfig.font,
+                          fontSize: routeDesignConfig.routeTitleSize || 80,
+                        }}
                       >
                         {`${routeDesignConfig.routeType} ${routeDesignConfig.routeDesc}`}
-                      </Badge>
+                      </div>
                     </div>
                   </div>
                   <div className={styles.descriptionDetails}>
@@ -138,27 +126,14 @@ export default function Page(props) {
                       routeDesignConfig.locationText,
                       false
                     )}
-                    <br />
                     {getDescriptionDetailElement(
                       routeDesignConfig.launchDateText,
                       false
                     )}
                   </div>
-                  <div className={styles.divider}></div>
                 </div>
               </div>
-              <div className={styles.mapContainer}>
-                <Map
-                  multiPolyLine={routeData.multiPolyLine}
-                  stops={routeData.stops}
-                  backgroundColor={routeDesignConfig.backgroundColor}
-                  tileLayerName={routeDesignConfig.tileLayerName}
-                  pathColor={routeDesignConfig.pathColor}
-                  mapZoom={routeDesignConfig.mapZoom}
-                  font={routeData.font}
-                  showMarkers={true}
-                />
-              </div>
+
               <div className={styles.transitLifeCred}>
                 <TransitLifeCredit />
               </div>

@@ -1,5 +1,5 @@
 // route 8
-// const polyline: [number, number][] = [
+// const multiPolyLine: [number, number][] = [
 //   [34.813835, 32.049623],
 //   [34.81384, 32.049415],
 //   [34.813867, 32.048231],

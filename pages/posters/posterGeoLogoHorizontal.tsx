@@ -2,7 +2,7 @@ import dynamic from "next/dynamic";
 import React from "react";
 import { Badge, Image, Text } from "theme-ui";
 import { useRouter } from "next/router";
-import styles from "./posterGeoLogo.module.css";
+import styles from "./posterGeoLogoHorizontal.module.css";
 import { server } from "../../config";
 
 import TransitLifeCredit from "../../components/tranitLifeCredit";
@@ -13,7 +13,7 @@ export async function getServerSideProps(context) {
     `${server}/api/routeData?routeID=${context.query.routeID}`
   );
   const routeDesignConfig = await fetch(
-    `${server}/api/routeDesignConfigGeoLogo?routeID=${context.query.routeID}`
+    `${server}/api/routeDesignConfigGeoLogoHorizontal?routeID=${context.query.routeID}`
   );
   return {
     props: {
@@ -118,6 +118,7 @@ export default function Page(props) {
                           zIndex: 100,
                           fontSize: routeDesignConfig.routeTitleSize || 60,
                           padding: 0,
+                          paddingLeft: 10,
                           fontFamily: routeDesignConfig.font,
                           color: "black",
                         }}

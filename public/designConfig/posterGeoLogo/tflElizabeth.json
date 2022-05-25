@@ -1,0 +1,28 @@
+{
+  "backgroundColor": "#9464CD",
+
+  "tileLayerName": "StamenToner",
+
+  "pathColor": "Snow",
+
+  "font": "Johnston",
+  "routeTitleSize": 100,
+  "routeType": "Line",
+
+  "routeName": "Elizabeth",
+
+  "routeDesc": "",
+
+  "numberOfStopsText": "NUMBER OF STATIONS: 41",
+
+  "locationText": "LONDON, UK",
+  "launchDateText": "SINCE MAY 2022",
+
+  "agencyLogoPath": "../../logos/tfl/Elizabeth line logo.svg",
+
+  "agencyLogoWidth": 190,
+  "agencyLogoHeight": 140,
+  "agencyLogoTop": 15,
+  "agencyLogoRight": -35,
+  "mapZoom": 10.5
+}

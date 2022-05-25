@@ -1,4 +1,4 @@
-export const polyline: [number, number][] = 	[
+export const multiPolyLine: [number, number][] = [
   [-0.019885, 51.582965],
   [-0.04115, 51.586919],
   [-0.060241, 51.588108],
@@ -14,23 +14,21 @@ export const polyline: [number, number][] = 	[
   [-0.133761, 51.489097],
   [-0.124204, 51.485743],
   [-0.122644, 51.472184],
-  [-0.114888, 51.462618]
+  [-0.114888, 51.462618],
+];
 
-]
-
-export const stops =
-[
+export const stops = [
   {
-    "stop_id": "HUBBRX",
-    "stop_name": "Brixton",
-    "stop_lat": 51.462961,
-    "stop_lon": -0.114531,
+    stop_id: "HUBBRX",
+    stop_name: "Brixton",
+    stop_lat: 51.462961,
+    stop_lon: -0.114531,
   },
   {
-    "stop_id": "HUBWHC",
-    "stop_name": "Walthamstow Central",
-    "stop_lat": 51.582948,
-    "stop_lon": -0.019842
+    stop_id: "HUBWHC",
+    stop_name: "Walthamstow Central",
+    stop_lat: 51.582948,
+    stop_lon: -0.019842,
   },
   // {
   //   "stop_id": "A41N",
@@ -572,4 +570,4 @@ export const stops =
   //   "stop_lat": 40.746644,
   //   "stop_lon": -73.891338
   // }
-]
+];

@@ -25,9 +25,9 @@
   "logoWidth": 220,
 
   "agencyLogoPath": "../../logos/TLV/Dankal Logo.svg",
-  "agencyLogoWidth": 190,
-  "agencyLogoHeight": 110,
-  "agencyLogoTop": 20,
-  "agencyLogoRight": -10,
-  "mapZoom": 13.75
+  "agencyLogoWidth": 290,
+  "agencyLogoHeight": 210,
+  "agencyLogoTop": 1050,
+  "agencyLogoRight": 50,
+  "mapZoom": 13
 }

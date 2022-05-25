@@ -1,7 +1,7 @@
 import PropTypes from "prop-types";
 import React, { useRef } from "react";
 import Moveable from "react-moveable";
-import { Badge } from "theme-ui";
+import { Badge, Input } from "theme-ui";
 
 import MoveableHelper from "moveable-helper";
 
@@ -19,11 +19,13 @@ const StopLabel = ({ xPos, yPos, stop, pointPositions, font }) => {
   return (
     <div className="container">
       <Badge
+        
         ref={targetRef}
         sx={{
           position: "absolute",
           height: 30,
           padding: 0,
+          width: 100,
           top: yPos, // For some reason, it puts the points the correct location compared to lat lon
           left: xPos,
           fontSize: 40,

@@ -1,10 +1,10 @@
 import {
   MapContainer,
-  Polyline,
   Pane,
   useMapEvents,
   TileLayer,
   Marker,
+  Polyline,
 } from "react-leaflet";
 import React, { useState, useMemo, useEffect } from "react";
 
@@ -76,7 +76,7 @@ StopLabels.propTypes = {
 };
 
 const RouteMap = ({
-  polyline,
+  multiPolyLine,
   stops,
   backgroundColor,
   tileLayerName,
@@ -85,11 +85,12 @@ const RouteMap = ({
   font,
   showGeoLayer,
   smoothFactor,
-  showMarkers
+  showMarkers,
 }) => {
   /**
    * Lat Lon markers, leave here for testing lat lon vs. xy positions
    */
+
   const markers = stops.map((stop) => {
     return (
       <Marker
@@ -109,16 +110,18 @@ const RouteMap = ({
       </Marker>
     );
   });
-  const middleOfRoute = Math.round(polyline.length / 2);
-  const reversePolyLine = useMemo((): [number, number][] => {
-    return polyline.map((coord) => [coord[1], coord[0]]);
-  }, [polyline]);
-
+  const middleOfRoute = Math.round(multiPolyLine[0].length / 2);
+  const reverseMultiPolyLine = useMemo((): [number, number][][] => {
+    return multiPolyLine.map((polyLine) =>
+      polyLine.map((coord) => [coord[1], coord[0]])
+    );
+  }, [multiPolyLine]);
+  
   const [map, setMap] = useState(null);
 
   useEffect(() => {
     if (map) {
-      map.fitBounds(reversePolyLine, { maxZoom: mapZoom });
+      map.fitBounds(reverseMultiPolyLine, { maxZoom: mapZoom });
     }
   }, [map]);
 
@@ -126,7 +129,7 @@ const RouteMap = ({
     <MapContainer
       ref={setMap}
       id="map"
-      center={reversePolyLine[middleOfRoute]}
+      center={reverseMultiPolyLine[0][middleOfRoute]}
       zoom={12}
       zoomSnap={0.1}
       scrollWheelZoom={false}
@@ -144,7 +147,7 @@ const RouteMap = ({
       <Pane name="route-path" style={{ zIndex: 499, cursor: "default" }}>
         <Polyline
           pathOptions={{ color: pathColor, weight: 10 }}
-          positions={reversePolyLine}
+          positions={reverseMultiPolyLine}
           smoothFactor={smoothFactor}
         />
         {showMarkers && markers}
@@ -159,35 +162,36 @@ const RouteMap = ({
 
 RouteMap.prototypes = {
   // Should be [number, number][]
-  polyline: PropTypes.arrayOf(
-    PropTypes.arrayOf(function (props, propName, componentName) {
-      if (
-        !Array.isArray(props.TWO_NUMBERS) ||
-        props.TWO_NUMBERS.length != 2 ||
-        !props.TWO_NUMBERS.every(Number.isInteger)
-      ) {
-        return new Error(`${propName} needs to be an array of two numbers`);
-      }
+  multiPolyLine: PropTypes.arrayOf(
+    PropTypes.arrayOf(
+      PropTypes.arrayOf(function (props, propName, componentName) {
+        if (
+          !Array.isArray(props.TWO_NUMBERS) ||
+          props.TWO_NUMBERS.length != 2 ||
+          !props.TWO_NUMBERS.every(Number.isInteger)
+        ) {
+          return new Error(`${propName} needs to be an array of two numbers`);
+        }
 
-      return null;
-    }).isRequired
+        return null;
+      })
+    ).isRequired
   ),
   stops: PropTypes.arrayOf(StopType).isRequired,
   backgroundColor: PropTypes.string,
   tileLayerName: PropTypes.oneOf(["StamenToner", null]),
   pathColor: PropTypes.string,
   mapZoom: PropTypes.number,
-  font:  PropTypes.string,
+  font: PropTypes.string,
   showGeoLayer: PropTypes.bool,
   smoothFactor: PropTypes.number,
-  showMarkers: PropTypes.bool
+  showMarkers: PropTypes.bool,
 };
 
 RouteMap.defaultProps = {
   showGeoLayer: true,
   smoothFactor: 5,
-  showMarkers: false
-  
-}
+  showMarkers: false,
+};
 
 export default RouteMap;

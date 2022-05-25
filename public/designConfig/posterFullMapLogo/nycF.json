@@ -22,10 +22,10 @@
 
   "agencyLogoPath": "../../logos/nyc/MTA logo.svg",
 
-  "agencyLogoWidth": 110,
+  "agencyLogoWidth": 120,
+  "agencyLogoHeight": 120,
+  "agencyLogoTop": 1150,
+  "agencyLogoRight": 50,
 
-  "agencyLogoHeight": 110,
-  "agencyLogoTop": 20,
-  "agencyLogoRight": 20,
-  "mapZoom": 12.5
+  "mapZoom": 12
 }

@@ -22,11 +22,10 @@
 
   "agencyLogoPath": "../../logos/ratp/RATP Metro logo.svg",
   "logoPadding": "10px",
-  "lineDetailsFontSize": 20,
-  "agencyLogoWidth": 200,
-  "agencyLogoHeight": 200,
-  "agencyLogoTop": 20,
-  "agencyLogoRight": 20,
+  "agencyLogoWidth": 180,
+  "agencyLogoHeight": 180,
+  "agencyLogoTop": 1100,
+  "agencyLogoRight": 50,
 
   "mapZoom": 14
 }

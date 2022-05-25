@@ -51,6 +51,8 @@ export default function routeSelector(props) {
       </Head>
       <h1>Geo WITH Logo</h1>
       {getButtonsForLink('/posters/posterGeoLogo?routeID=')}
+      <h1>Geo WITH Logo Horizontal</h1>
+      {getButtonsForLink('/posters/posterGeoLogoHorizontal?routeID=')}
       <h1>Geo WITHOUT Logo</h1>
       {getButtonsForLink('/posters/posterGeoNoLogo?routeID=')}
       <h1>Full Psoter + Logo</h1>

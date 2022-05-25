@@ -121,7 +121,7 @@ export default function Page(props) {
                 }}
               >
                 <Map
-                  polyline={routeData.polyline}
+                  multiPolyLine={routeData.multiPolyLine}
                   showGeoLayer={false}
                   stops={routeData.stops}
                   backgroundColor={routeDesignConfig.backgroundColor}

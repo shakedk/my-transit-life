@@ -117,7 +117,7 @@ export default function Page(props) {
               </div>
               <div className={styles.mapContainer}>
                 <Map
-                  polyline={routeData.polyline}
+                  multiPolyLine={routeData.multiPolyLine}
                   stops={routeData.stops}
                   backgroundColor={routeDesignConfig.backgroundColor}
                   tileLayerName={routeDesignConfig.tileLayerName}
