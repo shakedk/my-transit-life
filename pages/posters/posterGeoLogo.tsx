@@ -155,7 +155,7 @@ export default function Page(props) {
                   tileLayerName={routeDesignConfig.tileLayerName}
                   pathColor={routeDesignConfig.pathColor}
                   mapZoom={routeDesignConfig.mapZoom}
-                  font={routeData.font}
+                  font={routeDesignConfig.font}
                   showMarkers={true}
                 />
               </div>

@@ -1,0 +1,33 @@
+{
+  "backgroundColor": "#751617",
+
+  "tileLayerName": "StamenToner",
+
+  "pathColor": "Snow",
+
+  "font": "Helvetica",
+
+  "routeType": "Line",
+
+  "routeName": "Dankal Red",
+
+  "routeDesc": "",
+
+  "routeTitleSize": 100,
+
+  "numberOfStopsText": "NUMBER OF STATIONS: 34",
+
+  "locationText": "TEL AVIV, ISRAEL",
+  "launchDateText": "SINCE NOVEMBER 1, 2022",
+
+  "logoPath": "",
+  "logoHeight": 120,
+  "logoWidth": 220,
+
+  "agencyLogoPath": "../../logos/TLV/Dankal Logo.svg",
+  "agencyLogoWidth": 290,
+  "agencyLogoHeight": 210,
+  "agencyLogoTop": 1050,
+  "agencyLogoRight": 50,
+  "mapZoom": 13
+}

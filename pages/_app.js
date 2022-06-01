@@ -3,11 +3,11 @@ import theme from '../styles/theme'
 import '../components/stopLabel.css';
 import './main.css'
 import Head from 'next/head';
-
+import { AppWrapper } from '../src/context/state'; // import based on where you put it
 
 function MyApp({ Component, pageProps }) {
   return (
-    <>
+    <AppWrapper>
       <Head>
         <link
           rel="preload"
@@ -19,7 +19,7 @@ function MyApp({ Component, pageProps }) {
       <ThemeProvider theme={theme}>
         <Component {...pageProps} />
       </ThemeProvider>
-    </>
+    </AppWrapper>
   );
 }
 

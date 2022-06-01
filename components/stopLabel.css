@@ -3,17 +3,17 @@
 
 } */
 
-/* .moveable1 { */
-	/* .moveable1>.moveable-rotation>.moveable-line  { */
-	/* background: greenyellow!important; */
-	/* border: none!important; */
-    /* width: 20px!important;
-    height: 20px!important; */
-    /* margin-top: -10px!important; */
-    /* margin-left: -10px!important; */
+/* .moveable1 {  */
+	.moveable1>.moveable-rotation>.moveable-line  {
+	background: greenyellow!important;
+	border: none!important;
+    width: 20px!important;
+    height: 20px!important;
+    margin-top: -10px!important;
+    margin-left: -10px!important;
 /* } */
-/* } */
+}
 
-.moveable1 {
+.moveable1Hide {
     display: none!important;
 }

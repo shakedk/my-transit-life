@@ -87,6 +87,7 @@ const RouteMap = ({
   smoothFactor,
   showMarkers,
 }) => {
+
   /**
    * Lat Lon markers, leave here for testing lat lon vs. xy positions
    */

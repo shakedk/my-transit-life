@@ -1,0 +1,31 @@
+{
+  "backgroundColor": "#FF6319",
+
+  "tileLayerName": "StamenToner",
+
+  "pathColor": "Snow",
+
+  "font": "Helvetica",
+
+  "routeType": "Train -",
+
+  "routeName": "F",
+
+  "routeDesc": "Queens Boulevard Express",
+  "routeTitleSize": 62,
+  "numberOfStopsText": "NUMBER OF STOPS: 39",
+
+  "locationText": "NEW YORK CITY, NY, USA",
+  "launchDateText": "SINCE DECEMBER 15, 1940",
+
+  "logoPath": "../../logos/nyc/F line logo.svg",
+
+  "agencyLogoPath": "../../logos/nyc/MTA logo.svg",
+
+  "agencyLogoWidth": 120,
+  "agencyLogoHeight": 120,
+  "agencyLogoTop": 1150,
+  "agencyLogoRight": 50,
+
+  "mapZoom": 12
+}

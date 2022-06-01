@@ -57,6 +57,8 @@ export default function routeSelector(props) {
       {getButtonsForLink('/posters/posterGeoNoLogo?routeID=')}
       <h1>Full Psoter + Logo</h1>
       {getButtonsForLink('/posters/posterFullMapLogo?routeID=')}
+      <h1>Big border (no logo)</h1>
+      {getButtonsForLink('/posters/posterBigFrameNoLogo?routeID=')}
     </>
   );
 }

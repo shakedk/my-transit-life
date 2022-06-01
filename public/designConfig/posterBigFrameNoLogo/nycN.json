@@ -1,0 +1,29 @@
+{
+  "backgroundColor": "#FDCE00",
+
+  "tileLayerName": "StamenToner",
+
+  "pathColor": "Snow",
+
+  "font": "Helvetica",
+
+  "routeType": "Train -",
+
+  "routeName": "N",
+  "routeDesc": "Broadway Express",
+
+  "numberOfStopsText": "NUMBER OF STOPS: 45",
+
+  "locationText": "NEW YORK CITY, NY, USA",
+  "launchDateText": "SINCE JUNE 22, 1915",
+
+  "logoPath": "../../logos/nyc/N line logo.svg",
+
+  "agencyLogoPath": "../../logos/nyc/MTA logo.svg",
+
+  "agencyLogoWidth": 120,
+  "agencyLogoHeight": 120,
+  "agencyLogoTop": 1150,
+  "agencyLogoRight": 50,
+  "mapZoom": 12
+}

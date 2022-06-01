@@ -13,7 +13,7 @@ export async function getServerSideProps(context) {
     `${server}/api/routeData?routeID=${context.query.routeID}`
   );
   const routeDesignConfig = await fetch(
-    `${server}/api/routeDesignConfigFullMapLogo?routeID=${context.query.routeID}`
+    `${server}/api/routeDesignConfigBigFrameNoLogo?routeID=${context.query.routeID}`
   );
   return {
     props: {
@@ -44,7 +44,7 @@ export default function Page(props) {
     ]
   );
 
-  const getDescriptionDetailElement = (detail: string, isFirst: boolean) => (
+  const getDescriptionDetailElement = (detail: string, isLast: boolean) => (
     <div>
       <Badge
         sx={{
@@ -54,6 +54,7 @@ export default function Page(props) {
           padding: 0,
           paddingBottom: 2,
           fontFamily: routeDesignConfig.font,
+          color: 'black'
         }}
         bg="transparent"
       >
@@ -104,7 +105,7 @@ export default function Page(props) {
                           fontSize: routeDesignConfig.routeTitleSize || 80,
                         }}
                       >
-                        {routeDesignConfig.routeName}
+                        {routeDesignConfig.routeName.toUpperCase()}
                       </div>
                       <div
                         className={styles.lineTypeDesc}
@@ -113,22 +114,28 @@ export default function Page(props) {
                           fontSize: routeDesignConfig.routeTitleSize || 80,
                         }}
                       >
-                        {`${routeDesignConfig.routeType} ${routeDesignConfig.routeDesc}`}
+                        {`${routeDesignConfig.routeType.toUpperCase()} ${routeDesignConfig.routeDesc.toUpperCase()}`}
                       </div>
                     </div>
                   </div>
                   <div className={styles.descriptionDetails}>
                     {getDescriptionDetailElement(
                       routeDesignConfig.numberOfStopsText,
-                      true
+                      false
                     )}
+                    <div className={styles.descriptionDetailDeivider}>
+                      {"|"}
+                    </div>
                     {getDescriptionDetailElement(
                       routeDesignConfig.locationText,
                       false
                     )}
+                    <div className={styles.descriptionDetailDeivider}>
+                      {"|"}
+                    </div>
                     {getDescriptionDetailElement(
                       routeDesignConfig.launchDateText,
-                      false
+                      true
                     )}
                   </div>
                 </div>
