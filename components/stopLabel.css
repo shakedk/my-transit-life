@@ -17,3 +17,7 @@
 .moveable1Hide {
     display: none!important;
 }
+
+textarea {
+    /* resize: none; */
+  }

@@ -86,6 +86,7 @@ const RouteMap = ({
   showGeoLayer,
   smoothFactor,
   showMarkers,
+  polyLines
 }) => {
 
   /**
@@ -114,7 +115,9 @@ const RouteMap = ({
   const middleOfRoute = Math.round(multiPolyLine[0].length / 2);
   const reverseMultiPolyLine = useMemo((): [number, number][][] => {
     return multiPolyLine.map((polyLine) =>
-      polyLine.map((coord) => [coord[1], coord[0]])
+      polyLine.path
+        ? polyLine.path.map((coord) => [coord[1], coord[0]])
+        : polyLine.map((coord) => [coord[1], coord[0]])
     );
   }, [multiPolyLine]);
   
@@ -146,17 +149,31 @@ const RouteMap = ({
     >
       {showGeoLayer ? getTileLayer(tileLayerName) : null}
       <Pane name="route-path" style={{ zIndex: 499, cursor: "default" }}>
-        <Polyline
-          pathOptions={{ color: pathColor, weight: 10 }}
-          positions={reverseMultiPolyLine}
-          smoothFactor={smoothFactor}
-        />
+        {polyLines ? (
+          Object.keys(polyLines).map((id) => (
+            <Polyline
+              key={id}
+              pathOptions={{ color: polyLines[id].color, weight: 10 }}
+              positions={polyLines[id].path.map((coord) => [
+                coord[1],
+                coord[0],
+              ])}
+              smoothFactor={smoothFactor}
+            />
+          ))
+        ) : (
+          <Polyline
+            pathOptions={{ color: pathColor, weight: 10 }}
+            positions={reverseMultiPolyLine}
+            smoothFactor={smoothFactor}
+          />
+        )}
         {showMarkers && markers}
       </Pane>
-
-      <Pane name="stop-dots" style={{ zIndex: 500, cursor: "default" }}>
-        <StopLabels stops={stops} font={font} />
-      </Pane>
+        <Pane name="stop-dots" style={{ zIndex: 500, cursor: "default" }}>
+          <StopLabels stops={stops} font={font} />
+        </Pane>
+      
     </MapContainer>
   );
 };
@@ -187,6 +204,7 @@ RouteMap.prototypes = {
   showGeoLayer: PropTypes.bool,
   smoothFactor: PropTypes.number,
   showMarkers: PropTypes.bool,
+  polyLines: PropTypes.any
 };
 
 RouteMap.defaultProps = {

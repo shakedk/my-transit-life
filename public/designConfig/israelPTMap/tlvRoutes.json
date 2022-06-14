@@ -1,0 +1,31 @@
+{
+  "backgroundColor": "#EF322A",
+
+  "tileLayerName": "StamenToner",
+
+  "pathColor": "Snow",
+
+  "font": "Helvetica",
+
+  "routeType": "Train -",
+
+  "routeName": "2",
+
+  "routeDesc": "7th Avenue Express",
+
+  "numberOfStopsText": "NUMBER OF STOPS: 61",
+
+  "locationText": "NEW YORK CITY, NY, USA",
+  "launchDateText": "SINCE NOVEMBER 26, 1904",
+
+  "logoPath": "../../logos/nyc/nyc 2 train logo.svg",
+
+  "agencyLogoPath": "../../logos/nyc/MTA logo.svg",
+
+  "agencyLogoWidth": 120,
+  "agencyLogoHeight": 120,
+  "agencyLogoTop": 1150,
+  "agencyLogoRight": 50,
+
+  "mapZoom": 12
+}
