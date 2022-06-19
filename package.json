@@ -10,7 +10,10 @@
   },
   "dependencies": {
     "@types/theme-ui": "^0.3.7",
+    "axios": "^0.27.2",
     "babel-preset-env": "^1.7.0",
+    "dashify": "^2.0.0",
+    "firebase-admin": "^10.3.0",
     "identity-obj-proxy": "^3.0.0",
     "leaflet": "^1.7.1",
     "leaflet-offline": "^1.1.0",

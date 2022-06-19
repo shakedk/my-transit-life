@@ -1,5 +1,5 @@
 import dynamic from "next/dynamic";
-import React from "react";
+import React, { useRef } from "react";
 import { Badge, Image, Text } from "theme-ui";
 import { useRouter } from "next/router";
 import styles from "./posterGeoLogoHorizontal.module.css";
@@ -7,6 +7,7 @@ import { server } from "../../config";
 
 import TransitLifeCredit from "../../components/tranitLifeCredit";
 import Head from "next/head";
+import { createPosterInDB } from "./utils";
 
 export async function getServerSideProps(context) {
   const routeData = await fetch(
@@ -29,6 +30,8 @@ export default function Page(props) {
 
   const routeData = JSON.parse(props.routeData.routeData);
   const routeDesignConfig = JSON.parse(props.routeDesignConfig.routeData);
+
+  // const mapRef = useRef<any>();
 
   const Map = React.useMemo(
     () =>
@@ -62,8 +65,15 @@ export default function Page(props) {
       </Badge>
     </div>
   );
+
   const PosterTemaple = () =>
-    React.useMemo(() => {
+  {
+      React.useEffect(() => {
+
+        const posterType = router.pathname.replace("/posters/", "");
+        createPosterInDB(posterType, routeID);
+      }, [routeID]);
+    return React.useMemo(() => {
       if (routeID) {
         return (
           <div>
@@ -148,8 +158,9 @@ export default function Page(props) {
                   <div className={styles.divider}></div>
                 </div>
               </div>
-              <div className={styles.mapContainer}>
+              <div  className={styles.mapContainer}>
                 <Map
+                  // offsetTop={mapRef && mapRef.current && mapRef.current.offsetTop}
                   multiPolyLine={routeData.multiPolyLine}
                   stops={routeData.stops}
                   backgroundColor={routeDesignConfig.backgroundColor}
@@ -168,5 +179,7 @@ export default function Page(props) {
         );
       }
     }, [routeID]);
+
+  }
   return <PosterTemaple />;
 }
