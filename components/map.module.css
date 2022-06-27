@@ -1,9 +1,9 @@
 /* .markerTooltip {
-    
+    z-index: 1000;
     border: none;
     box-shadow: none;
     background-color: transparent;
-    font-size: 10px;
-    font-family: 'verdana';
-    color: red;
+    /* font-size: 10px; */
+    font-family: 'Roboto';
+    /* color: red; */
 } */

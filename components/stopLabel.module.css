@@ -1,0 +1,10 @@
+.markerTooltip {
+  z-index: 1000;
+  border: none;
+  box-shadow: none;
+  background-color: transparent;
+
+  font-family: 'Roboto';
+
+}
+
