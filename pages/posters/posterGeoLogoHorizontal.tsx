@@ -1,5 +1,5 @@
 import dynamic from "next/dynamic";
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import { Badge, Image, Text } from "theme-ui";
 import { useRouter } from "next/router";
 import styles from "./posterGeoLogoHorizontal.module.css";
@@ -8,6 +8,7 @@ import { server } from "../../config";
 import TransitLifeCredit from "../../components/tranitLifeCredit";
 import Head from "next/head";
 import { createPosterInDB } from "./utils";
+import EditToggle from "../../components/editToggle";
 
 export async function getServerSideProps(context) {
   const routeData = await fetch(
@@ -66,13 +67,12 @@ export default function Page(props) {
     </div>
   );
 
-  const PosterTemaple = () =>
-  {
-      React.useEffect(() => {
-
-        const posterType = router.pathname.replace("/posters/", "");
-        createPosterInDB(posterType, routeID);
-      }, [routeID]);
+  const PosterTemaple = () => {
+    React.useEffect(() => {
+      const posterType = router.pathname.replace("/posters/", "");
+      createPosterInDB(posterType, routeID);
+    }, [routeID]);
+    const [isInEditMode, setIsInEditMode] = useState(false);
     return React.useMemo(() => {
       if (routeID) {
         return (
@@ -81,6 +81,10 @@ export default function Page(props) {
             <Head>
               <title>{routeID}</title>
             </Head>
+            <EditToggle
+              isInEditMode={isInEditMode}
+              setIsInEditMode={setIsInEditMode}
+            />
             <div className={styles.posterContainer}>
               <div className={styles.header}>
                 <div
@@ -158,7 +162,7 @@ export default function Page(props) {
                   <div className={styles.divider}></div>
                 </div>
               </div>
-              <div  className={styles.mapContainer}>
+              <div className={styles.mapContainer}>
                 <Map
                   // offsetTop={mapRef && mapRef.current && mapRef.current.offsetTop}
                   multiPolyLine={routeData.multiPolyLine}
@@ -169,6 +173,7 @@ export default function Page(props) {
                   mapZoom={routeDesignConfig.mapZoom}
                   font={routeDesignConfig.font}
                   showMarkers={true}
+                  isInEditMode={isInEditMode}
                 />
               </div>
               <div className={styles.transitLifeCred}>
@@ -178,8 +183,7 @@ export default function Page(props) {
           </div>
         );
       }
-    }, [routeID]);
-
-  }
+    }, [routeID, isInEditMode]);
+  };
   return <PosterTemaple />;
 }

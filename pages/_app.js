@@ -1,6 +1,6 @@
 import { ThemeProvider } from 'theme-ui'
 import theme from '../styles/theme'
-import '../components/stopLabel.css';
+
 import './main.css'
 import Head from 'next/head';
 import { AppWrapper } from '../src/context/state'; // import based on where you put it
