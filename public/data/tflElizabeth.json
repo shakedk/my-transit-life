@@ -101,6 +101,13 @@
       "stop_name": "Heathrow Terminal 5",
       "stop_lat": 51.470053,
       "stop_lon": -0.490589
+    },
+    {
+      "stop_id": "Optibus",
+      "stop_name": "OPTIBUS",
+      "stop_lat": 51.519141,
+      "stop_lon": -0.070514
+
     }
   ]
 }

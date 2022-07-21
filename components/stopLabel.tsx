@@ -32,6 +32,7 @@ const StopLabel = ({
     position: [markerLat, markerLon],
   });
   const markerRef = useRef(null);
+  const tooltipRef = useRef(null);
 
   const eventHandlers = useMemo(
     () => ({
@@ -68,84 +69,94 @@ const StopLabel = ({
       ref={markerRef}
       icon={
         new Icon({
-          iconUrl: "/transparentPoint.svg",
-          iconSize: [100, 100],
+          iconUrl:
+            stop.stop_name !== "OPTIBUS"
+              ? isInEditMode
+                ? "/point.svg"
+                : "/transparentPoint.svg"
+              : "/logos/optibus.svg",
+          iconSize: isInEditMode ? [300, 300] : [100, 100],
         })
       }
       zIndexOffset={600}
       eventHandlers={eventHandlers}
     >
       {/* Edit seems to work, add movability and width and height and send to DB */}
-      <div>
-        <Tooltip
-          interactive={true}
-          permanent
-          className={styles.markerTooltip}
-          direction={"center"}
-        >
-          <Textarea
-            value={stopProps.label}
-            disabled={!isInEditMode}
-            onChange={(e) => {
-              setStopProps((oldState) => {
-                stopPropetiesChanedHandler(
-                  stop.stop_id,
-                  oldState.position[0],
-                  oldState.position[1],
-                  oldState.labelWidth,
-                  oldState.labelHeight,
-                  stopOriginalName,
-                  e.target.value
-                );
-                return {
-                  ...oldState,
-                  label: e.target.value,
-                };
-              });
-            }}
-            onPointerUp={(e) => {
-              if (
-                isInEditMode &&
-                e.currentTarget != null &&
-                e.currentTarget.offsetWidth != null &&
-                e.currentTarget.offsetHeight != null
-              ) {
+      {stop.stop_name !== "OPTIBUS" ? (
+        <div>
+          <Tooltip
+            ref={tooltipRef}
+            interactive={true}
+            permanent
+            className={styles.markerTooltip}
+            direction={"center"}
+          >
+            <Textarea
+              value={stopProps.label}
+              disabled={!isInEditMode}
+              onChange={(e) => {
+
                 setStopProps((oldState) => {
                   stopPropetiesChanedHandler(
                     stop.stop_id,
                     oldState.position[0],
                     oldState.position[1],
-                    e.currentTarget && e.currentTarget.offsetWidth || oldState.labelWidth,
-                    e.currentTarget && e.currentTarget.offsetHeight  || oldState.labelHeight,
+                    oldState.labelWidth,
+                    oldState.labelHeight,
                     stopOriginalName,
-                    oldState.label
+                    e.target.value
                   );
                   return {
                     ...oldState,
-                    labelWidth: e.currentTarget.offsetWidth,
-                    labelHeight: e.currentTarget.offsetHeight,
+                    label: e.target.value,
                   };
                 });
-              }
-            }}
-            sx={{
-              // cursor: isInEditMode ? "pointer" : "default",
-              resize: isInEditMode ? "both" : "none",
-              position: "absolute",
-              top: 10, // For some reason, it puts the points the correct location compared to lat lon
-              left: 10,
-              padding: 0,
-              width: stopProps.labelWidth || "auto",
-              height: stopProps.labelHeight || "auto",
-              fontSize: 40,
-              fontFamily: font || "Helvetica",
-              color: "#FFFFFF",
-              zIndex: 500,
-              border: isInEditMode ? "2 solid black" : "none",
-            }}
-          ></Textarea>
-        </Tooltip>
-      </div>
+              }}
+              onMouseUp={(e) => {
+                if (isInEditMode) {
+
+                  setStopProps((oldState) => {
+
+                    stopPropetiesChanedHandler(
+                      stop.stop_id,
+                      oldState.position[0],
+                      oldState.position[1],
+                      (e.target as HTMLTextAreaElement).offsetWidth ||
+                        oldState.labelWidth, //tooltipRef.current.offsetWidth,
+                      (e.target as HTMLTextAreaElement).offsetHeight ||
+                        oldState.labelHeight, //tooltipRef.current.offsetHeight,
+                      stopOriginalName,
+                      oldState.label
+                    );
+                    return {
+                      ...oldState,
+                      labelWidth: (e.target as HTMLTextAreaElement).offsetWidth,
+                      labelHeight: (e.target as HTMLTextAreaElement)
+                        .offsetHeight,
+                    };
+                  });
+                }
+              }}
+              sx={{
+                // cursor: isInEditMode ? "pointer" : "default",
+                resize: isInEditMode ? "both" : "none",
+                position: "absolute",
+                top: 10, // For some reason, it puts the points the correct location compared to lat lon
+                left: 10,
+                padding: 0,
+                width: stopProps.labelWidth || "min-content",
+                height: stopProps.labelHeight || "min-content",
+                fontSize: 40,
+                fontFamily: font || "Helvetica",
+                color: "#FFFFFF",
+                zIndex: 500,
+                border: isInEditMode ? "2 solid black" : "none",
+                textAlign: "center",
+              }}
+            ></Textarea>
+          </Tooltip>
+        </div>
+      ) : null}
     </Marker>
   );
 };
@@ -160,12 +171,7 @@ export const StopType = PropTypes.shape({
 StopLabel.propTypes = {
   stopModifiedName: PropTypes.string.isRequired,
   stopPropetiesChanedHandler: PropTypes.func.isRequired,
-  stop: PropTypes.shape({
-    stop_lat: PropTypes.number.isRequired,
-    stop_lon: PropTypes.number.isRequired,
-    stop_id: PropTypes.string.isRequired,
-    stop_name: PropTypes.string.isRequired,
-  }),
+  stop: StopType,
   stopOriginalName: PropTypes.string.isRequired,
 
   markerLat: PropTypes.number.isRequired,

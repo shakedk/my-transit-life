@@ -7,9 +7,9 @@ import { server } from "../../config";
 
 import TransitLifeCredit from "../../components/tranitLifeCredit";
 import Head from "next/head";
-import { createPosterInDB } from "./utils";
+import { createPosterInDB, useMap } from "./utils";
 import EditToggle from "../../components/editToggle";
-
+// import { Map } from "../posters/utils";
 export async function getServerSideProps(context) {
   const routeData = await fetch(
     `${server}/api/routeData?routeID=${context.query.routeID}`
@@ -25,28 +25,18 @@ export async function getServerSideProps(context) {
   };
 }
 
-export default function Page(props) {
+export default function Page({
+  // geoMap,
+  routeData,
+  routeDesignConfig,
+  isInEditMode,
+}) {
   const router = useRouter();
-  const { routeID } = router.query;
+  const GeoMap = useMap();
+  // const { routeID } = router.query;
 
-  const routeData = JSON.parse(props.routeData.routeData);
-  const routeDesignConfig = JSON.parse(props.routeDesignConfig.routeData);
-
-  // const mapRef = useRef<any>();
-
-  const Map = React.useMemo(
-    () =>
-      dynamic(
-        () => import("../../components/map"), // replace '@components/map' with your component's location
-        {
-          loading: () => <p>A map is loading</p>,
-          ssr: false, // This line is important. It's what prevents server-side render
-        }
-      ),
-    [
-      /* list variables which should trigger a re-render here */
-    ]
-  );
+  // const routeData = JSON.parse(props.routeData.routeData);
+  // const routeDesignConfig = JSON.parse(props.routeDesignConfig.routeData);
 
   const getDescriptionDetailElement = (detail: string, isFirst: boolean) => (
     <div>
@@ -67,123 +57,99 @@ export default function Page(props) {
     </div>
   );
 
-  const PosterTemaple = () => {
-    React.useEffect(() => {
-      const posterType = router.pathname.replace("/posters/", "");
-      createPosterInDB(posterType, routeID);
-    }, [routeID]);
-    const [isInEditMode, setIsInEditMode] = useState(false);
-    return React.useMemo(() => {
-      if (routeID) {
-        return (
-          <div>
-            {" "}
-            <Head>
-              <title>{routeID}</title>
-            </Head>
-            <EditToggle
-              isInEditMode={isInEditMode}
-              setIsInEditMode={setIsInEditMode}
-            />
-            <div className={styles.posterContainer}>
-              <div className={styles.header}>
+  const PosterGeoLogoHorizontal = () => (
+    <div className={styles.posterContainer}>
+      <div className={styles.header}>
+        <div
+          style={{
+            position: "absolute",
+            top: `${routeDesignConfig.agencyLogoTop}px`,
+            right: `${routeDesignConfig.agencyLogoRight}px`,
+          }}
+        >
+          <Image
+            src={routeDesignConfig.agencyLogoPath}
+            sx={{
+              width: routeDesignConfig.agencyLogoWidth,
+              height: routeDesignConfig.agencyLogoHeight,
+            }}
+          ></Image>
+        </div>
+        <div className={styles.title}>
+          <div className={styles.lineDetails}>
+            <div className={styles.lineNameAndLogo}>
+              {routeDesignConfig.logoPath ? (
+                <Image
+                  src={routeDesignConfig.logoPath}
+                  sx={{
+                    padding: routeDesignConfig.logoPadding || 0,
+                    width: routeDesignConfig.logoWidth || 140,
+                    height: routeDesignConfig.logoHeight || 140,
+                  }}
+                ></Image>
+              ) : (
                 <div
+                  className={styles.lineName}
                   style={{
-                    position: "absolute",
-                    top: `${routeDesignConfig.agencyLogoTop}px`,
-                    right: `${routeDesignConfig.agencyLogoRight}px`,
+                    color: routeDesignConfig.backgroundColor,
+                    fontFamily: routeDesignConfig.font,
+                    fontSize: routeDesignConfig.routeTitleSize || 80,
                   }}
                 >
-                  <Image
-                    src={routeDesignConfig.agencyLogoPath}
-                    sx={{
-                      width: routeDesignConfig.agencyLogoWidth,
-                      height: routeDesignConfig.agencyLogoHeight,
-                    }}
-                  ></Image>
+                  {" "}
+                  {routeDesignConfig.routeName}
                 </div>
-                <div className={styles.title}>
-                  <div className={styles.lineDetails}>
-                    <div className={styles.lineNameAndLogo}>
-                      {routeDesignConfig.logoPath ? (
-                        <Image
-                          src={routeDesignConfig.logoPath}
-                          sx={{
-                            padding: routeDesignConfig.logoPadding || 0,
-                            width: routeDesignConfig.logoWidth || 140,
-                            height: routeDesignConfig.logoHeight || 140,
-                          }}
-                        ></Image>
-                      ) : (
-                        <div
-                          className={styles.lineName}
-                          style={{
-                            color: routeDesignConfig.backgroundColor,
-                            fontFamily: routeDesignConfig.font,
-                            fontSize: routeDesignConfig.routeTitleSize || 80,
-                          }}
-                        >
-                          {" "}
-                          {routeDesignConfig.routeName}
-                        </div>
-                      )}
-                      <Badge
-                        sx={{
-                          zIndex: 100,
-                          fontSize: routeDesignConfig.routeTitleSize || 60,
-                          padding: 0,
-                          paddingLeft: 10,
-                          fontFamily: routeDesignConfig.font,
-                          color: "black",
-                        }}
-                        p={4}
-                        color="black"
-                        bg="transparent"
-                      >
-                        {`${routeDesignConfig.routeType} ${routeDesignConfig.routeDesc}`}
-                      </Badge>
-                    </div>
-                  </div>
-                  <div className={styles.descriptionDetails}>
-                    {getDescriptionDetailElement(
-                      routeDesignConfig.numberOfStopsText,
-                      true
-                    )}
-                    {getDescriptionDetailElement(
-                      routeDesignConfig.locationText,
-                      false
-                    )}
-                    <br />
-                    {getDescriptionDetailElement(
-                      routeDesignConfig.launchDateText,
-                      false
-                    )}
-                  </div>
-                  <div className={styles.divider}></div>
-                </div>
-              </div>
-              <div className={styles.mapContainer}>
-                <Map
-                  // offsetTop={mapRef && mapRef.current && mapRef.current.offsetTop}
-                  multiPolyLine={routeData.multiPolyLine}
-                  stops={routeData.stops}
-                  backgroundColor={routeDesignConfig.backgroundColor}
-                  tileLayerName={routeDesignConfig.tileLayerName}
-                  pathColor={routeDesignConfig.pathColor}
-                  mapZoom={routeDesignConfig.mapZoom}
-                  font={routeDesignConfig.font}
-                  showMarkers={true}
-                  isInEditMode={isInEditMode}
-                />
-              </div>
-              <div className={styles.transitLifeCred}>
-                <TransitLifeCredit />
-              </div>
+              )}
+              <Badge
+                sx={{
+                  zIndex: 100,
+                  fontSize: routeDesignConfig.routeTitleSize || 60,
+                  padding: 0,
+                  paddingLeft: 10,
+                  fontFamily: routeDesignConfig.font,
+                  color: "black",
+                }}
+                p={4}
+                color="black"
+                bg="transparent"
+              >
+                {`${routeDesignConfig.routeType} ${routeDesignConfig.routeDesc}`}
+              </Badge>
             </div>
           </div>
-        );
-      }
-    }, [routeID, isInEditMode]);
-  };
-  return <PosterTemaple />;
+          <div className={styles.descriptionDetails}>
+            {getDescriptionDetailElement(
+              routeDesignConfig.numberOfStopsText,
+              true
+            )}
+            {getDescriptionDetailElement(routeDesignConfig.locationText, false)}
+            <br />
+            {getDescriptionDetailElement(
+              routeDesignConfig.launchDateText,
+              false
+            )}
+          </div>
+          <div className={styles.divider}></div>
+        </div>
+      </div>
+      <div className={styles.mapContainer}>
+        <GeoMap
+          // offsetTop={mapRef && mapRef.current && mapRef.current.offsetTop}
+          multiPolyLine={routeData.multiPolyLine}
+          stops={routeData.stops}
+          backgroundColor={routeDesignConfig.backgroundColor}
+          tileLayerName={routeDesignConfig.tileLayerName}
+          pathColor={routeDesignConfig.pathColor}
+          mapZoom={routeDesignConfig.mapZoom}
+          font={routeDesignConfig.font}
+          showMarkers={true}
+          isInEditMode={isInEditMode} showGeoLayer={undefined} smoothFactor={undefined}        />
+      </div>
+      <div className={styles.transitLifeCred}>
+        <TransitLifeCredit />
+      </div>
+    </div>
+  );
+
+  return <PosterGeoLogoHorizontal />;
 }
