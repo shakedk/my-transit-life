@@ -11,7 +11,6 @@ import {
 import React, { useState, useMemo, useEffect } from "react";
 
 import "leaflet/dist/leaflet.css";
-import "leaflet-offline";
 import { useRouter } from "next/router";
 import { getPosterIDInDB } from "../pages/posters/utils";
 
@@ -57,7 +56,7 @@ import { StopType } from "./stopLabel";
 //   label_lat: number,
 //   label_lon: number,
 //   labelWidth: number,
-//   labelHieght: number,
+//   labelHeight: number,
 //   stopOriginalName: string,
 //   stopModifiedName: string
 // ) => {
@@ -70,7 +69,7 @@ import { StopType } from "./stopLabel";
 //     label_lat,
 //     label_lon,
 //     labelWidth,
-//     labelHieght,
+//     labelHeight,
 //   };
 
 //   console.log(stopOriginalName, " ", params)
@@ -143,7 +142,7 @@ const RouteMap = ({
   showGeoLayer,
   smoothFactor,
   showMarkers,
-  isInEditMode
+  isInEditMode,
 }) => {
   /**
    * Lat Lon markers, leave here for testing lat lon vs. xy positions
@@ -174,7 +173,7 @@ const RouteMap = ({
     label_lat: number,
     label_lon: number,
     labelWidth: number,
-    labelHieght: number,
+    labelHeight: number,
     stopOriginalName: string,
     stopModifiedName: string
   ) => {
@@ -187,9 +186,9 @@ const RouteMap = ({
       label_lat,
       label_lon,
       labelWidth,
-      labelHieght,
+      labelHeight,
     };
-
+    // console.log(params);
     axios.put(`/api/poster/${posterID}`, params);
   };
 

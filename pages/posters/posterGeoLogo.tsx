@@ -1,48 +1,18 @@
-import dynamic from "next/dynamic";
 import React from "react";
-import { Badge, Image, Text } from "theme-ui";
-import { useRouter } from "next/router";
+import { Badge, Image } from "theme-ui";
 import styles from "./posterGeoLogo.module.css";
-import { server } from "../../config";
+import { useMap } from "./utils";
 
-import TransitLifeCredit from "../../components/tranitLifeCredit";
 import Head from "next/head";
+import TransitLifeCredit from "../../components/tranitLifeCredit";
 
-export async function getServerSideProps(context) {
-  const routeData = await fetch(
-    `${server}/api/routeData?routeID=${context.query.routeID}`
-  );
-  const routeDesignConfig = await fetch(
-    `${server}/api/routeDesignConfigGeoLogo?routeID=${context.query.routeID}`
-  );
-  return {
-    props: {
-      routeData: await routeData.json(),
-      routeDesignConfig: await routeDesignConfig.json(),
-    }, // will be passed to the page component as props
-  };
-}
 
-export default function Page(props) {
-  const router = useRouter();
-  const { routeID } = router.query;
-
-  const routeData = JSON.parse(props.routeData.routeData);
-  const routeDesignConfig = JSON.parse(props.routeDesignConfig.routeData);
-
-  const Map = React.useMemo(
-    () =>
-      dynamic(
-        () => import("../../components/map"), // replace '@components/map' with your component's location
-        {
-          loading: () => <p>A map is loading</p>,
-          ssr: false, // This line is important. It's what prevents server-side render
-        }
-      ),
-    [
-      /* list variables which should trigger a re-render here */
-    ]
-  );
+export default function Page({
+  routeData,
+  routeDesignConfig,
+  isInEditMode,
+}) {
+  const GeoMap = useMap();
 
   const getDescriptionDetailElement = (detail: string, isFirst: boolean) => (
     <div>
@@ -62,15 +32,7 @@ export default function Page(props) {
       </Badge>
     </div>
   );
-  const PosterTemaple = () =>
-    React.useMemo(() => {
-      if (routeID) {
-        return (
-          <div>
-            {" "}
-            <Head>
-              <title>{routeID}</title>
-            </Head>
+  const PosterGeoLogo = () => (
             <div className={styles.posterContainer}>
               <div className={styles.header}>
                 <div
@@ -148,7 +110,7 @@ export default function Page(props) {
                 </div>
               </div>
               <div className={styles.mapContainer}>
-                <Map
+                <GeoMap
                   multiPolyLine={routeData.multiPolyLine}
                   stops={routeData.stops}
                   backgroundColor={routeDesignConfig.backgroundColor}
@@ -157,15 +119,13 @@ export default function Page(props) {
                   mapZoom={routeDesignConfig.mapZoom}
                   font={routeDesignConfig.font}
                   showMarkers={true}
+                  isInEditMode={isInEditMode}
                 />
               </div>
               <div className={styles.transitLifeCred}>
                 <TransitLifeCredit />
               </div>
             </div>
-          </div>
-        );
-      }
-    }, [routeID]);
-  return <PosterTemaple />;
+       )
+  return <PosterGeoLogo />;
 }

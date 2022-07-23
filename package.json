@@ -16,7 +16,6 @@
     "firebase-admin": "^10.3.0",
     "identity-obj-proxy": "^3.0.0",
     "leaflet": "^1.7.1",
-    "leaflet-offline": "^1.1.0",
     "localforage": "^1.10.0",
     "moveable-helper": "^0.4.0",
     "next": "^12.1.5",

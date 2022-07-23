@@ -1,12 +1,10 @@
-import dynamic from "next/dynamic";
 import React from "react";
-import { Badge, Image, Text } from "theme-ui";
-import { useRouter } from "next/router";
+import { Badge, Image } from "theme-ui";
 import styles from "./posterFullMapLogo.module.css";
 import { server } from "../../config";
 
 import TransitLifeCredit from "../../components/tranitLifeCredit";
-import Head from "next/head";
+import { useMap } from "./utils";
 
 export async function getServerSideProps(context) {
   const routeData = await fetch(
@@ -23,26 +21,12 @@ export async function getServerSideProps(context) {
   };
 }
 
-export default function Page(props) {
-  const router = useRouter();
-  const { routeID } = router.query;
-
-  const routeData = JSON.parse(props.routeData.routeData);
-  const routeDesignConfig = JSON.parse(props.routeDesignConfig.routeData);
-
-  const Map = React.useMemo(
-    () =>
-      dynamic(
-        () => import("../../components/map"), // replace '@components/map' with your component's location
-        {
-          loading: () => <p>A map is loading</p>,
-          ssr: false, // This line is important. It's what prevents server-side render
-        }
-      ),
-    [
-      /* list variables which should trigger a re-render here */
-    ]
-  );
+export default function Page({
+  routeData,
+  routeDesignConfig,
+  isInEditMode,
+}) {
+  const GeoMap = useMap();
 
   const getDescriptionDetailElement = (detail: string, isFirst: boolean) => (
     <div>
@@ -61,100 +45,90 @@ export default function Page(props) {
       </Badge>
     </div>
   );
-  const PosterTemaple = () =>
-    React.useMemo(() => {
-      if (routeID) {
-        return (
-          <div>
-            {" "}
-            <Head>
-              <title>{routeID}</title>
-            </Head>
-            <div className={styles.posterContainer}>
+  const PosterFullMapLogo = () => (
+    <div className={styles.posterContainer}>
+      <div
+        className={styles.header}
+        style={{ backgroundColor: routeDesignConfig.backgroundColor }}
+      >
+        <div className={styles.title}>
+          <div className={styles.lineDetails}>
+            <div className={styles.lineNameNoLogo}>
               <div
-                className={styles.header}
-                style={{ backgroundColor: routeDesignConfig.backgroundColor }}
-              >
-                <div className={styles.title}>
-                  <div className={styles.lineDetails}>
-                    <div className={styles.lineNameNoLogo}>
-                      <div
-                        className={styles.lineName}
-                        style={{
-                          fontFamily: routeDesignConfig.font,
-                          fontSize: routeDesignConfig.routeTitleSize || 80,
-                        }}
-                      >
-                        {routeDesignConfig.routeName}
-                      </div>
-                      <div
-                        className={styles.lineTypeDesc}
-                        style={{
-                          fontFamily: routeDesignConfig.font,
-                          fontSize: routeDesignConfig.routeTitleSize || 80,
-                        }}
-                      >
-                        {`${routeDesignConfig.routeType} ${routeDesignConfig.routeDesc}`}
-                      </div>
-                    </div>
-                  </div>
-                  <div className={styles.descriptionDetails}>
-                    {getDescriptionDetailElement(
-                      routeDesignConfig.numberOfStopsText,
-                      true
-                    )}
-                    {getDescriptionDetailElement(
-                      routeDesignConfig.locationText,
-                      false
-                    )}
-                    {getDescriptionDetailElement(
-                      routeDesignConfig.launchDateText,
-                      false
-                    )}
-                  </div>
-                </div>
-              </div>
-              <div
-                className={styles.mapContainer}
+                className={styles.lineName}
                 style={{
-                  position: "relative",
+                  fontFamily: routeDesignConfig.font,
+                  fontSize: routeDesignConfig.routeTitleSize || 80,
                 }}
               >
-                <Map
-                  multiPolyLine={routeData.multiPolyLine}
-                  showGeoLayer={false}
-                  stops={routeData.stops}
-                  backgroundColor={routeDesignConfig.backgroundColor}
-                  tileLayerName={routeDesignConfig.tileLayerName}
-                  pathColor={routeDesignConfig.pathColor}
-                  mapZoom={routeDesignConfig.mapZoom + 0.5} //As we have more space to show the route
-                  font={routeDesignConfig.font}
-                  smoothFactor={8}
-                  showMarkers
-                />
-                <div
-                  style={{
-                    position: "absolute",
-                    top: `${routeDesignConfig.agencyLogoTop}px`,
-                    right: `${routeDesignConfig.agencyLogoRight}px`,
-                  }}
-                >
-                  <Image
-                    src={routeDesignConfig.agencyLogoPath}
-                    sx={{
-                      width: routeDesignConfig.agencyLogoWidth,
-                      height: routeDesignConfig.agencyLogoHeight,
-                    }}
-                  ></Image>
-                </div>
+                {routeDesignConfig.routeName}
               </div>
-              <div className={styles.transitLifeCred}>
-                <TransitLifeCredit />
+              <div
+                className={styles.lineTypeDesc}
+                style={{
+                  fontFamily: routeDesignConfig.font,
+                  fontSize: routeDesignConfig.routeTitleSize || 80,
+                }}
+              >
+                {`${routeDesignConfig.routeType} ${routeDesignConfig.routeDesc}`}
               </div>
             </div>
           </div>
-        );
-      }
-    }, [routeID]);
-  return <PosterTemaple />;
+          <div className={styles.descriptionDetails}>
+            {getDescriptionDetailElement(
+              routeDesignConfig.numberOfStopsText,
+              true
+            )}
+            {getDescriptionDetailElement(
+              routeDesignConfig.locationText,
+              false
+            )}
+            {getDescriptionDetailElement(
+              routeDesignConfig.launchDateText,
+              false
+            )}
+          </div>
+        </div>
+      </div>
+      <div
+        className={styles.mapContainer}
+        style={{
+          position: "relative",
+        }}
+      >
+        <GeoMap
+          multiPolyLine={routeData.multiPolyLine}
+          showGeoLayer={false}
+          stops={routeData.stops}
+          backgroundColor={routeDesignConfig.backgroundColor}
+          tileLayerName={routeDesignConfig.tileLayerName}
+          pathColor={routeDesignConfig.pathColor}
+          mapZoom={routeDesignConfig.mapZoom + 0.5} //As we have more space to show the route
+          font={routeDesignConfig.font}
+          smoothFactor={8}
+          showMarkers
+          isInEditMode={isInEditMode}
+        />
+        <div
+          style={{
+            position: "absolute",
+            top: `${routeDesignConfig.agencyLogoTop}px`,
+            right: `${routeDesignConfig.agencyLogoRight}px`,
+          }}
+        >
+          <Image
+            src={routeDesignConfig.agencyLogoPath}
+            sx={{
+              width: routeDesignConfig.agencyLogoWidth,
+              height: routeDesignConfig.agencyLogoHeight,
+            }}
+          ></Image>
+        </div>
+      </div>
+      <div className={styles.transitLifeCred}>
+        <TransitLifeCredit />
+      </div>
+    </div>
+  );
+  return <PosterFullMapLogo />;
 }
