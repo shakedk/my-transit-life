@@ -36,7 +36,6 @@ export default function routeSelector(props) {
                     : transitRoute}
                 </button>
               </a>
-              {/* </div> */}
             </Link>
           );
         })}
@@ -50,15 +49,15 @@ export default function routeSelector(props) {
         <title>RouteSelector</title>
       </Head>
       <h1>Geo WITH Logo</h1>
-      {getButtonsForLink('/posters/posterGeoLogo?routeID=')}
+      {getButtonsForLink('/posters/poster?posterType=PosterGeoLogo&routeID=')}
       <h1>Geo WITH Logo Horizontal</h1>
-      {getButtonsForLink('/posters/posterGeoLogoHorizontal?routeID=')}
+      {getButtonsForLink('/posters//poster?posterType=PosterGeoLogoHorizontal&routeID=')}
       <h1>Geo WITHOUT Logo</h1>
-      {getButtonsForLink('/posters/posterGeoNoLogo?routeID=')}
+      {getButtonsForLink('/posters//poster?posterType=PosterGeoNoLogo&routeID=')}
       <h1>Full Poster + Logo</h1>
-      {getButtonsForLink('/posters/posterFullMapLogo?routeID=')}
+      {getButtonsForLink('/posters/poster?posterType=PosterFullMapLogo&routeID=')}
       <h1>Big border (no logo)</h1>
-      {getButtonsForLink('/posters/posterBigFrameNoLogo?routeID=')}
+      {getButtonsForLink('/posters/poster?posterType=PosterBigFrameNoLogo&routeID=')}
     </>
   );
 }

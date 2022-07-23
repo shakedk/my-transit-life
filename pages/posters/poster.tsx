@@ -15,8 +15,9 @@ export async function getServerSideProps(context) {
   const routeData = await fetch(
     `${server}/api/routeData?routeID=${context.query.routeID}`
   );
+
   const routeDesignConfig = await fetch(
-    `${server}/api/routeDesignConfigGeoLogoHorizontal?routeID=${context.query.routeID}`
+    `${server}/api/routeDesignConfig${context.query.posterType.replace('Poster', '')}?routeID=${context.query.routeID}`
   );
   return {
     props: {

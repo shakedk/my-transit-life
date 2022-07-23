@@ -6,21 +6,6 @@ import { server } from "../../config";
 import TransitLifeCredit from "../../components/tranitLifeCredit";
 import { useMap } from "./utils";
 
-export async function getServerSideProps(context) {
-  const routeData = await fetch(
-    `${server}/api/routeData?routeID=${context.query.routeID}`
-  );
-  const routeDesignConfig = await fetch(
-    `${server}/api/routeDesignConfigFullMapLogo?routeID=${context.query.routeID}`
-  );
-  return {
-    props: {
-      routeData: await routeData.json(),
-      routeDesignConfig: await routeDesignConfig.json(),
-    }, // will be passed to the page component as props
-  };
-}
-
 export default function Page({
   routeData,
   routeDesignConfig,
