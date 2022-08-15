@@ -151,23 +151,25 @@ const RouteMap = ({
   const [posterID, setPosterID] = useState(null);
   const [stopDataFromDB, setStopDataFromDB] = useState(null);
 
-  const getTileLayer = (tileLayerName) => {
-    switch (tileLayerName) {
-      case "StamenToner":
-        return (
-          <TileLayer
-            opacity={0.4}
-            attribution='Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            url="https://stamen-tiles-{s}.a.ssl.fastly.net/toner/{z}/{x}/{y}{r}.png"
-            subdomains="abcd"
-            minZoom={0}
-            maxZoom={20}
-          />
-        );
-      default:
-        break;
-    }
-  };
+  const tileNameToUrl = 
+  {
+    StamenToner: "https://stamen-tiles-{s}.a.ssl.fastly.net/toner/{z}/{x}/{y}{r}.png",
+    StamenTonerLite: "https://stamen-tiles-{s}.a.ssl.fastly.net/toner-lite/{z}/{x}/{y}{r}.png",
+    StamenTonerLines: "https://stamen-tiles-{s}.a.ssl.fastly.net/toner-lines/{z}/{x}/{y}{r}.png",
+    StamenTerrainLines: "https://stamen-tiles-{s}.a.ssl.fastly.net/terrain-lines/{z}/{x}/{y}{r}.png",
+    CartoDBLiteNoLabels: "http://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png"
+  }
+  const getTileLayer = (tileLayerName) => (
+    <TileLayer
+      opacity={0.8}
+      attribution='Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      url={tileNameToUrl[tileLayerName]}
+      subdomains="abcd"
+      minZoom={0}
+      maxZoom={20}
+    />
+  );
+
   const stopPropetiesChanedHandler = (
     stopID: string,
     label_lat: number,

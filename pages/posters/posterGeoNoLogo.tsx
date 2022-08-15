@@ -80,6 +80,7 @@ export default function Page({
         </div>
       </div>
       <div className={styles.mapContainer}>
+    
         <GeoMap
           multiPolyLine={routeData.multiPolyLine}
           stops={routeData.stops}
@@ -89,7 +90,7 @@ export default function Page({
           mapZoom={routeDesignConfig.mapZoom}
           isInEditMode={isInEditMode} 
           font={routeDesignConfig.font}
-           showGeoLayer={false}
+           showGeoLayer={true}
           smoothFactor={undefined} 
           showMarkers={undefined} />
       </div>

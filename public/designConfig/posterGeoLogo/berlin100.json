@@ -1,0 +1,32 @@
+{
+  "backgroundColor": "#EF3F6A",
+
+  "tileLayerName": "StamenTonerLines",
+
+  "pathColor": "Snow",
+
+  "font": "Helvetica",
+
+  "routeType": "100",
+  "routeTitleSize": 35,
+
+  "routeName": "Route",
+
+  "routeDesc": "S+U Zoologischer Garten/Jebensstr. - Memhardstr.",
+
+  "numberOfStopsText": "NUMBER OF STOPS: 61",
+
+  "locationText": "NEW YORK CITY, NY, USA",
+  "launchDateText": "SINCE NOVEMBER 26, 1904",
+
+  "logoPath": "../../logos/nyc/nyc 2 train logo.svg",
+
+  "agencyLogoPath": "../../logos/nyc/MTA logo.svg",
+
+  "agencyLogoWidth": 120,
+  "agencyLogoHeight": 120,
+  "agencyLogoTop": 20,
+  "agencyLogoRight": 20,
+
+  "mapZoom": 14
+}
