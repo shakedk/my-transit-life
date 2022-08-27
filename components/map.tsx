@@ -1,14 +1,5 @@
-import {
-  MapContainer,
-  Pane,
-  useMapEvents,
-  TileLayer,
-  Marker,
-  Polyline,
-  Tooltip,
-  Popup,
-} from "react-leaflet";
-import React, { useState, useMemo, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { MapContainer, Marker, Pane, Polyline, TileLayer } from "react-leaflet";
 
 import "leaflet/dist/leaflet.css";
 import { useRouter } from "next/router";
@@ -16,12 +7,11 @@ import { getPosterIDInDB } from "../pages/posters/utils";
 
 import StopLabel from "./stopLabel";
 // import StopLabel, { StopType } from "./stopLabelNew";
-import PropTypes from "prop-types";
-import { Icon } from "leaflet";
 import axios from "axios";
-import styles from "./map.module.css";
-import { Textarea } from "@theme-ui/components";
+import { Icon } from "leaflet";
+import PropTypes from "prop-types";
 import { StopType } from "./stopLabel";
+import { redirect } from "next/dist/server/api-utils";
 
 // const StopLabels = ({ stops, font, posterID }) => {
 //   const [labels, setLabels] = useState(null);
@@ -135,33 +125,47 @@ const RouteMap = ({
   multiPolyLine,
   stops,
   backgroundColor,
+  mapOpacity,
   tileLayerName,
   pathColor,
+  pathWeight,
   mapZoom,
   font,
   showGeoLayer,
   smoothFactor,
   showMarkers,
   isInEditMode,
+  stopFontSize,
+  stopFontColor,
+  stopCircleSize,
+  stopBackgroundColor
 }) => {
   /**
    * Lat Lon markers, leave here for testing lat lon vs. xy positions
    */
 
   const [posterID, setPosterID] = useState(null);
-  const [stopDataFromDB, setStopDataFromDB] = useState(null);
+  const [stopDataFromDB, setStopDataFromDB] = useState({});
 
-  const tileNameToUrl = 
-  {
-    StamenToner: "https://stamen-tiles-{s}.a.ssl.fastly.net/toner/{z}/{x}/{y}{r}.png",
-    StamenTonerLite: "https://stamen-tiles-{s}.a.ssl.fastly.net/toner-lite/{z}/{x}/{y}{r}.png",
-    StamenTonerLines: "https://stamen-tiles-{s}.a.ssl.fastly.net/toner-lines/{z}/{x}/{y}{r}.png",
-    StamenTerrainLines: "https://stamen-tiles-{s}.a.ssl.fastly.net/terrain-lines/{z}/{x}/{y}{r}.png",
-    CartoDBLiteNoLabels: "http://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png"
-  }
+  const tileNameToUrl = {
+    StamenToner:
+      "https://stamen-tiles-{s}.a.ssl.fastly.net/toner/{z}/{x}/{y}{r}.png",
+    StamenTonerLite:
+      "https://stamen-tiles-{s}.a.ssl.fastly.net/toner-lite/{z}/{x}/{y}{r}.png",
+    StamenTonerLines:
+      "https://stamen-tiles-{s}.a.ssl.fastly.net/toner-lines/{z}/{x}/{y}{r}.png",
+    StamenTonerBackground:
+      "https://stamen-tiles-{s}.a.ssl.fastly.net/toner-background/{z}/{x}/{y}{r}.png",
+    StamenTerrainLines:
+      "https://stamen-tiles-{s}.a.ssl.fastly.net/terrain-lines/{z}/{x}/{y}{r}.png",
+    StamenHybrid:
+      "https://stamen-tiles-{s}.a.ssl.fastly.net/toner-hybrid/{z}/{x}/{y}{r}.png",
+    CartoDBLiteNoLabels:
+      "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
+  };
   const getTileLayer = (tileLayerName) => (
     <TileLayer
-      opacity={0.8}
+      opacity={mapOpacity || 0.5}
       attribution='Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
       url={tileNameToUrl[tileLayerName]}
       subdomains="abcd"
@@ -171,6 +175,7 @@ const RouteMap = ({
   );
 
   const stopPropetiesChanedHandler = (
+    posterID: string,
     stopID: string,
     label_lat: number,
     label_lon: number,
@@ -180,7 +185,7 @@ const RouteMap = ({
     stopModifiedName: string
   ) => {
     const params = {
-      posterID,
+      posterID: posterID,
     };
     params[stopID] = {
       stopOriginalName,
@@ -190,42 +195,47 @@ const RouteMap = ({
       labelWidth,
       labelHeight,
     };
-    // console.log(params);
+
     axios.put(`/api/poster/${posterID}`, params);
   };
-
+  const router = useRouter();
   useEffect(() => {
     async function getData() {
-      const posterType = router.pathname.replace("/posters/", "");
+      const posterType = router.query.posterType;
       const _routeID = router.query.routeID;
       const id = await getPosterIDInDB(posterType, _routeID);
 
       const res = await axios.get(`/api/poster/${id}`);
       setPosterID(id);
-      setStopDataFromDB(res.data);
+      setStopDataFromDB(res.data || {});
     }
     getData();
-  }, [posterID]);
-  const labels =
-    stopDataFromDB &&
-    stops.map((stop) => (
-      <StopLabel
-        key={stop.stop_id}
-        stop={stop}
-        // stopDataFromDB={stopDataFromDB}
-        markerLat={stopDataFromDB[stop.stop_id]?.label_lat || stop.stop_lat}
-        markerLon={stopDataFromDB[stop.stop_id]?.label_lon || stop.stop_lon}
-        labelWidthFromDB={stopDataFromDB[stop.stop_id]?.labelWidth}
-        labelHeightFromDB={stopDataFromDB[stop.stop_id]?.labelHeight}
-        stopModifiedName={
-          stopDataFromDB[stop.stop_id]?.stopModifiedName || stop.stop_name
-        }
-        stopPropetiesChanedHandler={stopPropetiesChanedHandler}
-        stopOriginalName={stop.stop_name}
-        font={font}
-        isInEditMode={isInEditMode}
-      />
-    ));
+  }, [router.query]);
+  const labels = useMemo(() => {
+    return stopDataFromDB &&
+      stops.map((stop) => (
+        <StopLabel
+          posterID={posterID}
+          key={stop.stop_id}
+          stop={stop}
+          // stopDataFromDB={stopDataFromDB}
+          markerLat={stopDataFromDB[stop.stop_id]?.label_lat || stop.stop_lat}
+          markerLon={stopDataFromDB[stop.stop_id]?.label_lon || stop.stop_lon}
+          labelWidthFromDB={stopDataFromDB[stop.stop_id]?.labelWidth}
+          labelHeightFromDB={stopDataFromDB[stop.stop_id]?.labelHeight}
+          stopModifiedName={
+            stopDataFromDB[stop.stop_id]?.stopModifiedName || stop.stop_name
+          }
+          stopPropetiesChanedHandler={stopPropetiesChanedHandler}
+          stopOriginalName={stop.stop_name}
+          font={font}
+          fontSize={stopFontSize}
+          stopColor={stopFontColor}
+          isInEditMode={isInEditMode}
+          stopBackgroundColor={stopBackgroundColor}
+        />
+      ));
+  }, [stopDataFromDB, posterID, stops]);
   const circleMarkers = stops.map((stop) => {
     return (
       <Marker
@@ -234,9 +244,10 @@ const RouteMap = ({
         icon={
           new Icon({
             iconUrl: "/point.svg",
-            iconSize: [300, 300],
+            iconSize: [stopCircleSize || 300, stopCircleSize|| 300],
           })
         }
+        sx={{fill: "red"}}
         zIndexOffset={500}
       ></Marker>
     );
@@ -256,7 +267,6 @@ const RouteMap = ({
     }
   }, [map]);
 
-  const router = useRouter();
   // useEffect(() => {
   //   const fetchData = async () => {
   //     const posterType = router.pathname.replace("/posters/", "");
@@ -267,6 +277,7 @@ const RouteMap = ({
   //   };
   //   fetchData();
   // }, []);
+
 
   return (
     <MapContainer
@@ -289,7 +300,12 @@ const RouteMap = ({
       {showGeoLayer ? getTileLayer(tileLayerName) : null}
       <Pane name="route-path" style={{ zIndex: 499, cursor: "default" }}>
         <Polyline
-          pathOptions={{ color: pathColor, weight: 10 }}
+          pathOptions={{ color: 'snow', weight: pathWeight + 20 || 20 }}
+          positions={reverseMultiPolyLine}
+          smoothFactor={smoothFactor}
+          />
+        <Polyline
+          pathOptions={{ color: pathColor, weight: pathWeight || 10 }}
           positions={reverseMultiPolyLine}
           smoothFactor={smoothFactor}
         />
@@ -332,11 +348,17 @@ RouteMap.prototypes = {
   backgroundColor: PropTypes.string,
   tileLayerName: PropTypes.oneOf(["StamenToner", null]),
   pathColor: PropTypes.string,
+  pathWeight: PropTypes.number || null,
   mapZoom: PropTypes.number,
   font: PropTypes.string,
   showGeoLayer: PropTypes.bool,
   smoothFactor: PropTypes.number,
   showMarkers: PropTypes.bool,
+  stopFontSize: PropTypes.number,
+  stopFontColor: PropTypes.string,
+  mapOpacity: PropTypes.number,
+  stopCircleSize: PropTypes.number,
+  stopBackgroundColor: PropTypes.string
 };
 
 RouteMap.defaultProps = {

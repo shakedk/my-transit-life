@@ -1,11 +1,12 @@
 import { Badge } from "theme-ui";
-
-const TransitLifeCredit = () => {
+import PropTypes from "prop-types";
+const TransitLifeCredit = (props) => {
+  const { creditFontSize } = props;
   return (
     <Badge
       sx={{
         zIndex: 100,
-        fontSize: 15,
+        fontSize: creditFontSize,
         fontWeight: "normal",
         padding: 0,
         fontFamily: "Oswald",
@@ -19,4 +20,7 @@ const TransitLifeCredit = () => {
   );
 };
 
+TransitLifeCredit.prototype = {
+  fontSize: PropTypes.string,
+};
 export default TransitLifeCredit;
