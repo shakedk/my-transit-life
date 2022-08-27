@@ -1,17 +1,10 @@
-import React from "react";
 import { Badge } from "theme-ui";
 import styles from "./posterBigFrameNoLogo.module.css";
-import { server } from "../../config";
 
 import TransitLifeCredit from "../../components/tranitLifeCredit";
 import { useMap } from "./utils";
 
-
-export default function Page({
-  routeData,
-  routeDesignConfig,
-  isInEditMode,
-}) {
+export default function Page({ routeData, routeDesignConfig, isInEditMode }) {
   const GeoMap = useMap();
 
   const getDescriptionDetailElement = (detail: string, isLast: boolean) => (
@@ -24,7 +17,7 @@ export default function Page({
           padding: 0,
           paddingBottom: 2,
           fontFamily: routeDesignConfig.font,
-          color: 'black'
+          color: "black",
         }}
         bg="transparent"
       >
@@ -51,7 +44,8 @@ export default function Page({
           font={routeDesignConfig.font}
           smoothFactor={8}
           showMarkers
-          isInEditMode={isInEditMode} />
+          isInEditMode={isInEditMode}
+        />
       </div>
       <div
         className={styles.header}
@@ -82,21 +76,17 @@ export default function Page({
           </div>
           <div className={styles.descriptionDetails}>
             {getDescriptionDetailElement(
-              routeDesignConfig.numberOfStopsText,
+              routeDesignConfig.descriptionDetails.numberOfStopsText,
               false
             )}
-            <div className={styles.descriptionDetailDeivider}>
-              {"|"}
-            </div>
+            <div className={styles.descriptionDetailDeivider}>{"|"}</div>
             {getDescriptionDetailElement(
-              routeDesignConfig.locationText,
+              routeDesignConfig.descriptionDetails.launchDateText,
               false
             )}
-            <div className={styles.descriptionDetailDeivider}>
-              {"|"}
-            </div>
+            <div className={styles.descriptionDetailDeivider}>{"|"}</div>
             {getDescriptionDetailElement(
-              routeDesignConfig.launchDateText,
+              routeDesignConfig.descriptionDetails.launchDateText,
               true
             )}
           </div>
@@ -107,6 +97,6 @@ export default function Page({
         <TransitLifeCredit />
       </div>
     </div>
-  )
+  );
   return <PosterBigFrameNoLogo />;
 }

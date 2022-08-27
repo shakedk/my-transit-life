@@ -13,10 +13,12 @@
 
   "routeDesc": "Queens Boulevard Express",
   "routeTitleSize": 62,
-  "numberOfStopsText": "NUMBER OF STOPS: 39",
+  "descriptionDetails": {
+    "numberOfStopsText": "NUMBER OF STOPS: 39",
 
-  "locationText": "NEW YORK CITY, NY, USA",
-  "launchDateText": "SINCE DECEMBER 15, 1940",
+    "locationText": "NEW YORK CITY, NY, USA",
+    "launchDateText": "SINCE DECEMBER 15, 1940"
+  },
 
   "logoPath": "../../logos/nyc/F line logo.svg",
 

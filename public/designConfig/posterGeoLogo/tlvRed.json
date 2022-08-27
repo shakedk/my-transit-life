@@ -15,10 +15,12 @@
 
   "routeTitleSize": 100,
 
-  "numberOfStopsText": "NUMBER OF STATIONS: 34",
+  "descriptionDetails": {
+    "numberOfStopsText": "NUMBER OF STATIONS: 34",
 
-  "locationText": "TEL AVIV, ISRAEL",
-  "launchDateText": "SINCE NOVEMBER 1, 2022",
+    "locationText": "TEL AVIV, ISRAEL",
+    "launchDateText": "SINCE NOVEMBER 1, 2022"
+  },
 
   "logoPath": "",
   "logoHeight": 120,

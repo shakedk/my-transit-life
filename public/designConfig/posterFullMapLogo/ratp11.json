@@ -13,10 +13,12 @@
 
   "routeDesc": "du métro de Paris",
 
-  "numberOfStopsText": "Points d’arrêt: 13",
+  "descriptionDetails": {
+    "numberOfStopsText": "Points d’arrêt: 13",
 
-  "locationText": "Paris, Île-de-France, France",
-  "launchDateText": "Depuis le 28 avril 1935",
+    "locationText": "Paris, Île-de-France, France",
+    "launchDateText": "Depuis le 28 avril 1935"
+  },
   "routeTitleSize": 80,
   "logoPath": "../../logos/ratp/RATP_11.svg",
 
