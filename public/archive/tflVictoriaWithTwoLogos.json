@@ -49,11 +49,12 @@
 
   "routeDesc": "",
 
-  "numberOfStopsText": "NUMBER OF STATIONS: 16",
+  "descriptionDetails": {
+    "numberOfStopsText": "NUMBER OF STATIONS: 16",
 
-  "locationText": "LONDON, UK",
-  "launchDateText": "SINCE SEPTEMBER 1, 1968",
-
+    "locationText": "LONDON, UK",
+    "launchDateText": "SINCE SEPTEMBER 1, 1968"
+  },
   "logoPath": "../../logos/tfl/Victoria Line Logo.svg",
   "logoHeight": 120,
   "logoWidth": 220,

@@ -1,16 +1,10 @@
-import React from "react";
 import { Badge, Image } from "theme-ui";
 import styles from "./posterFullMapLogo.module.css";
-import { server } from "../../config";
 
 import TransitLifeCredit from "../../components/tranitLifeCredit";
 import { useMap } from "./utils";
 
-export default function Page({
-  routeData,
-  routeDesignConfig,
-  isInEditMode,
-}) {
+export default function Page({ routeData, routeDesignConfig, isInEditMode }) {
   const GeoMap = useMap();
 
   const getDescriptionDetailElement = (detail: string, isFirst: boolean) => (
@@ -61,15 +55,15 @@ export default function Page({
           </div>
           <div className={styles.descriptionDetails}>
             {getDescriptionDetailElement(
-              routeDesignConfig.numberOfStopsText,
+              routeDesignConfig.descriptionDetails.numberOfStopsText,
               true
             )}
             {getDescriptionDetailElement(
-              routeDesignConfig.locationText,
+              routeDesignConfig.descriptionDetails.launchDateText,
               false
             )}
             {getDescriptionDetailElement(
-              routeDesignConfig.launchDateText,
+              routeDesignConfig.descriptionDetails.launchDateText,
               false
             )}
           </div>

@@ -13,10 +13,12 @@
 
   "routeDesc": "",
 
-  "numberOfStopsText": "NUMBER OF STATIONS: 41",
+  "descriptionDetails": {
+    "numberOfStopsText": "NUMBER OF STATIONS: 41",
 
-  "locationText": "LONDON, UK",
-  "launchDateText": "SINCE MAY 2022",
+    "locationText": "LONDON, UK",
+    "launchDateText": "SINCE MAY 2022"
+  },
 
   "agencyLogoPath": "../../logos/tfl/Elizabeth line logo.svg",
 

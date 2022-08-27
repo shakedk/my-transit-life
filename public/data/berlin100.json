@@ -467,10 +467,10 @@
 
   "stops": [
     {
-      "stop_id": "070101002758",
-      "stop_name": "S+U Zoologischer Garten Bhf",
-      "stop_lat": 13.332707,
-      "stop_lon": 52.506921
+      "stop_id": "070101006006",
+      "stop_name": "Brandenburger Tor",
+      "stop_lat": 52.516511,
+      "stop_lon": 13.381937
     }
   ]
 }

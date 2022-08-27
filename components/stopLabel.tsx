@@ -1,36 +1,58 @@
 import PropTypes from "prop-types";
-import React, { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Textarea } from "theme-ui";
-
-
+import Color from 'color';
 import { Marker, Tooltip } from "react-leaflet";
 
 import { Icon } from "leaflet";
 
 import styles from "./stopLabel.module.css";
 const StopLabel = ({
+  posterID,
   stopModifiedName,
   stopPropetiesChanedHandler,
   stop,
   stopOriginalName,
-
   markerLat,
   markerLon,
   labelWidthFromDB,
   labelHeightFromDB,
   font,
+  fontSize,
+  stopColor,
+  stopBackgroundColor,
 
   isInEditMode,
 }) => {
   // CHANGE ANY!
   // CHANGE ANY!
   // CHANGE ANY!
+
   const [stopProps, setStopProps] = useState<any>({
     label: stopModifiedName,
     labelWidth: labelWidthFromDB,
     labelHeight: labelHeightFromDB,
     position: [markerLat, markerLon],
   });
+
+  useEffect(() => {
+    // Must update the state to change in props triggers re-render
+    setStopProps((oldState) => {
+      return {
+        ...oldState,
+        label: stopModifiedName,
+        labelWidth: labelWidthFromDB,
+        labelHeight: labelHeightFromDB,
+        position: [markerLat, markerLon],
+      };
+    });
+  }, [
+    stopModifiedName,
+    labelWidthFromDB,
+    labelHeightFromDB,
+    markerLat,
+    markerLon,
+  ]);
   const markerRef = useRef(null);
   const tooltipRef = useRef(null);
 
@@ -43,6 +65,7 @@ const StopLabel = ({
 
           setStopProps((oldState) => {
             stopPropetiesChanedHandler(
+              posterID,
               stop.stop_id,
               newPosition.lat,
               newPosition.lng,
@@ -59,8 +82,9 @@ const StopLabel = ({
         }
       },
     }),
-    []
+    [posterID]
   );
+
   return (
     <Marker
       key={stop.stop_id}
@@ -78,7 +102,7 @@ const StopLabel = ({
           iconSize: isInEditMode ? [300, 300] : [100, 100],
         })
       }
-      zIndexOffset={600}
+      zIndexOffset={1000}
       eventHandlers={eventHandlers}
     >
       {/* Edit seems to work, add movability and width and height and send to DB */}
@@ -94,10 +118,12 @@ const StopLabel = ({
             <Textarea
               value={stopProps.label}
               disabled={!isInEditMode}
+              backgroundColor={ stopBackgroundColor && Color(stopBackgroundColor).alpha(0.7).string()}
+              
               onChange={(e) => {
-
                 setStopProps((oldState) => {
                   stopPropetiesChanedHandler(
+                    posterID,
                     stop.stop_id,
                     oldState.position[0],
                     oldState.position[1],
@@ -114,10 +140,9 @@ const StopLabel = ({
               }}
               onMouseUp={(e) => {
                 if (isInEditMode) {
-
                   setStopProps((oldState) => {
-
                     stopPropetiesChanedHandler(
+                      posterID,
                       stop.stop_id,
                       oldState.position[0],
                       oldState.position[1],
@@ -146,12 +171,14 @@ const StopLabel = ({
                 padding: 0,
                 width: stopProps.labelWidth || "min-content",
                 height: stopProps.labelHeight || "min-content",
-                fontSize: 40,
+                fontSize: fontSize || 40,
+                fontWeight: "bold",
                 fontFamily: font || "Helvetica",
-                color: "#FFFFFF",
+                color: stopColor || "#FFFFFF",
                 zIndex: 500,
                 border: isInEditMode ? "2 solid black" : "none",
                 textAlign: "center",
+                borderRadius: 50
               }}
             ></Textarea>
           </Tooltip>
@@ -172,6 +199,7 @@ StopLabel.propTypes = {
   stopModifiedName: PropTypes.string.isRequired,
   stopPropetiesChanedHandler: PropTypes.func.isRequired,
   stop: StopType,
+  posterID: PropTypes.string,
   stopOriginalName: PropTypes.string.isRequired,
 
   markerLat: PropTypes.number.isRequired,
@@ -179,8 +207,7 @@ StopLabel.propTypes = {
   labelWidthFromDB: PropTypes.number,
   labelHeightFromDB: PropTypes.number,
   font: PropTypes.string.isRequired,
-
-  isInEditMode:PropTypes.bool.isRequired
-
+  stopBackgroundColor: PropTypes.string,
+  isInEditMode: PropTypes.bool.isRequired,
 };
 export default StopLabel;

@@ -12,10 +12,12 @@
   "routeType": "Line",
   "routeDesc": "",
 
-  "numberOfStopsText": "NUMBER OF STATIONS: 16",
+  "descriptionDetails": {
+    "numberOfStopsText": "NUMBER OF STATIONS: 16",
 
-  "locationText": "LONDON, UK",
-  "launchDateText": "SINCE SEPTEMBER 1, 1968",
+    "locationText": "LONDON, UK",
+    "launchDateText": "SINCE SEPTEMBER 1, 1968"
+  },
 
   "agencyLogoWidth": 350,
   "agencyLogoHeight": 231,

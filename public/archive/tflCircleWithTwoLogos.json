@@ -68,11 +68,12 @@
 
   "routeDesc": "",
 
-  "numberOfStopsText": "NUMBER OF STATIONS: 36",
+  "descriptionDetails": {
+    "numberOfStopsText": "NUMBER OF STATIONS: 36",
 
-  "locationText": "LONDON, UK",
-  "launchDateText": "SINCE 1863",
-
+    "locationText": "LONDON, UK",
+    "launchDateText": "SINCE 1863"
+  },
   "logoPath": "../../logos/tfl/Circle Line Logo.svg",
   "logoHeight": 120,
   "logoWidth": 220,

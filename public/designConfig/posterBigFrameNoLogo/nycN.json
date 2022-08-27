@@ -12,10 +12,12 @@
   "routeName": "N",
   "routeDesc": "Broadway Express",
 
-  "numberOfStopsText": "NUMBER OF STOPS: 45",
+  "descriptionDetails": {
+    "numberOfStopsText": "NUMBER OF STOPS: 45",
 
-  "locationText": "NEW YORK CITY, NY, USA",
-  "launchDateText": "SINCE JUNE 22, 1915",
+    "locationText": "NEW YORK CITY, NY, USA",
+    "launchDateText": "SINCE JUNE 22, 1915"
+  },
 
   "logoPath": "../../logos/nyc/N line logo.svg",
 

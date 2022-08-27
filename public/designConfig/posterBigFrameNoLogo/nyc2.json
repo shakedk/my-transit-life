@@ -13,10 +13,12 @@
 
   "routeDesc": "7th Avenue Express",
 
-  "numberOfStopsText": "NUMBER OF STOPS: 61",
+  "descriptionDetails": {
+    "numberOfStopsText": "NUMBER OF STOPS: 61",
 
-  "locationText": "NEW YORK CITY, NY, USA",
-  "launchDateText": "SINCE NOVEMBER 26, 1904",
+    "locationText": "NEW YORK CITY, NY, USA",
+    "launchDateText": "SINCE NOVEMBER 26, 1904"
+  },
 
   "logoPath": "../../logos/nyc/nyc 2 train logo.svg",
 
