@@ -1,0 +1,34 @@
+{
+  "backgroundColor": "#8E5E25",
+
+  "tileLayerName": "StamenToner",
+
+  "pathColor": "Snow",
+
+  "font": "Parisine",
+
+  "routeType": "",
+
+  "routeName": "Ligne 11",
+
+  "routeDesc": "du métro de Paris",
+
+  "descriptionDetails": {
+    "numberOfStopsText": "Points d’arrêt: 13",
+
+    "locationText": "Paris, Île-de-France, France",
+    "launchDateText": "Depuis le 28 avril 1935"
+  },
+  "routeTitleSize": 80,
+  "logoPath": "../../logos/ratp/RATP_11.svg",
+
+  "agencyLogoPath": "../../logos/ratp/RATP Metro logo.svg",
+  "logoPadding": "10px",
+  "lineDetailsFontSize": 20,
+  "agencyLogoWidth": 200,
+  "agencyLogoHeight": 200,
+  "agencyLogoTop": 20,
+  "agencyLogoRight": 20,
+
+  "mapZoom": 14
+}

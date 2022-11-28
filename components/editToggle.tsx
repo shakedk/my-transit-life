@@ -1,12 +1,13 @@
+/* eslint-disable react/prop-types */
 
-import React, { useCallback, useEffect, useRef, useState } from "react";
 
-import { Button } from 'theme-ui'
-
-const EditToggle = ({ isInEditMode, setIsInEditMode }) => {
+import { Button } from 'theme-ui';
+import React from 'react';
+ 
+const EditToggle = ({ isInEditMode, setIsInEditMode, isPrintMode }) => {
   return (
     <Button
-    onClick={() => {
+      onClick={() => {
         setIsInEditMode(!isInEditMode);
       }}
     >

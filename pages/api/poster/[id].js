@@ -8,10 +8,13 @@ export default async (req, res) => {
       await db
         .collection("posters")
         .doc(id)
-        .update({
-          ...req.body,
-          updated: new Date().toISOString(),
-        });
+        .set(
+          {
+            ...req.body,
+            updated: new Date().toISOString(),
+          },
+          { merge: true }
+        );
     } else if (req.method === "GET") {
       const doc = await db.collection("posters").doc(id).get();
       if (!doc.exists) {
@@ -24,7 +27,6 @@ export default async (req, res) => {
     }
     res.status(200).end();
   } catch (e) {
-    console.log("Shaked", e);
     res.status(400).end();
   }
 };

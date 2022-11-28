@@ -1,0 +1,23 @@
+{
+  "backgroundColor": "#FF6319",
+
+  "tileLayerName": "StamenToner",
+
+  "pathColor": "Snow",
+
+  "font": "Helvetica",
+
+  "routeType": " Train",
+
+  "routeName": "F",
+  "routeNameAndTypeSize": 400,
+  "lineDetailsFontSize": 1000,
+
+  "routeDesc": "Queens Boulevard Express",
+  "routeTitleSize": 200,
+
+  "stopFontSize": 100,
+  "stopCircleSize": 800,
+  "mapZoom": 16,
+  "creditFontSize": 70
+}

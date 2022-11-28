@@ -1,9 +1,8 @@
-import React from "react";
 import Link from "next/link";
 
-import styles from "./routeSelector.module.css";
-import { server } from "../config";
 import Head from "next/head";
+import { server } from "../config";
+import styles from "./routeSelector.module.css";
 
 export async function getServerSideProps(context) {
   const routeList = await fetch(`${server}/api/listOfRoutes`);
@@ -21,6 +20,7 @@ export default function routeSelector(props) {
     nycN: "NYC - N Train",
     tflVictoria: "London Victoria Line",
     tflCircle: "London Circle Line",
+    tflNorthern: "London Northern Line",
   };
 
   function getButtonsForLink(link: string) {
@@ -49,15 +49,23 @@ export default function routeSelector(props) {
         <title>RouteSelector</title>
       </Head>
       <h1>Geo WITH Logo</h1>
-      {getButtonsForLink('/posters/poster?posterType=PosterGeoLogo&routeID=')}
+      {getButtonsForLink("/posters/poster?posterType=PosterGeoLogo&routeID=")}
       <h1>Geo WITH Logo Horizontal</h1>
-      {getButtonsForLink('/posters//poster?posterType=PosterGeoLogoHorizontal&routeID=')}
+      {getButtonsForLink(
+        "/posters//poster?posterType=PosterGeoLogoHorizontal&routeID="
+      )}
       <h1>Geo WITHOUT Logo</h1>
-      {getButtonsForLink('/posters//poster?posterType=PosterGeoNoLogo&routeID=')}
+      {getButtonsForLink(
+        "/posters//poster?posterType=PosterGeoNoLogo&routeID="
+      )}
       <h1>Full Poster + Logo</h1>
-      {getButtonsForLink('/posters/poster?posterType=PosterFullMapLogo&routeID=')}
+      {getButtonsForLink(
+        "/posters/poster?posterType=PosterFullMapLogo&routeID="
+      )}
       <h1>Big border (no logo)</h1>
-      {getButtonsForLink('/posters/poster?posterType=PosterBigFrameNoLogo&routeID=')}
+      {getButtonsForLink(
+        "/posters/poster?posterType=PosterBigFrameNoLogo&routeID="
+      )}
     </>
   );
 }

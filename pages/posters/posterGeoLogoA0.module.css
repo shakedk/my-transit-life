@@ -1,0 +1,102 @@
+.posterContainer {
+  border: 200px GhostWhite solid;
+  background: white;
+  height: 7016px;
+  width: 4960px;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  height: 13%;
+  position: relative;
+}
+
+.mapContainer {
+  height: 87%;
+}
+
+.headerNoDescriptionDetails {
+  height: 15%;
+  position: relative;
+}
+
+.mapContainerNoDescriptionDetails {
+  height: 85%;
+}
+
+.title {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  flex-grow: 3;
+  padding-top: 90px;
+  word-wrap: normal;
+}
+
+.lineDetails {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+}
+
+.lineDetailsNoDescriptionDetails {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  margin-top: 40px;
+}
+
+.lineNameAndLogo {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.lineNameAndLogoHeb {
+  display: flex;
+  flex-direction: row;
+  flex-direction: row-reverse;
+  width: 100%;
+  justify-content: space-around;
+}
+
+.lineNameNoLogo {
+  padding-left: 30px;
+}
+
+.descriptionDetails {
+  align-self: flex-end;
+  padding-right: 30px;
+}
+
+
+.divider {
+  height: 3px;
+  width: 95%;
+  margin-top: -40px;
+  background-color: black;
+  align-self: center;
+}
+
+
+.agencyLogo {
+  position: absolute;
+  /* right: 20px; */
+  /* top: 20px; */
+}
+
+.transitLifeCred {
+  position: absolute;
+  top: 1600px;
+  transform: rotate(270deg);
+  left: -50px;
+}
+
+.transitLifeCredNoDescriptionDetails {
+  position: absolute;
+  top: 6440px;
+  transform: rotate(270deg);
+  left: -240px;
+}

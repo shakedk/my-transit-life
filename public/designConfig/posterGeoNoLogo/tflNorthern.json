@@ -1,0 +1,31 @@
+{
+  "backgroundColor": "grey",
+
+  "tileLayerName": "StamenToner",
+
+  "pathColor": "black",
+
+  "font": "Johnston",
+  "routeTitleSize": 100,
+  "routeType": "Line",
+  "pathWeight": 10,
+  "stopCircleSize": 120,
+  "routeName": "Northern",
+
+  "routeDesc": "",
+
+  "descriptionDetails": {
+    "numberOfStopsText": "NUMBER OF STATIONS: 52",
+
+    "locationText": "LONDON, UK",
+    "launchDateText": "SINCE 1890"
+  },
+
+  "agencyLogoPath": "../../logos/tfl/Northern Line Logo.svg",
+
+  "agencyLogoWidth": 250,
+  "agencyLogoHeight": 131,
+  "agencyLogoTop": 15,
+  "agencyLogoRight": -35,
+  "mapZoom": 13
+}

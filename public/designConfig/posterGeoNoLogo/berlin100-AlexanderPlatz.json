@@ -1,0 +1,39 @@
+{
+  "backgroundColor": "#00B5E5",
+  "mapOpacity": 0.2,
+  "tileLayerName": "StamenTonerBackground",
+
+  "pathColor": "snow",
+  "stopFontColor": "#2F91B7",
+  "stopColor": "#2F91B7",
+  "stopBackgroundColor": "white",
+  "font": "FFTransit",
+
+  "routeType": "100",
+  "routeNameAndTypeSize": 400,
+  "routeTitleSize": 200,
+
+  "lineDetailsFontSize": 100,
+  "routeName": "Route",
+  "routeDesc": "Zoologischer Garten/Jebensstraße - Memhardstr.",
+  "pathWeight": 40,
+
+  "descriptionDetailsDONOTSHOW": {
+    "numberOfStopsText": "ANZHAL HALTESTELLEN: 19",
+    "locationText": "BERLIN, DEUSTCHLAND",
+    "launchDateText": "SINCE 1990"
+  },
+
+  "agencyLogoWidth": 120,
+  "agencyLogoHeight": 120,
+  "agencyLogoTop": 20,
+  "agencyLogoRight": 20,
+
+  "stopFontSize": 80,
+  "stopCircleSize": 800,
+  "mapZoom": 16,
+
+  "creditFontSize": 70,
+
+  "stopIDsToDisplayFromConfig": ["070101007153"]
+}

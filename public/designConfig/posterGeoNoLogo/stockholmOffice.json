@@ -1,23 +1,24 @@
 {
-  "backgroundColor": "#FF2C95",
-  "mapOpacity": 0.8,
+  "backgroundColor": "#F10D6B",
+  "mapOpacity": 0.2,
   "tileLayerName": "StamenTonerBackground",
 
-  "pathColor": "#FF2C95",
-  "stopFontColor": "#FF2C95",
-  "stopBackgroundColor": "snow",
+  "pathColor": "snow",
+  "stopFontColor": "#C10E55",
+  "stopColor": "#F10D6B",
+  "stopBackgroundColor": "white",
   "font": "FFTransit",
 
-  "routeType": "100",
+  "routeType": "linjen",
   "routeNameAndTypeSize": 400,
   "routeTitleSize": 200,
 
   "lineDetailsFontSize": 100,
-  "routeName": "Route",
-  "routeDesc": "Zoologischer Garten/Jebensstraße - Memhardstr.",
+  "routeName": "Röda",
+  "routeDesc": "Mörby centrum / Ropsten ◄ ► Fruängen / Norsborg",
   "pathWeight": 40,
 
-  "comments": {
+  "descriptionDetailsDONOTSHOW": {
     "numberOfStopsText": "ANZHAL HALTESTELLEN: 19",
     "locationText": "BERLIN, DEUSTCHLAND",
     "launchDateText": "SINCE 1990"
@@ -31,10 +32,10 @@
   "agencyLogoHeight": 120,
   "agencyLogoTop": 20,
   "agencyLogoRight": 20,
-  
-  "stopFontSize": 100,
+
+  "stopFontSize": 80,
   "stopCircleSize": 800,
-  "mapZoom": 16,
+  "mapZoom": 14,
 
   "creditFontSize": 70
 }

@@ -471,6 +471,24 @@
       "stop_name": "Brandenburger Tor",
       "stop_lat": 52.516511,
       "stop_lon": 13.381937
+    },
+    {
+      "stop_id": "070101002758",
+      "stop_name": "Zoologischer Garten Bhf",
+      "stop_lat": 52.506921,
+      "stop_lon": 13.332707
+    },
+    {
+      "stop_id": "070101007153",
+      "stop_name": "Alexanderplatz Bhf/Memhardstr.",
+      "stop_lat": 52.522934,
+      "stop_lon": 13.410752
+    },
+    {
+      "stop_id": "optibus_office",
+      "stop_name": "Optibus Office",
+      "stop_lat": 52.499973,
+      "stop_lon": 13.427705
     }
   ]
 }

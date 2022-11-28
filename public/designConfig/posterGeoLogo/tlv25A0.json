@@ -1,0 +1,40 @@
+{
+  "backgroundColor": "#1F5CAA",
+
+  "tileLayerName": "StamenToner",
+
+  "pathColor": "#1F5CAA",
+
+  "font": "Heebo",
+  "stopFontSize": 140,
+  "routeType": "",
+  "stopCircleSize": 1000,
+  "stopColor": "snow",
+  "stopBackgroundColor": "#1F5CAA",
+  "isSingleDot": true,
+  "pathWeight": 20,
+
+
+  "routeName": "25",
+  "routeNameColor": "snow",
+  "routeNameBackground": "#1F5CAA",
+  "routeNamePaddingTop": 40,
+  "routeNamePaddingBottom": 40,
+  "routeNameHeight": 172,
+  "routeNameFontWeight": "500",
+
+  "routeDesc": "       אוניברסיטת תל אביב - חניון דן חולון",
+  "routeTitleSize": 312,
+  "routeTitleFontWeight": "300",
+  "logoFontSize":180,
+
+  "agencyLogoPath": "../../logos/TLV/Dan Logo.svg",
+
+  "agencyLogoWidth": 440,
+  "agencyLogoHeight": 440,
+  "agencyLogoTop": 80,
+  "agencyLogoRight": 80,
+  "mapZoom": 18,
+
+  "creditFontSize": 56
+}

@@ -1,11 +1,11 @@
-import {} from "react";
+import { } from "react";
 import { Badge, Image } from "theme-ui";
 import styles from "./posterGeoLogoHorizontal.module.css";
 
 import TransitLifeCredit from "../../components/tranitLifeCredit";
 import { useMap } from "./utils";
 
-export default function Page({ routeData, routeDesignConfig, isInEditMode }) {
+export default function Page({ routeData, routeDesignConfig, isInEditMode, isPrintMode }) {
   const GeoMap = useMap();
 
   const getDescriptionDetailElement = (detail: string, isFirst: boolean) => (
@@ -89,16 +89,16 @@ export default function Page({ routeData, routeDesignConfig, isInEditMode }) {
           </div>
           <div className={styles.descriptionDetails}>
             {getDescriptionDetailElement(
-              routeDesignConfig.descriptionDetails.numberOfStopsText,
+              routeDesignConfig.descriptionDetails?.numberOfStopsText,
               true
             )}
             {getDescriptionDetailElement(
-              routeDesignConfig.descriptionDetails.launchDateText,
+              routeDesignConfig.descriptionDetails?.launchDateText,
               false
             )}
             <br />
             {getDescriptionDetailElement(
-              routeDesignConfig.descriptionDetails.launchDateText,
+              routeDesignConfig.descriptionDetails?.launchDateText,
               false
             )}
           </div>
@@ -117,12 +117,13 @@ export default function Page({ routeData, routeDesignConfig, isInEditMode }) {
           font={routeDesignConfig.font}
           showMarkers={true}
           isInEditMode={isInEditMode}
+          isPrintMode={isPrintMode}
           showGeoLayer={undefined}
           smoothFactor={undefined}
         />
       </div>
       <div className={styles.transitLifeCred}>
-        <TransitLifeCredit />
+        <TransitLifeCredit creditFontSize={routeDesignConfig.creditFontSize} />
       </div>
     </div>
   );

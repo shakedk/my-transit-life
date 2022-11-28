@@ -4,7 +4,7 @@ import styles from "./posterFullMapLogo.module.css";
 import TransitLifeCredit from "../../components/tranitLifeCredit";
 import { useMap } from "./utils";
 
-export default function Page({ routeData, routeDesignConfig, isInEditMode }) {
+export default function Page({ routeData, routeDesignConfig, isInEditMode, isPrintMode }) {
   const GeoMap = useMap();
 
   const getDescriptionDetailElement = (detail: string, isFirst: boolean) => (
@@ -55,15 +55,15 @@ export default function Page({ routeData, routeDesignConfig, isInEditMode }) {
           </div>
           <div className={styles.descriptionDetails}>
             {getDescriptionDetailElement(
-              routeDesignConfig.descriptionDetails.numberOfStopsText,
+              routeDesignConfig.descriptionDetails?.numberOfStopsText,
               true
             )}
             {getDescriptionDetailElement(
-              routeDesignConfig.descriptionDetails.launchDateText,
+              routeDesignConfig.descriptionDetails?.launchDateText,
               false
             )}
             {getDescriptionDetailElement(
-              routeDesignConfig.descriptionDetails.launchDateText,
+              routeDesignConfig.descriptionDetails?.launchDateText,
               false
             )}
           </div>
@@ -87,6 +87,7 @@ export default function Page({ routeData, routeDesignConfig, isInEditMode }) {
           smoothFactor={8}
           showMarkers
           isInEditMode={isInEditMode}
+          isPrintMode={isPrintMode}
         />
         <div
           style={{
@@ -105,7 +106,7 @@ export default function Page({ routeData, routeDesignConfig, isInEditMode }) {
         </div>
       </div>
       <div className={styles.transitLifeCred}>
-        <TransitLifeCredit />
+        <TransitLifeCredit creditFontSize={routeDesignConfig.creditFontSize} />
       </div>
     </div>
   );

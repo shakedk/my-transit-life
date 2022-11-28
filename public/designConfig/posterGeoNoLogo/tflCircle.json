@@ -1,0 +1,30 @@
+{
+  "backgroundColor": "#FFD428",
+
+  "tileLayerName": "StamenToner",
+
+  "pathColor": "Snow",
+
+  "font": "Helvetica",
+  "routeTitleSize": 100,
+  "routeType": "Line",
+
+  "routeName": "Circle",
+
+  "routeDesc": "",
+
+  "descriptionDetails": {
+    "numberOfStopsText": "NUMBER OF STATIONS: 36",
+
+    "locationText": "LONDON, UK",
+    "launchDateText": "SINCE 1863"
+  },
+
+  "agencyLogoPath": "../../logos/tfl/Circle Line Logo.svg",
+
+  "agencyLogoWidth": 250,
+  "agencyLogoHeight": 131,
+  "agencyLogoTop": 15,
+  "agencyLogoRight": -35,
+  "mapZoom": 13
+}

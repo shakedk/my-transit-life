@@ -1,125 +1,17 @@
-import { useEffect, useMemo, useState } from "react";
-import { MapContainer, Marker, Pane, Polyline, TileLayer } from "react-leaflet";
+/* eslint-disable react/react-in-jsx-scope */
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { LayersControl, MapContainer, Marker, Pane, Polyline, TileLayer, useMapEvents } from "react-leaflet";
 
 import "leaflet/dist/leaflet.css";
 import { useRouter } from "next/router";
 import { getPosterIDInDB } from "../pages/posters/utils";
 
 import StopLabel from "./stopLabel";
-// import StopLabel, { StopType } from "./stopLabelNew";
 import axios from "axios";
 import { Icon } from "leaflet";
 import PropTypes from "prop-types";
 import { StopType } from "./stopLabel";
-import { redirect } from "next/dist/server/api-utils";
 
-// const StopLabels = ({ stops, font, posterID }) => {
-//   const [labels, setLabels] = useState(null);
-//   const getStopLabelLocation = (map, stop, stopDataFromDB) => {
-//     const xy = map.latLngToLayerPoint([
-//       stop.stop_lat,
-//       stop.stop_lon,
-//     ]);
-//     // The +10 and -20 is required to adjust the labels correctly
-//     // The 228 237 is probably due to the text area size
-//     const x = stopDataFromDB && stopDataFromDB.x ? stopDataFromDB.x - 475
-//      : xy.x + 10;
-//     const y = stopDataFromDB && stopDataFromDB.y ? stopDataFromDB.y - 120
-//      : xy.y - 20;
-//     return [x, y];
-// };
-
-// // const [stopDataFromDB, setStopDataFromDB] = useState(null);
-// useEffect(() => {
-//   async function fetchData() {
-//   const res = await axios.get(`/api/poster/${posterID}`);
-//   // setStopDataFromDB(res.data);
-// }
-
-//   // fetchData();
-// }, []);
-
-// const pointPositions = [];
-
-// const stopPropetiesChanedHandler = (
-//   stopID: string,
-//   label_lat: number,
-//   label_lon: number,
-//   labelWidth: number,
-//   labelHeight: number,
-//   stopOriginalName: string,
-//   stopModifiedName: string
-// ) => {
-//   const params = {
-//     posterID,
-//   };
-//   params[stopID] = {
-//     stopOriginalName,
-//     stopModifiedName,
-//     label_lat,
-//     label_lon,
-//     labelWidth,
-//     labelHeight,
-//   };
-
-//   console.log(stopOriginalName, " ", params)
-
-//   // axios.put(`/api/poster/${posterID}`, params);
-// };
-//   const map = useMapEvents({
-//     async moveend() {
-//       const res = await axios.get(`/api/poster/${posterID}`);
-//       const stopDataFromDB = res.data;
-
-//       setLabels(
-//         stops.map((stop) => {
-//           const stopOriginalName = stop.stop_name.replace(".", "");
-//           // const [x, y] = getStopLabelLocation(
-//           //   map,
-//           //   stop,
-//           //   stopDataFromDB[stopOriginalName]
-//           // );
-
-//           return posterID ? (
-//             <StopLabel
-//               // pointPositions={pointPositions}
-//               key={stopOriginalName}
-//               stopPropetiesChanedHandler={stopPropetiesChanedHandler}
-//               x={x}
-//               y={y}
-//               labelWidth={
-//                 stopDataFromDB[stopOriginalName] &&
-//                 stopDataFromDB[stopOriginalName].labelWidth
-//               }
-//               labelHeight={
-//                 stopDataFromDB[stopOriginalName] &&
-//                 stopDataFromDB[stopOriginalName].labelHeight
-//               }
-//               stopOriginalName={stop.stop_name}
-//               stopModifiedName={
-//                 (stopDataFromDB[stopOriginalName] &&
-//                   stopDataFromDB[stopOriginalName].stopModifiedName) ||
-//                 stop.stop_name
-//               }
-//               font={font}
-//               // posterID={posterID}
-//             />
-//           ) : null;
-//         })
-//       );
-//     },
-//   });
-//   // Labels wont load until we solve the fit bounds issue
-//   return labels !== null ? (
-//     <Pane name="stop-labels" style={{ zIndex: 5000, cursor: "default" }}>
-//       {labels}
-//     </Pane>
-//   ) : null;
-// };
-
-// StopLabels.propTypes = {
-//   stops: PropTypes.arrayOf(StopType),
-// };
 
 const RouteMap = ({
   multiPolyLine,
@@ -137,8 +29,12 @@ const RouteMap = ({
   isInEditMode,
   stopFontSize,
   stopFontColor,
+  stopIDsToDisplayFromConfig,
+  stopColor,
   stopCircleSize,
-  stopBackgroundColor
+  stopBackgroundColor,
+  isSingleDot,
+  isPrintMode
 }) => {
   /**
    * Lat Lon markers, leave here for testing lat lon vs. xy positions
@@ -146,6 +42,13 @@ const RouteMap = ({
 
   const [posterID, setPosterID] = useState(null);
   const [stopDataFromDB, setStopDataFromDB] = useState({});
+
+  const [displayedStops, setDisplayedStops] = useState(stops.reduce((stopObj, stop) => {
+    if (!stopIDsToDisplayFromConfig || stopIDsToDisplayFromConfig.includes(stop.stop_id)) {
+      stopObj[stop.stop_id] = true;
+    }
+    return stopObj;
+  }, {}));
 
   const tileNameToUrl = {
     StamenToner:
@@ -174,6 +77,34 @@ const RouteMap = ({
     />
   );
 
+  const stopMarkerCircleChangedHandler = (
+    posterID: string,
+    stopID: string,
+    marker_lat: number,
+    marker_lon: number
+  ) => {
+    const params = {
+      posterID: posterID,
+    };
+    params[stopID] = {
+      marker_lat,
+      marker_lon,
+    };
+    axios.put(`/api/poster/${posterID}`, params);
+  };
+  const stopDisplayToggleHandler = (
+    posterID: string,
+    stopID: string,
+    toDisplay: boolean
+  ) => {
+    const params = {
+      posterID: posterID,
+    };
+    params[stopID] = {
+      toDisplay
+    };
+    axios.put(`/api/poster/${posterID}`, params);
+  };
   const stopPropetiesChanedHandler = (
     posterID: string,
     stopID: string,
@@ -195,7 +126,6 @@ const RouteMap = ({
       labelWidth,
       labelHeight,
     };
-
     axios.put(`/api/poster/${posterID}`, params);
   };
   const router = useRouter();
@@ -212,46 +142,104 @@ const RouteMap = ({
     getData();
   }, [router.query]);
   const labels = useMemo(() => {
-    return stopDataFromDB &&
-      stops.map((stop) => (
-        <StopLabel
-          posterID={posterID}
-          key={stop.stop_id}
-          stop={stop}
-          // stopDataFromDB={stopDataFromDB}
-          markerLat={stopDataFromDB[stop.stop_id]?.label_lat || stop.stop_lat}
-          markerLon={stopDataFromDB[stop.stop_id]?.label_lon || stop.stop_lon}
-          labelWidthFromDB={stopDataFromDB[stop.stop_id]?.labelWidth}
-          labelHeightFromDB={stopDataFromDB[stop.stop_id]?.labelHeight}
-          stopModifiedName={
-            stopDataFromDB[stop.stop_id]?.stopModifiedName || stop.stop_name
-          }
-          stopPropetiesChanedHandler={stopPropetiesChanedHandler}
-          stopOriginalName={stop.stop_name}
-          font={font}
-          fontSize={stopFontSize}
-          stopColor={stopFontColor}
-          isInEditMode={isInEditMode}
-          stopBackgroundColor={stopBackgroundColor}
-        />
-      ));
-  }, [stopDataFromDB, posterID, stops]);
-  const circleMarkers = stops.map((stop) => {
     return (
-      <Marker
-        key={stop.stop_id}
-        position={[stop.stop_lat, stop.stop_lon]}
-        icon={
-          new Icon({
-            iconUrl: "/point.svg",
-            iconSize: [stopCircleSize || 300, stopCircleSize|| 300],
-          })
-        }
-        sx={{fill: "red"}}
-        zIndexOffset={500}
-      ></Marker>
+      stopDataFromDB &&
+      stops.map((stop) => {
+        return (
+          <StopLabel
+            posterID={posterID}
+            key={stop.stop_id}
+            stop={stop}
+            // stopDataFromDB={stopDataFromDB}
+            markerLat={
+              stopDataFromDB[stop.stop_id]?.label_lat || stop.stop_lat
+            }
+            markerLon={
+              stopDataFromDB[stop.stop_id]?.label_lon || stop.stop_lon
+            }
+            labelWidthFromDB={stopDataFromDB[stop.stop_id]?.labelWidth}
+            labelHeightFromDB={stopDataFromDB[stop.stop_id]?.labelHeight}
+            stopModifiedName={
+              stopDataFromDB[stop.stop_id]?.stopModifiedName || stop.stop_name
+            }
+            stopPropetiesChanedHandler={stopPropetiesChanedHandler}
+            stopOriginalName={stop.stop_name}
+            font={font}
+            fontSize={stopFontSize}
+            stopFontColor={stopFontColor}
+            isInEditMode={isInEditMode}
+            stopBackgroundColor={stopBackgroundColor}
+          />
+        );
+      })
     );
+  }, [stopDataFromDB, posterID, stops]);
+  const stopCircleSvg = isSingleDot ?
+    `<svg xmlns="http://www.w3.org/2000/svg" width="67" height="67">
+      <g>
+        <circle id="1" cx="34" cy="34" r="1" stroke="${stopBackgroundColor}" stroke-width="1.5" fill="none"/>
+        <circle id="2" cx="34" cy="34" r="1" fill="${stopColor}" />
+    </g>
+    </svg>` :
+    `<svg xmlns="http://www.w3.org/2000/svg" width="67" height="67">
+      <g>
+       <circle id="1" cx="34" cy="34" r="3.2" stroke="snow" stroke-width="1.5" fill="none"/>
+             <circle id="1" cx="34" cy="34" r="3" stroke="${stopColor}" stroke-width="1.5" fill="none"/>
+             <circle id="2" cx="34" cy="34" r="1" fill="${stopColor}" />
+    </g>
+    </svg>`;
+
+  const url = encodeURI("data:image/svg+xml," + stopCircleSvg).replaceAll("#", "%23");
+
+  const CustomIcon = Icon.extend({
+    options: {
+      iconSize: [stopCircleSize, stopCircleSize],
+      iconAnchor: [stopCircleSize / 2, stopCircleSize / 2],
+    },
   });
+
+  const circleMarkers = stops.map((stop) => {
+    const markerRef = useRef(null);
+    const eventHandlers = useMemo(
+      () => ({
+        dragend() {
+          const newPosition = markerRef.current.getLatLng();
+          stopMarkerCircleChangedHandler(
+            posterID,
+            stop.stop_id,
+            newPosition.lat,
+            newPosition.lng
+          );
+        },
+      }),
+      [posterID]
+    );
+    if (
+      displayedStops[stop.stop_id]
+    ) {
+      return (
+        stop.stop_id !== 'OPTIBUS_background' &&
+        <Marker
+          key={`${stop.stop_name} (${stop.stop_id})`}
+          eventHandlers={eventHandlers}
+          ref={markerRef}
+          position={[
+            stopDataFromDB[stop.stop_id]?.marker_lat || stop.stop_lat,
+            stopDataFromDB[stop.stop_id]?.marker_lon || stop.stop_lon,
+          ]}
+          draggable={isInEditMode}
+          icon={
+            //@ts-ignore
+            new CustomIcon({ iconUrl: url })
+          }
+          zIndexOffset={500}
+        ></Marker>
+      );
+    } else {
+      return null;
+    }
+  });
+
   const middleOfRoute = Math.round(multiPolyLine[0].length / 2);
   const reverseMultiPolyLine = useMemo((): [number, number][][] => {
     return multiPolyLine.map((polyLine) =>
@@ -267,17 +255,43 @@ const RouteMap = ({
     }
   }, [map]);
 
-  // useEffect(() => {
-  //   const fetchData = async () => {
-  //     const posterType = router.pathname.replace("/posters/", "");
-  //     const _routeID = router.query.routeID;
-  //     const id = await getPosterIDInDB(posterType, _routeID);
+  useEffect(() => {
+    if (Object.keys(stopDataFromDB).length > 0) {
+      setDisplayedStops(Object.keys(stopDataFromDB).reduce((stopsToDisplay, stop_id) => {
+        if (stopDataFromDB[stop_id].toDisplay) {
+          stopsToDisplay[stop_id] = true;
+          return stopsToDisplay;
+        } else {
+          return stopsToDisplay;
+        }
+      }, {}))
+    }
+  }, [stopDataFromDB]);
 
-  //     setPosterID(id);
-  //   };
-  //   fetchData();
-  // }, []);
+  const routePath =
+    <Polyline
+      key="routePath"
+      pathOptions={{ color: pathColor, weight: pathWeight || 10 }}
+      positions={reverseMultiPolyLine}
+      smoothFactor={smoothFactor}
+    />
 
+  const MapEventer = useCallback(() => {
+    useMapEvents({
+      overlayadd(overlay) {
+        const stopID = (overlay.name.match(/\((.*?)\)/)[1]);
+        stopDisplayToggleHandler(posterID, stopID, true);
+
+      },
+      overlayremove(overlay) {
+        const stopID = (overlay.name.match(/\((.*?)\)/)[1]);
+        stopDisplayToggleHandler(posterID, stopID, false);
+      }
+    })
+
+    return null;
+
+  }, [displayedStops, setDisplayedStops, routePath, posterID]);
 
   return (
     <MapContainer
@@ -300,29 +314,33 @@ const RouteMap = ({
       {showGeoLayer ? getTileLayer(tileLayerName) : null}
       <Pane name="route-path" style={{ zIndex: 499, cursor: "default" }}>
         <Polyline
-          pathOptions={{ color: 'snow', weight: pathWeight + 20 || 20 }}
-          positions={reverseMultiPolyLine}
-          smoothFactor={smoothFactor}
-          />
-        <Polyline
-          pathOptions={{ color: pathColor, weight: pathWeight || 10 }}
+          pathOptions={{ color: "snow", weight: pathWeight + 10 || 10 }}
           positions={reverseMultiPolyLine}
           smoothFactor={smoothFactor}
         />
-        {labels}
-        {showMarkers && circleMarkers}
-      </Pane>
+        {routePath}
+        {!isPrintMode && <LayersControl position="topright">
+          {labels.sort((a, b) => {
+            const aName = `${a.props.stop.stop_name} (${a.props.stop.stop_id})`;
+            const bName = `${b.props.stop.stop_name} (${b.props.stop.stop_id})`;
+            return aName.localeCompare(bName);
+          }).map(label => {
+            return (
+              <LayersControl.Overlay key={`${label.props.stop.stop_name} (${label.props.stop.stop_id})`}
+                name={`${label.props.stop.stop_name} (${label.props.stop.stop_id})`}
+                // NOT WORKING WHY
+                checked={displayedStops[label.props.stop.stop_id]}>
 
-      {/* <Pane name="stop-dots" style={{ zIndex: 500, cursor: "default" }}>
-        {posterID && (
-          <StopLabels
-            stops={stops}
-            font={font}
-            posterID={posterID}
-            // routeID={routeID}
-          />
-        )}
-      </Pane> */}
+                {label}
+              </LayersControl.Overlay>
+            )
+          })}
+        </LayersControl>
+        }
+        {isPrintMode && labels && labels.filter(stopLabel => displayedStops[stopLabel.key])}
+          {showMarkers && circleMarkers}
+      </Pane>
+      <MapEventer />
     </MapContainer>
   );
 };
@@ -356,9 +374,13 @@ RouteMap.prototypes = {
   showMarkers: PropTypes.bool,
   stopFontSize: PropTypes.number,
   stopFontColor: PropTypes.string,
+  stopIDsToDisplayFromConfig: PropTypes.array,
   mapOpacity: PropTypes.number,
   stopCircleSize: PropTypes.number,
-  stopBackgroundColor: PropTypes.string
+  stopBackgroundColor: PropTypes.string,
+  isSingleDot: PropTypes.bool,
+  isInEditMode: PropTypes.bool,
+  isPrintMode: PropTypes.bool,
 };
 
 RouteMap.defaultProps = {

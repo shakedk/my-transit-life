@@ -1,11 +1,19 @@
+/* eslint-disable react/react-in-jsx-scope */
+/* eslint-disable react/prop-types */
 import { Badge, Image } from "theme-ui";
 import styles from "./posterGeoLogo.module.css";
 import { useMap } from "./utils";
 
-import TransitLifeCredit from "../../components/tranitLifeCredit";
 
-export default function Page({ routeData, routeDesignConfig, isInEditMode }) {
+import TransitLifeCredit from "../../components/tranitLifeCredit";
+import CustomDrag from "../../src/utils/CustomDrag";
+
+export default function Page({ routeData, routeDesignConfig, isInEditMode, isPrintMode }) {
   const GeoMap = useMap();
+
+  function contains_heb(str) {
+    return (/[\u0590-\u05FF]/).test(str);
+  }
 
   const getDescriptionDetailElement = (detail: string, isFirst: boolean) => (
     <div>
@@ -27,7 +35,8 @@ export default function Page({ routeData, routeDesignConfig, isInEditMode }) {
   );
   const PosterGeoLogo = () => (
     <div className={styles.posterContainer}>
-      <div className={styles.header}>
+      <div className={routeDesignConfig.descriptionDetails ? styles.header : styles.headerNoDescriptionDetails}>
+        <CustomDrag id={'logo'} isDrggable={isInEditMode}>
         <div
           style={{
             position: "absolute",
@@ -42,10 +51,12 @@ export default function Page({ routeData, routeDesignConfig, isInEditMode }) {
               height: routeDesignConfig.agencyLogoHeight,
             }}
           ></Image>
-        </div>
+          </div>
+          </CustomDrag>
         <div className={styles.title}>
-          <div className={styles.lineDetails}>
-            <div className={styles.lineNameAndLogo}>
+          <div className={routeDesignConfig.descriptionDetails ? styles.lineDetails : styles.lineDetailsNoDescriptionDetails}>
+            <div className={contains_heb(routeDesignConfig.routeName) ? styles.lineNameAndLogo : styles.lineNameAndLogoHeb}>
+
               {routeDesignConfig.logoPath ? (
                 <Image
                   src={routeDesignConfig.logoPath}
@@ -56,56 +67,75 @@ export default function Page({ routeData, routeDesignConfig, isInEditMode }) {
                   }}
                 ></Image>
               ) : (
+                <CustomDrag id={'lineName'} isDrggable={isInEditMode}>
                 <div
                   className={styles.lineName}
                   style={{
-                    color: routeDesignConfig.backgroundColor,
+                    color: routeDesignConfig.routeNameColor || routeDesignConfig.backgroundColor,
+                    background: routeDesignConfig.routeNameBackground || 'transparent',
                     fontFamily: routeDesignConfig.font,
-                    fontSize: routeDesignConfig.routeTitleSize || 80,
+                    fontSize: routeDesignConfig.logoFontSize || 80,
+                    paddingLeft: routeDesignConfig.routeNameBackground && 15 || 0,
+                    paddingRight: routeDesignConfig.routeNameBackground && 15 || 0,
+                    paddingTop: routeDesignConfig.routeNameBackground && routeDesignConfig.routeNamePaddingTop || 5,
+                    paddingBottom: routeDesignConfig.routeNameBackground && routeDesignConfig.routeNamePaddingBottom || 5,
+                    marginRight: routeDesignConfig.routeNameBackground && 40 || 0,
+                    fontWeight: routeDesignConfig.routeNameFontWeight || "bolder",
+                    height: routeDesignConfig.routeNameBackground && `${routeDesignConfig.routeNameHeight}px` ||'auto',
                   }}
                 >
                   {" "}
                   {routeDesignConfig.routeName}
                 </div>
+                </CustomDrag>
               )}
-              <Badge
-                sx={{
-                  zIndex: 100,
-                  fontSize: routeDesignConfig.routeTitleSize || 60,
-                  padding: 0,
-                  fontFamily: routeDesignConfig.font,
-                  color: "black",
-                }}
-                p={4}
-                color="black"
-                bg="transparent"
-              >
-                {`${routeDesignConfig.routeType} ${routeDesignConfig.routeDesc}`}
-              </Badge>
+                      <CustomDrag id={'roudeDesc'} isDrggable={isInEditMode}>
+                <Badge
+                  sx={{
+                    zIndex: 100,
+                    fontSize: routeDesignConfig.routeTitleSize || 60,
+                    fontWeight: routeDesignConfig.routeTitleFontWeight || 'auto',
+                    padding: 0,
+                    fontFamily: routeDesignConfig.font,
+                    color: "black",
+                  }}
+                  p={4}
+                  color="black"
+                  bg="transparent"
+                >
+                  {`${routeDesignConfig.routeType} ${routeDesignConfig.routeDesc}`}
+                </Badge>
+              </CustomDrag>
             </div>
           </div>
+        <CustomDrag id={'details'} isDrggable={isInEditMode}>
           <div className={styles.descriptionDetails}>
             {getDescriptionDetailElement(
-              routeDesignConfig.descriptionDetails.numberOfStopsText,
+              routeDesignConfig.descriptionDetails?.numberOfStopsText,
               true
             )}
             {getDescriptionDetailElement(
-              routeDesignConfig.descriptionDetails.launchDateText,
+              routeDesignConfig.descriptionDetails?.launchDateText,
               false
             )}
             <br />
             {getDescriptionDetailElement(
-              routeDesignConfig.descriptionDetails.launchDateText,
+              routeDesignConfig.descriptionDetails?.launchDateText,
               false
             )}
           </div>
-          <div className={styles.divider}></div>
+        </CustomDrag>
+          {routeDesignConfig.descriptionDetails &&
+            <div className={styles.divider}></div>}
         </div>
       </div>
-      <div className={styles.mapContainer}>
+      <div className={routeDesignConfig.descriptionDetails ? styles.mapContainer : styles.mapContainerNoDescriptionDetails}>
         <GeoMap
           multiPolyLine={routeData.multiPolyLine}
+          stopBackgroundColor={routeDesignConfig.stopBackgroundColor}
+          isSingleDot={routeDesignConfig.isSingleDot}
           stops={routeData.stops}
+          pathWeight={routeDesignConfig.pathWeight}
           backgroundColor={routeDesignConfig.backgroundColor}
           tileLayerName={routeDesignConfig.tileLayerName}
           pathColor={routeDesignConfig.pathColor}
@@ -113,10 +143,16 @@ export default function Page({ routeData, routeDesignConfig, isInEditMode }) {
           font={routeDesignConfig.font}
           showMarkers={true}
           isInEditMode={isInEditMode}
+          isPrintMode={isPrintMode}
+          stopFontSize={routeDesignConfig.stopFontSize}
+          stopFontColor={routeDesignConfig.stopFontColor}
+          stopIDsToDisplayFromConfig={routeDesignConfig.stopIDsToDisplayFromConfig}
+          stopColor={routeDesignConfig.stopColor}
+          stopCircleSize={routeDesignConfig.stopCircleSize}
         />
       </div>
-      <div className={styles.transitLifeCred}>
-        <TransitLifeCredit />
+      <div className={routeDesignConfig.descriptionDetails ? styles.transitLifeCred : styles.transitLifeCredNoDescriptionDetails}>
+        <TransitLifeCredit creditFontSize={routeDesignConfig.creditFontSize} />
       </div>
     </div>
   );

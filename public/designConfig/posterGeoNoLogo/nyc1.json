@@ -1,0 +1,23 @@
+{
+  "backgroundColor": "#EF322A",
+
+  "tileLayerName": "StamenToner",
+
+  "pathColor": "Snow",
+
+  "font": "Helvetica",
+
+  "routeType": "Train",
+
+  "routeName": "1",
+  "routeNameAndTypeSize": 400,
+  "routeTitleSize": 200,
+  "lineDetailsFontSize": 1000,
+
+  "routeDesc": "Broadway - 7 Avenue Local",
+
+  "stopFontSize": 100,
+  "stopCircleSize": 800,
+  "mapZoom": 16,
+  "creditFontSize": 70
+}

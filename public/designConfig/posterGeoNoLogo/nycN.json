@@ -1,0 +1,23 @@
+{
+  "backgroundColor": "#FDCE00",
+
+  "tileLayerName": "StamenToner",
+
+  "pathColor": "Snow",
+
+  "font": "Helvetica",
+
+  "routeType": "Train",
+
+  "routeName": "N",
+  "routeDesc": "Broadway Express",
+
+  "routeNameAndTypeSize": 400,
+  "routeTitleSize": 200,
+  "lineDetailsFontSize": 1000,
+
+  "stopFontSize": 100,
+  "stopCircleSize": 800,
+  "mapZoom": 16,
+  "creditFontSize": 70
+}

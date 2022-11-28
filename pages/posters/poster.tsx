@@ -11,6 +11,7 @@ import PosterGeoLogo from "./posterGeoLogo";
 import PosterGeoLogoHorizontal from "./posterGeoLogoHorizontal";
 import PosterGeoNoLogo from "./posterGeoNoLogo";
 import { createPosterInDB } from "./utils";
+import PosterGeoLogoA0 from "./posterGeoLogoA0";
 
 export async function getServerSideProps(context) {
   const routeData = await fetch(
@@ -42,7 +43,8 @@ export default function Page(props) {
     posterType: string,
     routeData: object,
     routeDesignConfig: object,
-    isInEditMode: boolean
+    isInEditMode: boolean,
+    isPrintMode: boolean
   ) => {
     switch (posterType.toLocaleLowerCase()) {
       case "PosterGeoLogoHorizontal".toLocaleLowerCase():
@@ -51,6 +53,7 @@ export default function Page(props) {
             routeData={routeData}
             routeDesignConfig={routeDesignConfig}
             isInEditMode={isInEditMode}
+            isPrintMode={isPrintMode}
           />
         );
       case "PosterBigFrameNoLogo".toLocaleLowerCase():
@@ -59,6 +62,7 @@ export default function Page(props) {
             routeData={routeData}
             routeDesignConfig={routeDesignConfig}
             isInEditMode={isInEditMode}
+            isPrintMode={isPrintMode}
           />
         );
       case "PosterFullMapLogo".toLocaleLowerCase():
@@ -67,6 +71,7 @@ export default function Page(props) {
             routeData={routeData}
             routeDesignConfig={routeDesignConfig}
             isInEditMode={isInEditMode}
+            isPrintMode={isPrintMode}
           />
         );
       case "PosterGeoLogo".toLocaleLowerCase():
@@ -75,6 +80,16 @@ export default function Page(props) {
             routeData={routeData}
             routeDesignConfig={routeDesignConfig}
             isInEditMode={isInEditMode}
+            isPrintMode={isPrintMode}
+          />
+        );
+      case "PosterGeoLogoA0".toLocaleLowerCase():
+        return (
+          <PosterGeoLogoA0
+            routeData={routeData}
+            routeDesignConfig={routeDesignConfig}
+            isInEditMode={isInEditMode}
+            isPrintMode={isPrintMode}
           />
         );
       case "PosterGeoNoLogo".toLocaleLowerCase():
@@ -83,6 +98,7 @@ export default function Page(props) {
             routeData={routeData}
             routeDesignConfig={routeDesignConfig}
             isInEditMode={isInEditMode}
+            isPrintMode={isPrintMode}
           />
         );
       default:
@@ -93,9 +109,10 @@ export default function Page(props) {
     React.useEffect(() => {
       createPosterInDB(posterType, routeID);
     }, [routeID]);
-    const [isInEditMode, setIsInEditMode] = useState(false);
-
     const isPrintMode = router.query.printMode;
+    
+    const [isInEditMode, setIsInEditMode] = useState(!isPrintMode);
+
     return React.useMemo(() => {
       if (routeID) {
         return (
@@ -108,6 +125,7 @@ export default function Page(props) {
               <>
                 <EditToggle
                   isInEditMode={isInEditMode}
+                  isPrintMode={isPrintMode}
                   setIsInEditMode={setIsInEditMode}
                 />
                 <OpenForPrintButton />
@@ -117,7 +135,8 @@ export default function Page(props) {
               posterType as string,
               routeData,
               routeDesignConfig,
-              isInEditMode
+              isInEditMode,
+              isPrintMode
             )}
           </div>
         );

@@ -9,7 +9,7 @@ import styles from "./posterGeoNoLogoA0.module.css";
 import TransitLifeCredit from "../../components/tranitLifeCredit";
 import { useMap } from "./utils";
 
-export default function Page({ routeData, routeDesignConfig, isInEditMode }) {
+export default function Page({ routeData, routeDesignConfig, isInEditMode, isPrintMode }) {
   const GeoMap = useMap();
 
   const getDescriptionDetailElement = (detail: string, isFirst: boolean) => (
@@ -49,6 +49,7 @@ export default function Page({ routeData, routeDesignConfig, isInEditMode }) {
                   className={styles.lineType}
                   style={{
                     color: routeDesignConfig.backgroundColor,
+                    paddingLeft: 20,
                     fontWeight: 'bolder',
                     fontFamily: routeDesignConfig.font,
                     fontSize: routeDesignConfig.routeNameAndTypeSize || routeDesignConfig.routeTitleSize || 80,
@@ -73,16 +74,16 @@ export default function Page({ routeData, routeDesignConfig, isInEditMode }) {
           {routeDesignConfig.descriptionDetails && (
             <div className={styles.descriptionDetails}>
               {getDescriptionDetailElement(
-                routeDesignConfig.descriptionDetails.numberOfStopsText,
+                routeDesignConfig.descriptionDetails?.numberOfStopsText,
                 true
               )}
               {getDescriptionDetailElement(
-                routeDesignConfig.descriptionDetails.locationText,
+                routeDesignConfig.descriptionDetails?.locationText,
                 false
               )}
               <br />
               {getDescriptionDetailElement(
-                routeDesignConfig.descriptionDetails.launchDateText,
+                routeDesignConfig.descriptionDetails?.launchDateText,
                 false
               )}
             </div>
@@ -103,11 +104,15 @@ export default function Page({ routeData, routeDesignConfig, isInEditMode }) {
           pathWeight={routeDesignConfig.pathWeight}
           mapZoom={routeDesignConfig.mapZoom}
           isInEditMode={isInEditMode}
+          isPrintMode={isPrintMode}
           font={routeDesignConfig.font}
           stopFontSize={routeDesignConfig.stopFontSize}
           stopFontColor={routeDesignConfig.stopFontColor}
+          stopIDsToDisplayFromConfig={routeDesignConfig.stopIDsToDisplayFromConfig}
+          stopColor={routeDesignConfig.stopColor}
           stopCircleSize={routeDesignConfig.stopCircleSize}
           stopBackgroundColor={routeDesignConfig.stopBackgroundColor}
+          isSingleDot={routeDesignConfig.isSingleDot}
           showGeoLayer={true}
           smoothFactor={undefined}
           showMarkers={true}

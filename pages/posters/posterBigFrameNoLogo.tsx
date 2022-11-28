@@ -4,7 +4,7 @@ import styles from "./posterBigFrameNoLogo.module.css";
 import TransitLifeCredit from "../../components/tranitLifeCredit";
 import { useMap } from "./utils";
 
-export default function Page({ routeData, routeDesignConfig, isInEditMode }) {
+export default function Page({ routeData, routeDesignConfig, isInEditMode, isPrintMode }) {
   const GeoMap = useMap();
 
   const getDescriptionDetailElement = (detail: string, isLast: boolean) => (
@@ -45,6 +45,7 @@ export default function Page({ routeData, routeDesignConfig, isInEditMode }) {
           smoothFactor={8}
           showMarkers
           isInEditMode={isInEditMode}
+          isPrintMode={isPrintMode}
         />
       </div>
       <div
@@ -75,18 +76,18 @@ export default function Page({ routeData, routeDesignConfig, isInEditMode }) {
             </div>
           </div>
           <div className={styles.descriptionDetails}>
-            {getDescriptionDetailElement(
-              routeDesignConfig.descriptionDetails.numberOfStopsText,
+            {routeDesignConfig.descriptionDetails && getDescriptionDetailElement(
+              routeDesignConfig.descriptionDetails?.numberOfStopsText,
               false
             )}
             <div className={styles.descriptionDetailDeivider}>{"|"}</div>
-            {getDescriptionDetailElement(
-              routeDesignConfig.descriptionDetails.launchDateText,
+            {routeDesignConfig.descriptionDetails && getDescriptionDetailElement(
+              routeDesignConfig.descriptionDetails?.launchDateText,
               false
             )}
             <div className={styles.descriptionDetailDeivider}>{"|"}</div>
-            {getDescriptionDetailElement(
-              routeDesignConfig.descriptionDetails.launchDateText,
+            {routeDesignConfig.descriptionDetails && getDescriptionDetailElement(
+              routeDesignConfig.descriptionDetails?.launchDateText,
               true
             )}
           </div>
@@ -94,7 +95,7 @@ export default function Page({ routeData, routeDesignConfig, isInEditMode }) {
       </div>
 
       <div className={styles.transitLifeCred}>
-        <TransitLifeCredit />
+        <TransitLifeCredit creditFontSize={routeDesignConfig.creditFontSize} />
       </div>
     </div>
   );

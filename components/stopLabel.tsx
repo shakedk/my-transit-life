@@ -1,3 +1,4 @@
+/* eslint-disable react/react-in-jsx-scope */
 import PropTypes from "prop-types";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Textarea } from "theme-ui";
@@ -19,7 +20,7 @@ const StopLabel = ({
   labelHeightFromDB,
   font,
   fontSize,
-  stopColor,
+  stopFontColor,
   stopBackgroundColor,
 
   isInEditMode,
@@ -99,10 +100,11 @@ const StopLabel = ({
                 ? "/point.svg"
                 : "/transparentPoint.svg"
               : "/logos/optibus.svg",
-          iconSize: isInEditMode ? [300, 300] : [100, 100],
+          // iconSize: (isInEditMode || stop.stop_name === "OPTIBUS" )? [300, 300] : [100, 100],
+          iconSize: stop.stop_name === "OPTIBUS"  ? [500, 500] : [300, 300],
         })
       }
-      zIndexOffset={1000}
+      zIndexOffset={2000}
       eventHandlers={eventHandlers}
     >
       {/* Edit seems to work, add movability and width and height and send to DB */}
@@ -118,7 +120,7 @@ const StopLabel = ({
             <Textarea
               value={stopProps.label}
               disabled={!isInEditMode}
-              backgroundColor={ stopBackgroundColor && Color(stopBackgroundColor).alpha(0.7).string()}
+              backgroundColor={ stopBackgroundColor && Color(stopBackgroundColor).alpha(0.3).string()}
               
               onChange={(e) => {
                 setStopProps((oldState) => {
@@ -174,7 +176,7 @@ const StopLabel = ({
                 fontSize: fontSize || 40,
                 fontWeight: "bold",
                 fontFamily: font || "Helvetica",
-                color: stopColor || "#FFFFFF",
+                color: stopFontColor || "#FFFFFF",
                 zIndex: 500,
                 border: isInEditMode ? "2 solid black" : "none",
                 textAlign: "center",
