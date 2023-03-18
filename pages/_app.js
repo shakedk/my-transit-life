@@ -3,6 +3,7 @@ import theme from '../styles/theme'
 
 import './main.css'
 import Head from 'next/head';
+import React from 'react';
 import { AppWrapper } from '../src/context/state'; // import based on where you put it
 
 function MyApp({ Component, pageProps }) {

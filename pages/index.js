@@ -14,6 +14,7 @@ export default function Home() {
 
       <main>
         <h1
+        //@ts-ignore
           sx={{
             fontWeight: "bold",
             fontSize: 4, // picks up value from `theme.fontSizes[4]`

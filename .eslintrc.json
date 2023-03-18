@@ -1,6 +1,6 @@
 {
     "env": {
-        "browser": true,
+        "node": true,
         "es2021": true
     },
     "extends": [
@@ -20,5 +20,8 @@
         "@typescript-eslint"
     ],
     "rules": {
-    }
+        "react/prop-types": 0,
+        "@typescript-eslint/ban-ts-ignore": "off",
+        "@typescript-eslint/ban-ts-comment": "off"
+      }
 }

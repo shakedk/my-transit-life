@@ -1,8 +1,7 @@
-
-const fs = require("fs");
+import path from "path";
+import fs from "fs";
 
 export default async function handler(req, res) {
-  const path = require("path");
   const { routeID } = req.query;
   try {
     const routeData = fs.readFileSync(

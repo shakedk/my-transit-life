@@ -1,4 +1,4 @@
-import { } from "react";
+import React from 'react';
 import { Badge, Image } from "theme-ui";
 import styles from "./posterGeoLogoHorizontal.module.css";
 
@@ -119,8 +119,7 @@ export default function Page({ routeData, routeDesignConfig, isInEditMode, isPri
           isInEditMode={isInEditMode}
           isPrintMode={isPrintMode}
           showGeoLayer={undefined}
-          smoothFactor={undefined}
-        />
+          smoothFactor={undefined} patterns={undefined} mapOpacity={undefined} pathWeight={undefined} stopFontSize={undefined} stopFontColor={undefined} stopIDsToDisplayFromConfig={undefined} stopColor={undefined} stopCircleSize={undefined} stopBackgroundColor={undefined} isSingleDot={undefined}        />
       </div>
       <div className={styles.transitLifeCred}>
         <TransitLifeCredit creditFontSize={routeDesignConfig.creditFontSize} />

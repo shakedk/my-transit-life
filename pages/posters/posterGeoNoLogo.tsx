@@ -1,6 +1,7 @@
 import { Badge } from "theme-ui";
 // import styles from "./posterGeoNoLogo.module.css";
 import styles from "./posterGeoNoLogoA0.module.css";
+import React from 'react';
 // import styles from "./posterGeoNoLogoA0.module.module.css";
 // import styles from "./posterGeoNoLogoA0.module.module.css";
 // import styles from "./posterGeoNoLogoA0.module.module.css";
@@ -115,8 +116,7 @@ export default function Page({ routeData, routeDesignConfig, isInEditMode, isPri
           isSingleDot={routeDesignConfig.isSingleDot}
           showGeoLayer={true}
           smoothFactor={undefined}
-          showMarkers={true}
-        />
+          showMarkers={true} patterns={undefined}        />
       </div>
       <div className={styles.transitLifeCred}>
         <TransitLifeCredit creditFontSize={routeDesignConfig.creditFontSize} />

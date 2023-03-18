@@ -148,8 +148,7 @@ export default function Page({ routeData, routeDesignConfig, isInEditMode, isPri
           stopFontColor={routeDesignConfig.stopFontColor}
           stopIDsToDisplayFromConfig={routeDesignConfig.stopIDsToDisplayFromConfig}
           stopColor={routeDesignConfig.stopColor}
-          stopCircleSize={routeDesignConfig.stopCircleSize}
-        />
+          stopCircleSize={routeDesignConfig.stopCircleSize} patterns={undefined} mapOpacity={undefined} showGeoLayer={undefined} smoothFactor={undefined}        />
       </div>
       <div className={routeDesignConfig.descriptionDetails ? styles.transitLifeCred : styles.transitLifeCredNoDescriptionDetails}>
         <TransitLifeCredit creditFontSize={routeDesignConfig.creditFontSize} />

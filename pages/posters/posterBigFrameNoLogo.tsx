@@ -1,10 +1,15 @@
 import { Badge } from "theme-ui";
 import styles from "./posterBigFrameNoLogo.module.css";
-
+import React from 'react';
 import TransitLifeCredit from "../../components/tranitLifeCredit";
 import { useMap } from "./utils";
 
-export default function Page({ routeData, routeDesignConfig, isInEditMode, isPrintMode }) {
+export default function Page({
+  routeData,
+  routeDesignConfig,
+  isInEditMode,
+  isPrintMode,
+}) {
   const GeoMap = useMap();
 
   const getDescriptionDetailElement = (detail: string, isLast: boolean) => (
@@ -46,6 +51,16 @@ export default function Page({ routeData, routeDesignConfig, isInEditMode, isPri
           showMarkers
           isInEditMode={isInEditMode}
           isPrintMode={isPrintMode}
+          patterns={undefined}
+          mapOpacity={undefined}
+          pathWeight={undefined}
+          stopFontSize={undefined}
+          stopFontColor={undefined}
+          stopIDsToDisplayFromConfig={undefined}
+          stopColor={undefined}
+          stopCircleSize={undefined}
+          stopBackgroundColor={undefined}
+          isSingleDot={undefined}
         />
       </div>
       <div
@@ -76,20 +91,23 @@ export default function Page({ routeData, routeDesignConfig, isInEditMode, isPri
             </div>
           </div>
           <div className={styles.descriptionDetails}>
-            {routeDesignConfig.descriptionDetails && getDescriptionDetailElement(
-              routeDesignConfig.descriptionDetails?.numberOfStopsText,
-              false
-            )}
+            {routeDesignConfig.descriptionDetails &&
+              getDescriptionDetailElement(
+                routeDesignConfig.descriptionDetails?.numberOfStopsText,
+                false
+              )}
             <div className={styles.descriptionDetailDeivider}>{"|"}</div>
-            {routeDesignConfig.descriptionDetails && getDescriptionDetailElement(
-              routeDesignConfig.descriptionDetails?.launchDateText,
-              false
-            )}
+            {routeDesignConfig.descriptionDetails &&
+              getDescriptionDetailElement(
+                routeDesignConfig.descriptionDetails?.launchDateText,
+                false
+              )}
             <div className={styles.descriptionDetailDeivider}>{"|"}</div>
-            {routeDesignConfig.descriptionDetails && getDescriptionDetailElement(
-              routeDesignConfig.descriptionDetails?.launchDateText,
-              true
-            )}
+            {routeDesignConfig.descriptionDetails &&
+              getDescriptionDetailElement(
+                routeDesignConfig.descriptionDetails?.launchDateText,
+                true
+              )}
           </div>
         </div>
       </div>

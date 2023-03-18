@@ -1,6 +1,15 @@
 /* eslint-disable react/react-in-jsx-scope */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { LayersControl, MapContainer, Marker, Pane, Polyline, TileLayer, useMapEvents } from "react-leaflet";
+import {
+  LayerGroup,
+  LayersControl,
+  MapContainer,
+  Marker,
+  Pane,
+  Polyline,
+  TileLayer,
+  useMapEvents,
+} from "react-leaflet";
 
 import "leaflet/dist/leaflet.css";
 import { useRouter } from "next/router";
@@ -12,9 +21,9 @@ import { Icon } from "leaflet";
 import PropTypes from "prop-types";
 import { StopType } from "./stopLabel";
 
-
 const RouteMap = ({
   multiPolyLine,
+  patterns,
   stops,
   backgroundColor,
   mapOpacity,
@@ -34,7 +43,7 @@ const RouteMap = ({
   stopCircleSize,
   stopBackgroundColor,
   isSingleDot,
-  isPrintMode
+  isPrintMode,
 }) => {
   /**
    * Lat Lon markers, leave here for testing lat lon vs. xy positions
@@ -42,13 +51,19 @@ const RouteMap = ({
 
   const [posterID, setPosterID] = useState(null);
   const [stopDataFromDB, setStopDataFromDB] = useState({});
+  const [displsyedPatternsFromDB, setDisplsyedPatternsFromDB] = useState({});
 
-  const [displayedStops, setDisplayedStops] = useState(stops.reduce((stopObj, stop) => {
-    if (!stopIDsToDisplayFromConfig || stopIDsToDisplayFromConfig.includes(stop.stop_id)) {
-      stopObj[stop.stop_id] = true;
-    }
-    return stopObj;
-  }, {}));
+  const [displayedStops, setDisplayedStops] = useState(
+    stops.reduce((stopObj, stop) => {
+      if (
+        !stopIDsToDisplayFromConfig ||
+        stopIDsToDisplayFromConfig.includes(stop.stop_id)
+      ) {
+        stopObj[stop.stop_id] = true;
+      }
+      return stopObj;
+    }, {})
+  );
 
   const tileNameToUrl = {
     StamenToner:
@@ -85,8 +100,9 @@ const RouteMap = ({
   ) => {
     const params = {
       posterID: posterID,
+      stops: {},
     };
-    params[stopID] = {
+    params.stops[stopID] = {
       marker_lat,
       marker_lon,
     };
@@ -99,9 +115,27 @@ const RouteMap = ({
   ) => {
     const params = {
       posterID: posterID,
+      stops: {},
     };
-    params[stopID] = {
-      toDisplay
+    params.stops[stopID] = {
+      toDisplay,
+    };
+    axios.put(`/api/poster/${posterID}`, params);
+  };
+  const patternDisplayToggleHandler = (
+    posterID: string,
+    patternName: string,
+    toDisplay: boolean
+  ) => {
+    const routeId = patterns.filter(
+      (p) => p.properties.route_long_name == patternName
+    )[0].properties.route_id;
+    const params = {
+      posterID: posterID,
+      patterns: {},
+    };
+    params.patterns[routeId] = {
+      toDisplay,
     };
     axios.put(`/api/poster/${posterID}`, params);
   };
@@ -117,8 +151,9 @@ const RouteMap = ({
   ) => {
     const params = {
       posterID: posterID,
+      stops: {},
     };
-    params[stopID] = {
+    params.stops[stopID] = {
       stopOriginalName,
       stopModifiedName,
       label_lat,
@@ -137,7 +172,8 @@ const RouteMap = ({
 
       const res = await axios.get(`/api/poster/${id}`);
       setPosterID(id);
-      setStopDataFromDB(res.data || {});
+      setStopDataFromDB(res.data.stops || {});
+      setDisplsyedPatternsFromDB(res.data.patterns || {});
     }
     getData();
   }, [router.query]);
@@ -151,12 +187,8 @@ const RouteMap = ({
             key={stop.stop_id}
             stop={stop}
             // stopDataFromDB={stopDataFromDB}
-            markerLat={
-              stopDataFromDB[stop.stop_id]?.label_lat || stop.stop_lat
-            }
-            markerLon={
-              stopDataFromDB[stop.stop_id]?.label_lon || stop.stop_lon
-            }
+            markerLat={stopDataFromDB[stop.stop_id]?.label_lat || stop.stop_lat}
+            markerLon={stopDataFromDB[stop.stop_id]?.label_lon || stop.stop_lon}
             labelWidthFromDB={stopDataFromDB[stop.stop_id]?.labelWidth}
             labelHeightFromDB={stopDataFromDB[stop.stop_id]?.labelHeight}
             stopModifiedName={
@@ -174,14 +206,14 @@ const RouteMap = ({
       })
     );
   }, [stopDataFromDB, posterID, stops]);
-  const stopCircleSvg = isSingleDot ?
-    `<svg xmlns="http://www.w3.org/2000/svg" width="67" height="67">
+  const stopCircleSvg = isSingleDot
+    ? `<svg xmlns="http://www.w3.org/2000/svg" width="67" height="67">
       <g>
         <circle id="1" cx="34" cy="34" r="1" stroke="${stopBackgroundColor}" stroke-width="1.5" fill="none"/>
         <circle id="2" cx="34" cy="34" r="1" fill="${stopColor}" />
     </g>
-    </svg>` :
-    `<svg xmlns="http://www.w3.org/2000/svg" width="67" height="67">
+    </svg>`
+    : `<svg xmlns="http://www.w3.org/2000/svg" width="67" height="67">
       <g>
        <circle id="1" cx="34" cy="34" r="3.2" stroke="snow" stroke-width="1.5" fill="none"/>
              <circle id="1" cx="34" cy="34" r="3" stroke="${stopColor}" stroke-width="1.5" fill="none"/>
@@ -189,7 +221,10 @@ const RouteMap = ({
     </g>
     </svg>`;
 
-  const url = encodeURI("data:image/svg+xml," + stopCircleSvg).replaceAll("#", "%23");
+  const url = encodeURI("data:image/svg+xml," + stopCircleSvg).replaceAll(
+    "#",
+    "%23"
+  );
 
   const CustomIcon = Icon.extend({
     options: {
@@ -214,90 +249,110 @@ const RouteMap = ({
       }),
       [posterID]
     );
-    if (
-      displayedStops[stop.stop_id]
-    ) {
+    if (displayedStops[stop.stop_id]) {
       return (
-        stop.stop_id !== 'OPTIBUS_background' &&
-        <Marker
-          key={`${stop.stop_name} (${stop.stop_id})`}
-          eventHandlers={eventHandlers}
-          ref={markerRef}
-          position={[
-            stopDataFromDB[stop.stop_id]?.marker_lat || stop.stop_lat,
-            stopDataFromDB[stop.stop_id]?.marker_lon || stop.stop_lon,
-          ]}
-          draggable={isInEditMode}
-          icon={
-            //@ts-ignore
-            new CustomIcon({ iconUrl: url })
-          }
-          zIndexOffset={500}
-        ></Marker>
+        stop.stop_id !== "OPTIBUS_background" && (
+          <Marker
+            key={`${stop.stop_name} (${stop.stop_id})`}
+            eventHandlers={eventHandlers}
+            ref={markerRef}
+            position={[
+              stopDataFromDB[stop.stop_id]?.marker_lat || stop.stop_lat,
+              stopDataFromDB[stop.stop_id]?.marker_lon || stop.stop_lon,
+            ]}
+            draggable={isInEditMode}
+            icon={
+              // @ts-ignore
+              new CustomIcon({ iconUrl: url })
+            }
+            zIndexOffset={500}
+          ></Marker>
+        )
       );
     } else {
       return null;
     }
   });
 
-  const middleOfRoute = Math.round(multiPolyLine[0].length / 2);
-  const reverseMultiPolyLine = useMemo((): [number, number][][] => {
-    return multiPolyLine.map((polyLine) =>
+  const anyRoute = useMemo(() => {
+    if (multiPolyLine) {
+      return multiPolyLine;
+    } else {
+      return [patterns[0].geometry.coordinates];
+    }
+  }, [patterns, multiPolyLine]);
+
+  const middleOfRoute = Math.round(anyRoute[0].length / 2);
+  const reverseMultiPolyLine = useCallback((path): [number, number][][] => {
+    return path.map((polyLine) =>
       polyLine.map((coord) => [coord[1], coord[0]])
     );
-  }, [multiPolyLine]);
+  }, []);
 
   const [map, setMap] = useState(null);
 
   useEffect(() => {
     if (map) {
-      map.fitBounds(reverseMultiPolyLine, { maxZoom: mapZoom });
+      map.fitBounds(reverseMultiPolyLine(anyRoute), { maxZoom: mapZoom });
     }
   }, [map]);
 
   useEffect(() => {
     if (Object.keys(stopDataFromDB).length > 0) {
-      setDisplayedStops(Object.keys(stopDataFromDB).reduce((stopsToDisplay, stop_id) => {
-        if (stopDataFromDB[stop_id].toDisplay) {
-          stopsToDisplay[stop_id] = true;
-          return stopsToDisplay;
-        } else {
-          return stopsToDisplay;
-        }
-      }, {}))
+      setDisplayedStops(
+        Object.keys(stopDataFromDB).reduce((stopsToDisplay, stop_id) => {
+          if (stopDataFromDB[stop_id].toDisplay) {
+            stopsToDisplay[stop_id] = true;
+            return stopsToDisplay;
+          } else {
+            return stopsToDisplay;
+          }
+        }, {})
+      );
     }
   }, [stopDataFromDB]);
 
-  const routePath =
+  const routePath = (
     <Polyline
       key="routePath"
       pathOptions={{ color: pathColor, weight: pathWeight || 10 }}
-      positions={reverseMultiPolyLine}
+      positions={reverseMultiPolyLine(anyRoute)}
       smoothFactor={smoothFactor}
     />
+  );
 
   const MapEventer = useCallback(() => {
     useMapEvents({
       overlayadd(overlay) {
-        const stopID = (overlay.name.match(/\((.*?)\)/)[1]);
-        stopDisplayToggleHandler(posterID, stopID, true);
-
+        const stopMatch = overlay.name.match(/\((.*?)\)/);
+        if (stopMatch) {
+          const stopID = stopMatch[1];
+          stopDisplayToggleHandler(posterID, stopID, true);
+        } else {
+          const pattrenName = overlay.name;
+          patternDisplayToggleHandler(posterID, pattrenName, true);
+        }
       },
       overlayremove(overlay) {
-        const stopID = (overlay.name.match(/\((.*?)\)/)[1]);
-        stopDisplayToggleHandler(posterID, stopID, false);
-      }
-    })
+        const stopMatch = overlay.name.match(/\((.*?)\)/);
+        if (stopMatch) {
+          const stopID = stopMatch[1];
+          stopDisplayToggleHandler(posterID, stopID, false);
+        } else {
+          const pattrenName = overlay.name;
+          patternDisplayToggleHandler(posterID, pattrenName, false);
+        }
+      },
+    });
 
     return null;
-
   }, [displayedStops, setDisplayedStops, routePath, posterID]);
 
   return (
     <MapContainer
       ref={setMap}
       id="map"
-      center={reverseMultiPolyLine[0][middleOfRoute]}
+      center={reverseMultiPolyLine(anyRoute)[0][middleOfRoute]}
       zoom={12}
       zoomSnap={0.1}
       scrollWheelZoom={false}
@@ -312,33 +367,90 @@ const RouteMap = ({
       }}
     >
       {showGeoLayer ? getTileLayer(tileLayerName) : null}
+      {/* When there is only a single pattern - can be removed in the future */}
       <Pane name="route-path" style={{ zIndex: 499, cursor: "default" }}>
-        <Polyline
-          pathOptions={{ color: "snow", weight: pathWeight + 10 || 10 }}
-          positions={reverseMultiPolyLine}
-          smoothFactor={smoothFactor}
-        />
-        {routePath}
-        {!isPrintMode && <LayersControl position="topright">
-          {labels.sort((a, b) => {
-            const aName = `${a.props.stop.stop_name} (${a.props.stop.stop_id})`;
-            const bName = `${b.props.stop.stop_name} (${b.props.stop.stop_id})`;
-            return aName.localeCompare(bName);
-          }).map(label => {
-            return (
-              <LayersControl.Overlay key={`${label.props.stop.stop_name} (${label.props.stop.stop_id})`}
-                name={`${label.props.stop.stop_name} (${label.props.stop.stop_id})`}
-                // NOT WORKING WHY
-                checked={displayedStops[label.props.stop.stop_id]}>
-
-                {label}
-              </LayersControl.Overlay>
-            )
-          })}
-        </LayersControl>
-        }
-        {isPrintMode && labels && labels.filter(stopLabel => displayedStops[stopLabel.key])}
-          {showMarkers && circleMarkers}
+        {!patterns && (
+          <Polyline
+            pathOptions={{ color: "snow", weight: pathWeight + 10 || 10 }}
+            positions={reverseMultiPolyLine(anyRoute)}
+            smoothFactor={smoothFactor}
+          />
+        )}
+        {!patterns && routePath}
+        {/* Patterns control */}
+        {patterns && !isPrintMode && (
+          <LayersControl position="topright">
+            {patterns
+              .sort((a, b) => {
+                return a.properties.route_long_name.localeCompare(
+                  b.properties.route_long_name
+                );
+              })
+              .map((pattern) => {
+                console.log("displsyedPatternsFromDB", displsyedPatternsFromDB);
+                return (
+                  <LayersControl.Overlay
+                    key={pattern.properties.route_id}
+                    name={pattern.properties.route_long_name}
+                    checked={
+                      displsyedPatternsFromDB[pattern.properties.route_id]
+                        ?.toDisplay
+                    }
+                  >
+                    <LayerGroup>
+                      <Polyline
+                        pathOptions={{
+                          color: "snow",
+                          weight: pathWeight + 10 || 10,
+                        }}
+                        positions={reverseMultiPolyLine([
+                          pattern.geometry.coordinates,
+                        ])}
+                        smoothFactor={smoothFactor}
+                      />
+                      <Polyline
+                        key={pattern.properties.route_id}
+                        pathOptions={{
+                          color: pathColor,
+                          weight: pathWeight || 10,
+                        }}
+                        positions={reverseMultiPolyLine([
+                          pattern.geometry.coordinates,
+                        ])}
+                        smoothFactor={smoothFactor}
+                      />
+                    </LayerGroup>
+                  </LayersControl.Overlay>
+                );
+              })}
+          </LayersControl>
+        )}
+        {/* Stop control */}
+        {!isPrintMode && (
+          <LayersControl position="topright">
+            {labels
+              .sort((a, b) => {
+                const aName = `${a.props.stop.stop_name} (${a.props.stop.stop_id})`;
+                const bName = `${b.props.stop.stop_name} (${b.props.stop.stop_id})`;
+                return aName.localeCompare(bName);
+              })
+              .map((label) => {
+                return (
+                  <LayersControl.Overlay
+                    key={`${label.props.stop.stop_name} (${label.props.stop.stop_id})`}
+                    name={`${label.props.stop.stop_name} (${label.props.stop.stop_id})`}
+                    checked={displayedStops[label.props.stop.stop_id]}
+                  >
+                    {label}
+                  </LayersControl.Overlay>
+                );
+              })}
+          </LayersControl>
+        )}
+        {isPrintMode &&
+          labels &&
+          labels.filter((stopLabel) => displayedStops[stopLabel.key])}
+        {showMarkers && circleMarkers}
       </Pane>
       <MapEventer />
     </MapContainer>
@@ -360,7 +472,39 @@ RouteMap.prototypes = {
 
         return null;
       })
-    ).isRequired
+    )
+  ),
+  patterns: PropTypes.arrayOf(
+    PropTypes.shape({
+      type: PropTypes.string,
+      properties: PropTypes.shape({
+        route_id: PropTypes.string.isRequired,
+        agency_id: PropTypes.string,
+        route_short_name: PropTypes.string.isRequired,
+        route_long_name: PropTypes.string.isRequired,
+        route_desc: PropTypes.string,
+        route_type: PropTypes.string,
+        route_color: PropTypes.string,
+      }),
+      geometry: PropTypes.shape({
+        type: PropTypes.string,
+        coordinates: PropTypes.arrayOf(
+          PropTypes.arrayOf(function (props, propName, componentName) {
+            if (
+              !Array.isArray(props.TWO_NUMBERS) ||
+              props.TWO_NUMBERS.length != 2 ||
+              !props.TWO_NUMBERS.every(Number.isInteger)
+            ) {
+              return new Error(
+                `${propName} needs to be an array of two numbers`
+              );
+            }
+
+            return null;
+          })
+        ),
+      }),
+    })
   ),
   stops: PropTypes.arrayOf(StopType).isRequired,
   backgroundColor: PropTypes.string,

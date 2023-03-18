@@ -6,7 +6,10 @@
     "dev": "next dev -p 3003",
     "build": "next build",
     "start": "next start",
-    "test": "jest"
+    "test": "jest",
+    "ts-lint": "tsc --noEmit --incremental --watch",
+    "lint": "next lint"
+
   },
   "dependencies": {
     "@types/theme-ui": "^0.3.7",

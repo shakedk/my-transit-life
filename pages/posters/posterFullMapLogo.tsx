@@ -1,4 +1,5 @@
 import { Badge, Image } from "theme-ui";
+import React from 'react';
 import styles from "./posterFullMapLogo.module.css";
 
 import TransitLifeCredit from "../../components/tranitLifeCredit";
@@ -87,8 +88,7 @@ export default function Page({ routeData, routeDesignConfig, isInEditMode, isPri
           smoothFactor={8}
           showMarkers
           isInEditMode={isInEditMode}
-          isPrintMode={isPrintMode}
-        />
+          isPrintMode={isPrintMode} patterns={undefined} mapOpacity={undefined} pathWeight={undefined} stopFontSize={undefined} stopFontColor={undefined} stopIDsToDisplayFromConfig={undefined} stopColor={undefined} stopCircleSize={undefined} stopBackgroundColor={undefined} isSingleDot={undefined}        />
         <div
           style={{
             position: "absolute",

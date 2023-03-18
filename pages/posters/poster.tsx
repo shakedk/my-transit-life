@@ -109,7 +109,7 @@ export default function Page(props) {
     React.useEffect(() => {
       createPosterInDB(posterType, routeID);
     }, [routeID]);
-    const isPrintMode = router.query.printMode;
+    const isPrintMode = router.query.printMode === "true";
     
     const [isInEditMode, setIsInEditMode] = useState(!isPrintMode);
 

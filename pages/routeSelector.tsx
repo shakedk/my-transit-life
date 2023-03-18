@@ -1,5 +1,5 @@
 import Link from "next/link";
-
+import React from 'react';
 import Head from "next/head";
 import { server } from "../config";
 import styles from "./routeSelector.module.css";

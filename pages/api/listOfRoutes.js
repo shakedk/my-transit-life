@@ -1,14 +1,15 @@
-const fs = require("fs");
+import fs from "fs";
+import path from "path";
+
 export default async function handler(req, res) {
   try {
-    const path = require("path");
     const fileNames = [];
     const dir = path.join(process.cwd(), "/public/data");
     const files = fs.readdirSync(dir);
     for (var i in files) {
       var name = dir + "/" + files[i];
       if (fs.statSync(name).isDirectory()) {
-        getFiles(name, fileNames);
+        fs.getFiles(name, fileNames);
       } else {
         const fileName = name.split("/").slice(-1)[0];
 

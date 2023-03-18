@@ -1,8 +1,7 @@
-import serverPath from "../../src/serverPath";
-const fs = require("fs");
+import path from "path";
+import fs from "fs";
 
 export default async function handler(req, res) {
-  const path = require("path");
   // Support different variations
   const { routeID } = req.query;
   const routeIDWithoutVariation = routeID.split('-')[0];
