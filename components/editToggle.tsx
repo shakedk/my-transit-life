@@ -4,7 +4,7 @@
 import { Button } from 'theme-ui';
 import React from 'react';
  
-const EditToggle = ({ isInEditMode, setIsInEditMode, isPrintMode }) => {
+const EditToggle = ({ isInEditMode, setIsInEditMode }) => {
   return (
     <Button
       onClick={() => {

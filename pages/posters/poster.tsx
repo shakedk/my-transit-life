@@ -125,7 +125,6 @@ export default function Page(props) {
               <>
                 <EditToggle
                   isInEditMode={isInEditMode}
-                  isPrintMode={isPrintMode}
                   setIsInEditMode={setIsInEditMode}
                 />
                 <OpenForPrintButton />

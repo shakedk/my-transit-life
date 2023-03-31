@@ -5,7 +5,7 @@ import { Textarea } from "theme-ui";
 import Color from 'color';
 import { Marker, Tooltip } from "react-leaflet";
 
-import { Icon } from "leaflet";
+import { Icon, LatLngExpression } from "leaflet";
 
 import styles from "./stopLabel.module.css";
 const StopLabel = ({
@@ -29,7 +29,13 @@ const StopLabel = ({
   // CHANGE ANY!
   // CHANGE ANY!
 
-  const [stopProps, setStopProps] = useState<any>({
+  interface IStopProps {
+    label: string,
+    labelWidth: number,
+    labelHeight: number,
+    position: LatLngExpression
+  }
+  const [stopProps, setStopProps] = useState<IStopProps>({
     label: stopModifiedName,
     labelWidth: labelWidthFromDB,
     labelHeight: labelHeightFromDB,

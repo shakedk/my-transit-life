@@ -12,7 +12,7 @@ export default function Page({
 }) {
   const GeoMap = useMap();
 
-  const getDescriptionDetailElement = (detail: string, isLast: boolean) => (
+  const getDescriptionDetailElement = (detail: string) => (
     <div>
       <Badge
         sx={{
@@ -94,19 +94,19 @@ export default function Page({
             {routeDesignConfig.descriptionDetails &&
               getDescriptionDetailElement(
                 routeDesignConfig.descriptionDetails?.numberOfStopsText,
-                false
+                // false
               )}
             <div className={styles.descriptionDetailDeivider}>{"|"}</div>
             {routeDesignConfig.descriptionDetails &&
               getDescriptionDetailElement(
                 routeDesignConfig.descriptionDetails?.launchDateText,
-                false
+                // false
               )}
             <div className={styles.descriptionDetailDeivider}>{"|"}</div>
             {routeDesignConfig.descriptionDetails &&
               getDescriptionDetailElement(
                 routeDesignConfig.descriptionDetails?.launchDateText,
-                true
+                // true
               )}
           </div>
         </div>

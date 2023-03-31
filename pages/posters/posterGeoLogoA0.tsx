@@ -1,7 +1,7 @@
 /* eslint-disable react/react-in-jsx-scope */
 /* eslint-disable react/prop-types */
 import { Badge, Image } from "theme-ui";
-import styles from "./PosterGeoLogoA0.module.css";
+import styles from "./posterGeoLogoA0.module.css";
 import { useMap } from "./utils";
 
 

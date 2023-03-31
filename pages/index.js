@@ -13,14 +13,7 @@ export default function Home() {
       </Head>
 
       <main>
-        <h1
-        //@ts-ignore
-          sx={{
-            fontWeight: "bold",
-            fontSize: 4, // picks up value from `theme.fontSizes[4]`
-            color: "primary", // picks up value from `theme.colors.primary`
-          }}
-        >
+        <h1>
           Welcome to <a href="https://nextjs.org">Next.js!</a>
         </h1>
       </main>

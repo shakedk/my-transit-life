@@ -4,7 +4,7 @@ import Head from "next/head";
 import { server } from "../config";
 import styles from "./routeSelector.module.css";
 
-export async function getServerSideProps(context) {
+export async function getServerSideProps() {
   const routeList = await fetch(`${server}/api/listOfRoutes`);
   return {
     props: {

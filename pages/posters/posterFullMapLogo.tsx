@@ -8,7 +8,7 @@ import { useMap } from "./utils";
 export default function Page({ routeData, routeDesignConfig, isInEditMode, isPrintMode }) {
   const GeoMap = useMap();
 
-  const getDescriptionDetailElement = (detail: string, isFirst: boolean) => (
+  const getDescriptionDetailElement = (detail: string) => (
     <div>
       <Badge
         sx={{
@@ -57,15 +57,15 @@ export default function Page({ routeData, routeDesignConfig, isInEditMode, isPri
           <div className={styles.descriptionDetails}>
             {getDescriptionDetailElement(
               routeDesignConfig.descriptionDetails?.numberOfStopsText,
-              true
+              // true
             )}
             {getDescriptionDetailElement(
               routeDesignConfig.descriptionDetails?.launchDateText,
-              false
+              // false
             )}
             {getDescriptionDetailElement(
               routeDesignConfig.descriptionDetails?.launchDateText,
-              false
+              // false
             )}
           </div>
         </div>

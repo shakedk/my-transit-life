@@ -461,7 +461,7 @@ RouteMap.prototypes = {
   // Should be [number, number][]
   multiPolyLine: PropTypes.arrayOf(
     PropTypes.arrayOf(
-      PropTypes.arrayOf(function (props, propName, componentName) {
+      PropTypes.arrayOf(function (props, propName) {
         if (
           !Array.isArray(props.TWO_NUMBERS) ||
           props.TWO_NUMBERS.length != 2 ||
@@ -489,7 +489,7 @@ RouteMap.prototypes = {
       geometry: PropTypes.shape({
         type: PropTypes.string,
         coordinates: PropTypes.arrayOf(
-          PropTypes.arrayOf(function (props, propName, componentName) {
+          PropTypes.arrayOf(function (props, propName) {
             if (
               !Array.isArray(props.TWO_NUMBERS) ||
               props.TWO_NUMBERS.length != 2 ||
