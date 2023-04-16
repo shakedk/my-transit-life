@@ -1,5 +1,11 @@
 import { useRouter } from "next/router";
-import React, { useState } from "react";
+import React, {
+  Suspense,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { server } from "../../config";
 
 import Head from "next/head";
@@ -40,72 +46,6 @@ export default function Page(props) {
   const routeData = JSON.parse(props.routeData.routeData);
   const routeDesignConfig = JSON.parse(props.routeDesignConfig.routeData);
 
-  const getPosterByType = (
-    posterType: string,
-    routeData: object,
-    routeDesignConfig: object,
-    isInEditMode: boolean,
-    isPrintMode: boolean
-  ) => {
-    switch (posterType.toLocaleLowerCase()) {
-      case "PosterGeoLogoHorizontal".toLocaleLowerCase():
-        return (
-          <PosterGeoLogoHorizontal
-            routeData={routeData}
-            routeDesignConfig={routeDesignConfig}
-            isInEditMode={isInEditMode}
-            isPrintMode={isPrintMode}
-          />
-        );
-      case "PosterBigFrameNoLogo".toLocaleLowerCase():
-        return (
-          <PosterBigFrameNoLogo
-            routeData={routeData}
-            routeDesignConfig={routeDesignConfig}
-            isInEditMode={isInEditMode}
-            isPrintMode={isPrintMode}
-          />
-        );
-      case "PosterFullMapLogo".toLocaleLowerCase():
-        return (
-          <PosterFullMapLogo
-            routeData={routeData}
-            routeDesignConfig={routeDesignConfig}
-            isInEditMode={isInEditMode}
-            isPrintMode={isPrintMode}
-          />
-        );
-      case "PosterGeoLogo".toLocaleLowerCase():
-        return (
-          <PosterGeoLogo
-            routeData={routeData}
-            routeDesignConfig={routeDesignConfig}
-            isInEditMode={isInEditMode}
-            isPrintMode={isPrintMode}
-          />
-        );
-      case "PosterGeoLogoA0".toLocaleLowerCase():
-        return (
-          <PosterGeoLogoA0
-            routeData={routeData}
-            routeDesignConfig={routeDesignConfig}
-            isInEditMode={isInEditMode}
-            isPrintMode={isPrintMode}
-          />
-        );
-      case "PosterGeoNoLogo".toLocaleLowerCase():
-        return (
-          <PosterGeoNoLogo
-            routeData={routeData}
-            routeDesignConfig={routeDesignConfig}
-            isInEditMode={isInEditMode}
-            isPrintMode={isPrintMode}
-          />
-        );
-      default:
-        return null;
-    }
-  };
   const PosterTemaple = () => {
     React.useEffect(() => {
       createPosterInDB(posterType, routeID);
@@ -113,38 +53,181 @@ export default function Page(props) {
     const isPrintMode = router.query.printMode === "true";
 
     const [isInEditMode, setIsInEditMode] = useState(!isPrintMode);
+    const getPosterByType = useCallback(
+      (
+        posterType: string,
+        routeData: object,
+        routeDesignConfig: object,
+        isInEditMode: boolean,
+        isPrintMode: boolean
+      ) => {
+        switch (posterType.toLocaleLowerCase()) {
+          case "PosterGeoLogoHorizontal".toLocaleLowerCase():
+            return (
+              <PosterGeoLogoHorizontal
+                routeData={routeData}
+                routeDesignConfig={routeDesignConfig}
+                isInEditMode={isInEditMode}
+                isPrintMode={isPrintMode}
+              />
+            );
+          case "PosterBigFrameNoLogo".toLocaleLowerCase():
+            return (
+              <PosterBigFrameNoLogo
+                routeData={routeData}
+                routeDesignConfig={routeDesignConfig}
+                isInEditMode={isInEditMode}
+                isPrintMode={isPrintMode}
+              />
+            );
+          case "PosterFullMapLogo".toLocaleLowerCase():
+            return (
+              <PosterFullMapLogo
+                routeData={routeData}
+                routeDesignConfig={routeDesignConfig}
+                isInEditMode={isInEditMode}
+                isPrintMode={isPrintMode}
+              />
+            );
+          case "PosterGeoLogo".toLocaleLowerCase():
+            return (
+              <PosterGeoLogo
+                routeData={routeData}
+                routeDesignConfig={routeDesignConfig}
+                isInEditMode={isInEditMode}
+                isPrintMode={isPrintMode}
+              />
+            );
+          case "PosterGeoLogoA0".toLocaleLowerCase():
+            return (
+              <PosterGeoLogoA0
+                routeData={routeData}
+                routeDesignConfig={routeDesignConfig}
+                isInEditMode={isInEditMode}
+                isPrintMode={isPrintMode}
+              />
+            );
+          case "PosterGeoNoLogo".toLocaleLowerCase():
+            return (
+              <PosterGeoNoLogo
+                routeData={routeData}
+                routeDesignConfig={routeDesignConfig}
+                isInEditMode={isInEditMode}
+                isPrintMode={isPrintMode}
+              />
+            );
+          default:
+            return null;
+        }
+      },
+      [routeID, isInEditMode]
+    );
 
-    return React.useMemo(() => {
-      return (
-        <React.Fragment>
-          <DataSelector/>
-          {routeID && (
-            <div>
-              {" "}
-              <Head>
-                <title>{routeID}</title>
-              </Head>
-              {!isPrintMode && (
-                <>
-                  <EditToggle
-                    isInEditMode={isInEditMode}
-                    setIsInEditMode={setIsInEditMode}
-                  />
-                  <OpenForPrintButton />
-                </>
-              )}
-              {getPosterByType(
-                posterType as string,
-                routeData,
-                routeDesignConfig,
-                isInEditMode,
-                isPrintMode
-              )}
-            </div>
-          )}
-        </React.Fragment>
-      );
-    }, [routeID, isInEditMode]);
+    const [Space, setSpace] = useState(null);
+
+    useEffect(() => {
+      async function loadZoomableUI() {
+        const spaceLib = await import("react-zoomable-ui");
+        spaceLib.suppressBrowserZooming();
+        setSpace(spaceLib);
+      }
+      loadZoomableUI();
+    }, []);
+
+    const posterRef = useRef(null);
+    const [posterWidth, setPosterWidth] = useState(1000);
+    const [posterHeight, setPosterHeight] = useState(1000);
+
+    useEffect(() => {
+      const updatePosterDimensions = () => {
+        if (posterRef.current) {
+          setPosterWidth(posterRef.current.clientWidth);
+          setPosterHeight(posterRef.current.clientHeight);
+        }
+      };
+      updatePosterDimensions();
+      window.addEventListener("resize", updatePosterDimensions);
+      return () => {
+        window.removeEventListener("resize", updatePosterDimensions);
+      };
+    }, [posterRef]);
+
+    const editPosterTemplate = (
+      <>
+        <DataSelector />
+        <Head>
+          <title>{routeID}</title>
+        </Head>
+        <EditToggle
+          isInEditMode={isInEditMode}
+          setIsInEditMode={setIsInEditMode}
+        />
+        <OpenForPrintButton />
+        {Space && (
+          <Suspense fallback={<div>Loading...</div>}>
+            {routeID && (
+              <div
+                ref={posterRef}
+                style={{
+                  position: "relative",
+                  border: "1px solid black",
+                  width: posterWidth,
+                  height: posterHeight,
+                }}
+              >
+                <Space.Space
+                  onCreate={(viewPort) => {
+                    // viewPort.setBoundsToContainer()
+                    debugger;
+                    debugger;
+                    debugger;
+                    debugger;
+                    debugger;
+                    debugger;
+                    debugger;
+                    debugger;
+                    debugger;
+                    viewPort.setBounds({
+                      x: [0, posterWidth],
+                      y: [0, posterHeight],
+                      zoom: 0.5
+                    });
+                  //   viewPort.camera.centerFitAreaIntoView({
+                  //     left: 0,
+                  //     top: 0,
+                  //     width: posterWidth,
+                  //     height: posterHeight,
+                  //     // zoom: 0.1
+                  //   });
+                  }}
+                >
+                  {getPosterByType(
+                    posterType as string,
+                    routeData,
+                    routeDesignConfig,
+                    isInEditMode,
+                    isPrintMode
+                  )}
+                </Space.Space>
+              </div>
+            )}
+          </Suspense>
+        )}
+      </>
+    );
+    return (
+      <React.Fragment>
+        {isPrintMode
+          ? getPosterByType(
+              posterType as string,
+              routeData,
+              routeDesignConfig,
+              isInEditMode,
+              isPrintMode
+            )
+          : editPosterTemplate}
+      </React.Fragment>
+    );
   };
   return <PosterTemaple />;
 }

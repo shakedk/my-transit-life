@@ -42,7 +42,7 @@ const DataSelector = () => {
       >
         {ptNetworks
           .sort((a, b) => {
-            return a.networkName.localeCompare(b.networkName);
+            return a.networkName.trim().localeCompare(b.networkName.trim());
           })
           .map((network) => {
             return (
