@@ -33,5 +33,6 @@ yarn-error.log*
 # vercel
 .vercel
 
-
-/src/utils/db/serviceAccountKey.json
+// keys
+/src/lib/db/serviceAccountKey.json
+/src/lib/dataAPI/transitApiKey.json

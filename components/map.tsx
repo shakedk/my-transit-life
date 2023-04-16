@@ -387,7 +387,6 @@ const RouteMap = ({
                 );
               })
               .map((pattern) => {
-                console.log("displsyedPatternsFromDB", displsyedPatternsFromDB);
                 return (
                   <LayersControl.Overlay
                     key={pattern.properties.route_id}

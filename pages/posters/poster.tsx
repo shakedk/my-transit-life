@@ -12,6 +12,7 @@ import PosterGeoLogoHorizontal from "./posterGeoLogoHorizontal";
 import PosterGeoNoLogo from "./posterGeoNoLogo";
 import { createPosterInDB } from "./utils";
 import PosterGeoLogoA0 from "./posterGeoLogoA0";
+import DataSelector from "../../components/dataSelector";
 
 export async function getServerSideProps(context) {
   const routeData = await fetch(
@@ -110,36 +111,39 @@ export default function Page(props) {
       createPosterInDB(posterType, routeID);
     }, [routeID]);
     const isPrintMode = router.query.printMode === "true";
-    
+
     const [isInEditMode, setIsInEditMode] = useState(!isPrintMode);
 
     return React.useMemo(() => {
-      if (routeID) {
-        return (
-          <div>
-            {" "}
-            <Head>
-              <title>{routeID}</title>
-            </Head>
-            {!isPrintMode && (
-              <>
-                <EditToggle
-                  isInEditMode={isInEditMode}
-                  setIsInEditMode={setIsInEditMode}
-                />
-                <OpenForPrintButton />
-              </>
-            )}
-            {getPosterByType(
-              posterType as string,
-              routeData,
-              routeDesignConfig,
-              isInEditMode,
-              isPrintMode
-            )}
-          </div>
-        );
-      }
+      return (
+        <React.Fragment>
+          <DataSelector/>
+          {routeID && (
+            <div>
+              {" "}
+              <Head>
+                <title>{routeID}</title>
+              </Head>
+              {!isPrintMode && (
+                <>
+                  <EditToggle
+                    isInEditMode={isInEditMode}
+                    setIsInEditMode={setIsInEditMode}
+                  />
+                  <OpenForPrintButton />
+                </>
+              )}
+              {getPosterByType(
+                posterType as string,
+                routeData,
+                routeDesignConfig,
+                isInEditMode,
+                isPrintMode
+              )}
+            </div>
+          )}
+        </React.Fragment>
+      );
     }, [routeID, isInEditMode]);
   };
   return <PosterTemaple />;

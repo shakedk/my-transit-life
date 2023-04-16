@@ -1,4 +1,6 @@
 import admin from 'firebase-admin';
+
+// Setup Google apps services account
 let serviceAccount = {};
 if (process.env.NODE_ENV === "development") {
   serviceAccount = require("./serviceAccountKey.json");
@@ -14,7 +16,6 @@ if (process.env.NODE_ENV === "development") {
   serviceAccount.auth_provider_x509_cert_url= process.env.SERVICE_ACCOUNT_AUTH_PROVIDER_X509_CERT_URL;
   serviceAccount.client_x509_cert_url= process.env.SERVICE_ACCOUNT_CLIENT_X509_CERT_URL;
 }
-
 
 if (!admin.apps.length) {
   try {

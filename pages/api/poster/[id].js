@@ -1,4 +1,4 @@
-import db from "../../../src/utils/db";
+import db from "../../../src/lib/db";
 
 export default async (req, res) => {
   const { id } = req.query;
