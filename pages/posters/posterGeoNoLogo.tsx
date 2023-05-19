@@ -64,6 +64,7 @@ export default function Page({ routeData, routeDesignConfig, isInEditMode, isPri
                   className={styles.lineDesc}
                   style={{
                     fontFamily: routeDesignConfig.font,
+                    fontWeight: 200,
                     fontSize: routeDesignConfig.routeTitleSize || 80,
                   }}
                 >
@@ -116,7 +117,8 @@ export default function Page({ routeData, routeDesignConfig, isInEditMode, isPri
           isSingleDot={routeDesignConfig.isSingleDot}
           showGeoLayer={true}
           smoothFactor={undefined}
-          showMarkers={true} patterns={undefined}        />
+          showMarkers={true} 
+          patterns={routeData.patterns}        />
       </div>
       <div className={styles.transitLifeCred}>
         <TransitLifeCredit creditFontSize={routeDesignConfig.creditFontSize} />

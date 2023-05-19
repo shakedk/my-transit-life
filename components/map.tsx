@@ -446,6 +446,37 @@ const RouteMap = ({
               })}
           </LayersControl>
         )}
+        {/* Print Mode Patterns */}
+        {isPrintMode &&
+          patterns &&
+          patterns.map((pattern) =>
+            displsyedPatternsFromDB[pattern.properties.route_id]?.toDisplay ? (
+              <>
+                <Polyline
+                  pathOptions={{
+                    color: "snow",
+                    weight: pathWeight + 10 || 10,
+                  }}
+                  positions={reverseMultiPolyLine([
+                    pattern.geometry.coordinates,
+                  ])}
+                  smoothFactor={smoothFactor}
+                />
+                <Polyline
+                  key={pattern.properties.route_id}
+                  pathOptions={{
+                    color: pathColor,
+                    weight: pathWeight || 10,
+                  }}
+                  positions={reverseMultiPolyLine([
+                    pattern.geometry.coordinates,
+                  ])}
+                  smoothFactor={smoothFactor}
+                />
+              </>
+            ) : null
+          )}
+        {/* Print Mode Stops */}
         {isPrintMode &&
           labels &&
           labels.filter((stopLabel) => displayedStops[stopLabel.key])}

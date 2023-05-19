@@ -19,6 +19,7 @@ import PosterGeoNoLogo from "./posterGeoNoLogo";
 import { createPosterInDB } from "./utils";
 import PosterGeoLogoA0 from "./posterGeoLogoA0";
 import DataSelector from "../../components/dataSelector";
+import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 
 export async function getServerSideProps(context) {
   const routeData = await fetch(
@@ -100,12 +101,14 @@ export default function Page(props) {
             );
           case "PosterGeoLogoA0".toLocaleLowerCase():
             return (
-              <PosterGeoLogoA0
-                routeData={routeData}
-                routeDesignConfig={routeDesignConfig}
-                isInEditMode={isInEditMode}
-                isPrintMode={isPrintMode}
-              />
+              <div>
+                <PosterGeoLogoA0
+                  routeData={routeData}
+                  routeDesignConfig={routeDesignConfig}
+                  isInEditMode={isInEditMode}
+                  isPrintMode={isPrintMode}
+                />
+              </div>
             );
           case "PosterGeoNoLogo".toLocaleLowerCase():
             return (
@@ -123,35 +126,7 @@ export default function Page(props) {
       [routeID, isInEditMode]
     );
 
-    const [Space, setSpace] = useState(null);
-
-    useEffect(() => {
-      async function loadZoomableUI() {
-        const spaceLib = await import("react-zoomable-ui");
-        spaceLib.suppressBrowserZooming();
-        setSpace(spaceLib);
-      }
-      loadZoomableUI();
-    }, []);
-
-    const posterRef = useRef(null);
-    const [posterWidth, setPosterWidth] = useState(1000);
-    const [posterHeight, setPosterHeight] = useState(1000);
-
-    useEffect(() => {
-      const updatePosterDimensions = () => {
-        if (posterRef.current) {
-          setPosterWidth(posterRef.current.clientWidth);
-          setPosterHeight(posterRef.current.clientHeight);
-        }
-      };
-      updatePosterDimensions();
-      window.addEventListener("resize", updatePosterDimensions);
-      return () => {
-        window.removeEventListener("resize", updatePosterDimensions);
-      };
-    }, [posterRef]);
-
+    const zoomOutScale = 0.2;
     const editPosterTemplate = (
       <>
         <DataSelector />
@@ -163,56 +138,33 @@ export default function Page(props) {
           setIsInEditMode={setIsInEditMode}
         />
         <OpenForPrintButton />
-        {Space && (
-          <Suspense fallback={<div>Loading...</div>}>
-            {routeID && (
-              <div
-                ref={posterRef}
-                style={{
-                  position: "relative",
-                  border: "1px solid black",
-                  width: posterWidth,
-                  height: posterHeight,
-                }}
-              >
-                <Space.Space
-                  onCreate={(viewPort) => {
-                    // viewPort.setBoundsToContainer()
-                    debugger;
-                    debugger;
-                    debugger;
-                    debugger;
-                    debugger;
-                    debugger;
-                    debugger;
-                    debugger;
-                    debugger;
-                    viewPort.setBounds({
-                      x: [0, posterWidth],
-                      y: [0, posterHeight],
-                      zoom: 0.5
-                    });
-                  //   viewPort.camera.centerFitAreaIntoView({
-                  //     left: 0,
-                  //     top: 0,
-                  //     width: posterWidth,
-                  //     height: posterHeight,
-                  //     // zoom: 0.1
-                  //   });
-                  }}
-                >
-                  {getPosterByType(
-                    posterType as string,
-                    routeData,
-                    routeDesignConfig,
-                    isInEditMode,
-                    isPrintMode
-                  )}
-                </Space.Space>
-              </div>
-            )}
-          </Suspense>
-        )}
+        <div
+          style={{
+            height: `${zoomOutScale * 7016 + 50}px`,
+            width: `${zoomOutScale * 4960 + 50}px`,
+            overflow: "hidden",
+            border: "20px solid red",
+          }}
+        >
+          <TransformWrapper
+            initialScale={zoomOutScale}
+            panning={{
+              disabled: true,
+            }}
+            wheel={{ disabled: true }}
+            pinch={{ disabled: true }}
+          >
+            <TransformComponent>
+              {getPosterByType(
+                posterType as string,
+                routeData,
+                routeDesignConfig,
+                isInEditMode,
+                isPrintMode
+              )}
+            </TransformComponent>
+          </TransformWrapper>
+        </div>
       </>
     );
     return (
