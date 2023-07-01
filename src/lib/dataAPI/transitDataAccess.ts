@@ -8,7 +8,7 @@ export class TransitDataAccess implements IDataAccess {
   BASE_URL: string;
 
   constructor() {
-    this.BASE_URL = "https://external.transitapp.com/v3/public/";
+    this.BASE_URL = "https://external.transitapp.com/v3/public";
     if (!this.initialized) {
       if (process.env.NODE_ENV === "development") {
         this.API_KEY = require("./transitApiKey.json");
@@ -66,18 +66,18 @@ export class TransitDataAccess implements IDataAccess {
   async getRoutesbyNetworkId(
     networkId: string
   ): Promise<{ routeName: string; routeId: string }[]> {
-    const url = `${this.BASE_URL}/available_networks`;
+    const url = `${this.BASE_URL}/routes_for_network?network_id=${networkId}`;
     const req = {
       method: "GET",
       headers: new Headers({
         apiKey: this.API_KEY,
       }),
     };
-    const response = await fetch(req);
-    const routes = await response.json();
+    const response = await fetch(url, req);
+    const { routes } = await response.json();
     return routes.map((route) => ({
-      routeName: route.name,
-      routeId: route.id,
+      routeName: `${route.route_short_name} - ${route.route_long_name}`,
+      routeId: route.global_route_id,
     }));
   }
 

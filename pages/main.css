@@ -1,6 +1,6 @@
-@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@300&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Heebo:wght@300;500&display=swap');
-
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@500&display=swap');
 @font-face {
     font-family: "Johnston";
     src: url("/fonts/johnston-itc-std-bold.otf");
@@ -14,5 +14,35 @@
     src: url("/fonts/FFTransit.ttf");
     font-style: bold;
     font-weight: 800;
+    font-display: swap;
+  }
+
+  @font-face {
+    font-family: "AvrileSans-Bold";
+    src: url("/fonts/AvrileSans-Bold.ttf");
+    font-style: bold;
+    font-weight: regular;
+    font-display: swap;
+  }
+
+  @font-face {
+    font-family: "AvrileSans-SemiBold";
+    src: url("/fonts/AvrileSans-SemiBold.ttf");
+    font-style: bold;
+    font-weight: light;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: "AvrileSans-Medium";
+    src: url("/fonts/AvrileSans-Medium.ttf");
+    font-style: bold;
+    font-weight: light;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: "AvrileSans-Regular";
+    src: url("/fonts/AvrileSans-Regular.ttf");
+    font-style: bold;
+    font-weight: light;
     font-display: swap;
   }

@@ -63,7 +63,7 @@ export default function Page({ routeData, routeDesignConfig, isInEditMode, isPri
                 <div
                   className={styles.lineDesc}
                   style={{
-                    fontFamily: routeDesignConfig.font,
+                    fontFamily: routeDesignConfig.routeTitleFont || routeDesignConfig.font,
                     fontWeight: 200,
                     fontSize: routeDesignConfig.routeTitleSize || 80,
                   }}
@@ -118,10 +118,11 @@ export default function Page({ routeData, routeDesignConfig, isInEditMode, isPri
           showGeoLayer={true}
           smoothFactor={undefined}
           showMarkers={true} 
-          patterns={routeData.patterns}        />
+          patterns={routeData.patterns}  
+          stopFont={routeDesignConfig.stopFont}      />
       </div>
       <div className={styles.transitLifeCred}>
-        <TransitLifeCredit creditFontSize={routeDesignConfig.creditFontSize} />
+        <TransitLifeCredit creditFontSize={routeDesignConfig.creditFontSize} font={routeDesignConfig.creditFont} />
       </div>
     </div>
   );

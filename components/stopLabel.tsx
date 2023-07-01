@@ -112,9 +112,7 @@ const StopLabel = ({
       }
       zIndexOffset={2000}
       eventHandlers={eventHandlers}
-    >
-      {/* Edit seems to work, add movability and width and height and send to DB */}
-      {stop.stop_name !== "OPTIBUS" ? (
+    >      {stop.stop_name !== "OPTIBUS" ? (
         <div>
           <Tooltip
             ref={tooltipRef}

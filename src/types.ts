@@ -10,6 +10,10 @@ export interface IRoute {
   shape: [number, number][];
 }
 export interface IPtNetwork {
-  networkName: string;
-  networkId: string;
+  networkName: string,
+  networkId: string
+}
+export interface IPattern {
+  patternId: string,
+  patternName: string
 }

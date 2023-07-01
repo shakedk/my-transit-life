@@ -67,6 +67,7 @@ export default function Page({ routeData, routeDesignConfig, isInEditMode, isPri
                   }}
                 ></Image>
               ) : (
+                routeDesignConfig.routeName && 
                 <CustomDrag id={'lineName'} isDrggable={isInEditMode}>
                 <div
                   className={styles.lineName}

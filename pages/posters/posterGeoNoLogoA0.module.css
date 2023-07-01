@@ -1,5 +1,6 @@
 .posterContainer {
-  border: 200px GhostWhite solid;
+  border: 400px white solid;
+  /* border: 200px GhostWhite solid; */
   background: white;
   height: 7016px;
   width: 4960px;
@@ -8,12 +9,12 @@
 }
 
 .header {
-  height: 13%;
+  height: 12%;
   position: relative;
 }
 
 .mapContainer {
-  height: 87%;
+  height: 88%;
 }
 
 .title {
@@ -31,14 +32,12 @@
   display: flex;
   flex-direction: row;
   align-items: center;
-  margin: 50px
+  /* margin: 50px */
 }
 
 .lineNameNoLogo {
   display: flex;
   flex-direction: column;
-  padding-left: 30px;
-  column-gap: 15px;
   width: 100%;
 }
 
@@ -47,14 +46,14 @@
   flex-direction: row;
   padding: 0;
   font-weight: bolder;
-  flex-grow: 1;
+  letter-spacing: 10px;
 }
 
 .lineTypeDesc {
+  margin-top: -55px; 
   padding: 0;
   color: black;
   font-weight: bolder;
-  flex-grow: 8;
 }
 
 .lineType {
@@ -77,14 +76,12 @@
 
 .agencyLogo {
   position: absolute;
-  /* right: 20px; */
-  /* top: 20px; */
 }
 
 .transitLifeCred {
   position: absolute;
-  top: 6350px;
+  top: 6197px;
   transform: rotate(270deg);
-  left: -310px;
+  left: -42px;
 }
 
