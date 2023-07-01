@@ -18,7 +18,7 @@ import PosterGeoLogoHorizontal from "./posterGeoLogoHorizontal";
 import PosterGeoNoLogo from "./posterGeoNoLogo";
 import { createPosterInDB } from "./utils";
 import PosterGeoLogoA0 from "./posterGeoLogoA0";
-import DataSelector from "../../components/dataSelector";
+import DataSelector from "../../components/dataSelectors/DataSelector";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 
 export async function getServerSideProps(context) {
@@ -32,10 +32,13 @@ export async function getServerSideProps(context) {
       ""
     )}?routeID=${context.query.routeID}`
   );
+
+  const routeDataJson = await routeData.json();
+  const routeDesignConfigJson = await routeDesignConfig.json();
   return {
     props: {
-      routeData: await routeData.json(),
-      routeDesignConfig: await routeDesignConfig.json(),
+      routeData: routeDataJson,
+      routeDesignConfig: routeDesignConfigJson,
     }, // will be passed to the page component as props
   };
 }
@@ -125,8 +128,9 @@ export default function Page(props) {
       },
       [routeID, isInEditMode]
     );
-
-    const zoomOutScale = 0.2;
+    
+    const intialZoomScale = 0.2;
+    
     const editPosterTemplate = (
       <>
         <DataSelector />
@@ -140,29 +144,45 @@ export default function Page(props) {
         <OpenForPrintButton />
         <div
           style={{
-            height: `${zoomOutScale * 7016 + 50}px`,
-            width: `${zoomOutScale * 4960 + 50}px`,
+            height: `${intialZoomScale  * 7016 + 50}px`,
+            width: `${intialZoomScale  * 4960 + 50}px`,
             overflow: "hidden",
             border: "20px solid red",
           }}
         >
           <TransformWrapper
-            initialScale={zoomOutScale}
+            initialScale={intialZoomScale}
             panning={{
               disabled: true,
             }}
+            limitToBounds={true}
+            minScale={0.2}
+            maxScale={0.5 }
             wheel={{ disabled: true }}
             pinch={{ disabled: true }}
+            alignmentAnimation={{ disabled: true }}
+            velocityAnimation={{ disabled: true }}
+            zoomAnimation={{ disabled: true }}
+            doubleClick={{ disabled: true }}
           >
-            <TransformComponent>
-              {getPosterByType(
-                posterType as string,
-                routeData,
-                routeDesignConfig,
-                isInEditMode,
-                isPrintMode
-              )}
-            </TransformComponent>
+            {({ zoomIn, zoomOut, resetTransform, ...rest }) => (
+              <>
+                <div className="tools">
+                  <button onClick={() => zoomIn(0.1)}>+</button>
+                  <button onClick={() => zoomOut(0.1)}>-</button>
+                  <button onClick={() => resetTransform()}>x</button>
+                </div>
+                <TransformComponent>
+                  {getPosterByType(
+                    posterType as string,
+                    routeData,
+                    routeDesignConfig,
+                    isInEditMode,
+                    isPrintMode
+                  )}
+                </TransformComponent>
+              </>
+            )}
           </TransformWrapper>
         </div>
       </>

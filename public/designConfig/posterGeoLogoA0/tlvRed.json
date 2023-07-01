@@ -1,0 +1,39 @@
+{
+  "backgroundColor": "#D91A1A",
+
+  "tileLayerName": "StamenToner",
+
+  "pathColor": "#D91A1A",
+
+  "font": "NotoSans",
+  "stopFontSize": 120,
+  "routeType": "",
+  "stopCircleSize": 2000,
+  "stopColor": "snow",
+  "stopBackgroundColor": "#D91A1A",
+  "isSingleDot": true,
+  "pathWeight": 50,
+
+
+  "routeNamePaddingTop": 45,
+  "routeNamePaddingBottom": 45,
+  "routeNamePaddingLeft": 60,
+  "routeNamePaddingRight": 60,
+  "routeNameHeight": 400,
+  "routeNameFontWeight": "500",
+
+  "routeDesc": "הקו האדום",
+  "routeTitleSize": 600,
+  "routeTitleFontWeight": "300",
+  "logoFontSize":222,
+
+    "agencyLogoPath": "../../logos/TLV/Dankal Logo.svg",
+
+  "agencyLogoWidth": 500,
+  "agencyLogoHeight": 500,
+  "agencyLogoTop": 80,
+  "agencyLogoRight": 80,
+  "mapZoom": 15,
+
+  "creditFontSize": 56
+}

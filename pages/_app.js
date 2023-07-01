@@ -22,6 +22,24 @@ function MyApp({ Component, pageProps }) {
           as="font"
           crossOrigin=""
         />
+        <link
+          rel="preload"
+          href="/fonts/AvrileSans-SemiBold.ttf"
+          as="font"
+          crossOrigin=""
+        />
+        <link
+          rel="preload"
+          href="/fonts/AvrileSans-Medium.ttf"
+          as="font"
+          crossOrigin=""
+        />
+        <link
+          rel="preload"
+          href="/fonts/AvrileSans-Regular.ttf"
+          as="font"
+          crossOrigin=""
+        />
       </Head>
       <ThemeProvider theme={theme}>
         <Component {...pageProps} />

@@ -4,18 +4,20 @@
   "tileLayerName": "StamenTonerBackground",
 
   "pathColor": "snow",
+  "stopFont": "AvrileSans-Regular",
   "stopFontColor": "snow",
   "stopColor": "#D91A1A",
   "stopBackgroundColor": "white",
-  "font": "FFTransit",
+  "font": "AvrileSans-Bold",
 
   "routeType": "M10",
-  "routeNameAndTypeSize": 400,
-  "routeTitleSize": 200,
+  "routeNameAndTypeSize": 360,
+  "routeTitleFont": "AvrileSans-SemiBold",
+  "routeTitleSize": 160,
 
   "lineDetailsFontSize": 100,
   "routeName": "MetroTram-Linie",
-  "routeDesc": "S+U Hauptbahnhof ◄ ► S+U Warschauer Str.",
+  "routeDesc": "S+U Hauptbahnhof ←→ S+U Warschauer Str.",
   "pathWeight": 40,
 
   "descriptionDetailsDONOTSHOW": {
@@ -34,7 +36,7 @@
   "agencyLogoRight": 20,
 
   "stopFontSize": 80,
-  "stopCircleSize": 800,
+  "stopCircleSize": 700,
   "mapZoom": 15.5,
 
   "creditFontSize": 70,

@@ -38,6 +38,7 @@ const RouteMap = ({
   isInEditMode,
   stopFontSize,
   stopFontColor,
+  stopFont,
   stopIDsToDisplayFromConfig,
   stopColor,
   stopCircleSize,
@@ -196,7 +197,7 @@ const RouteMap = ({
             }
             stopPropetiesChanedHandler={stopPropetiesChanedHandler}
             stopOriginalName={stop.stop_name}
-            font={font}
+            font={stopFont || font}
             fontSize={stopFontSize}
             stopFontColor={stopFontColor}
             isInEditMode={isInEditMode}
