@@ -5,7 +5,7 @@
 
   "pathColor": "#D91A1A",
 
-  "font": "NotoSans",
+  "font": "Noto Sans Hebrew",
   "stopFontSize": 120,
   "routeType": "",
   "stopCircleSize": 2000,
@@ -22,15 +22,15 @@
   "routeNameHeight": 400,
   "routeNameFontWeight": "500",
 
-  "routeDesc": "הקו האדום",
-  "routeTitleSize": 600,
+  "routeDesc": "הקו האדום של הרכבת הקלה בתל אביב - יפו",
+  "routeTitleSize": 300,
   "routeTitleFontWeight": "300",
   "logoFontSize":222,
 
     "agencyLogoPath": "../../logos/TLV/Dankal Logo.svg",
 
-  "agencyLogoWidth": 500,
-  "agencyLogoHeight": 500,
+  "agencyLogoWidth": 700,
+  "agencyLogoHeight": 700,
   "agencyLogoTop": 80,
   "agencyLogoRight": 80,
   "mapZoom": 15,

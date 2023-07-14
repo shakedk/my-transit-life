@@ -16,10 +16,12 @@ import PosterFullMapLogo from "./posterFullMapLogo";
 import PosterGeoLogo from "./posterGeoLogo";
 import PosterGeoLogoHorizontal from "./posterGeoLogoHorizontal";
 import PosterGeoNoLogo from "./posterGeoNoLogo";
-import { createPosterInDB } from "./utils";
+import { createPosterInDB, getPosterIDInDB } from "./utils";
 import PosterGeoLogoA0 from "./posterGeoLogoA0";
 import DataSelector from "../../components/dataSelectors/DataSelector";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
+import axios from "axios";
+import { IPattern } from "../../src/types";
 
 export async function getServerSideProps(context) {
   const routeData = await fetch(
@@ -57,14 +59,40 @@ export default function Page(props) {
     const isPrintMode = router.query.printMode === "true";
 
     const [isInEditMode, setIsInEditMode] = useState(!isPrintMode);
+    const [posterID, setPosterID] = useState(null);
+    const [stopDataFromDB, setStopDataFromDB] = useState({});
+    const [displsyedPatternsFromDB, setDisplsyedPatternsFromDB] = useState(
+      {}
+    );
+    const [selectedPatterns, setSelectedPatterns] = useState<IPattern[]>(null);
+
+    // I was going to add support for selectedPAtterns in mix wuth displsyedPatternsFromDB
+
+    useEffect(() => {
+      async function getData() {
+        const posterType = router.query.posterType;
+        const _routeID = router.query.routeID;
+        const id = await getPosterIDInDB(posterType, _routeID);
+
+        const res = await axios.get(`/api/poster/${id}`);
+        setPosterID(id);
+        setStopDataFromDB(res.data.stops || {});
+        setDisplsyedPatternsFromDB(res.data.patterns || {});
+      }
+      getData();
+    }, [router.query]);
+
     const getPosterByType = useCallback(
       (
         posterType: string,
-        routeData: object,
+        routeData: any,
         routeDesignConfig: object,
         isInEditMode: boolean,
         isPrintMode: boolean
       ) => {
+
+
+
         switch (posterType.toLocaleLowerCase()) {
           case "PosterGeoLogoHorizontal".toLocaleLowerCase():
             return (
@@ -73,6 +101,9 @@ export default function Page(props) {
                 routeDesignConfig={routeDesignConfig}
                 isInEditMode={isInEditMode}
                 isPrintMode={isPrintMode}
+                stopDataFromDB={stopDataFromDB}
+                posterID={posterID}
+                displsyedPatternsFromDB={displsyedPatternsFromDB}
               />
             );
           case "PosterBigFrameNoLogo".toLocaleLowerCase():
@@ -82,6 +113,9 @@ export default function Page(props) {
                 routeDesignConfig={routeDesignConfig}
                 isInEditMode={isInEditMode}
                 isPrintMode={isPrintMode}
+                stopDataFromDB={stopDataFromDB}
+                posterID={posterID}
+                displsyedPatternsFromDB={displsyedPatternsFromDB}
               />
             );
           case "PosterFullMapLogo".toLocaleLowerCase():
@@ -91,6 +125,9 @@ export default function Page(props) {
                 routeDesignConfig={routeDesignConfig}
                 isInEditMode={isInEditMode}
                 isPrintMode={isPrintMode}
+                stopDataFromDB={stopDataFromDB}
+                posterID={posterID}
+                displsyedPatternsFromDB={displsyedPatternsFromDB}
               />
             );
           case "PosterGeoLogo".toLocaleLowerCase():
@@ -100,6 +137,9 @@ export default function Page(props) {
                 routeDesignConfig={routeDesignConfig}
                 isInEditMode={isInEditMode}
                 isPrintMode={isPrintMode}
+                stopDataFromDB={stopDataFromDB}
+                posterID={posterID}
+                displsyedPatternsFromDB={displsyedPatternsFromDB}
               />
             );
           case "PosterGeoLogoA0".toLocaleLowerCase():
@@ -110,6 +150,9 @@ export default function Page(props) {
                   routeDesignConfig={routeDesignConfig}
                   isInEditMode={isInEditMode}
                   isPrintMode={isPrintMode}
+                  stopDataFromDB={stopDataFromDB}
+                  posterID={posterID}
+                  displsyedPatternsFromDB={displsyedPatternsFromDB}
                 />
               </div>
             );
@@ -120,20 +163,23 @@ export default function Page(props) {
                 routeDesignConfig={routeDesignConfig}
                 isInEditMode={isInEditMode}
                 isPrintMode={isPrintMode}
+                stopDataFromDB={stopDataFromDB}
+                posterID={posterID}
+                displsyedPatternsFromDB={displsyedPatternsFromDB}
               />
             );
           default:
             return null;
         }
       },
-      [routeID, isInEditMode]
+      [routeID, isInEditMode, displsyedPatternsFromDB, stopDataFromDB]
     );
-    
+
     const intialZoomScale = 0.2;
-    
+
     const editPosterTemplate = (
       <>
-        <DataSelector />
+        {/* <DataSelector routeData={routeData} onPatternChange={onPatternChange}/> */}
         <Head>
           <title>{routeID}</title>
         </Head>
@@ -142,10 +188,10 @@ export default function Page(props) {
           setIsInEditMode={setIsInEditMode}
         />
         <OpenForPrintButton />
-        <div
+        {/* <div
           style={{
-            height: `${intialZoomScale  * 7016 + 50}px`,
-            width: `${intialZoomScale  * 4960 + 50}px`,
+            height: `${intialZoomScale * 7016 + 50}px`,
+            width: `${intialZoomScale * 4960 + 50}px`,
             overflow: "hidden",
             border: "20px solid red",
           }}
@@ -157,7 +203,7 @@ export default function Page(props) {
             }}
             limitToBounds={true}
             minScale={0.2}
-            maxScale={0.5 }
+            maxScale={0.5}
             wheel={{ disabled: true }}
             pinch={{ disabled: true }}
             alignmentAnimation={{ disabled: true }}
@@ -184,7 +230,14 @@ export default function Page(props) {
               </>
             )}
           </TransformWrapper>
-        </div>
+        </div> */}
+        <div>      {getPosterByType(
+                    posterType as string,
+                    routeData,
+                    routeDesignConfig,
+                    isInEditMode,
+                    isPrintMode
+                  )}</div>
       </>
     );
     return (

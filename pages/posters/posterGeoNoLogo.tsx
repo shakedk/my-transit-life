@@ -10,7 +10,15 @@ import React from 'react';
 import TransitLifeCredit from "../../components/tranitLifeCredit";
 import { useMap } from "./utils";
 
-export default function Page({ routeData, routeDesignConfig, isInEditMode, isPrintMode }) {
+export default function Page({
+  routeData,
+  routeDesignConfig,
+  isInEditMode,
+  isPrintMode,
+  stopDataFromDB,
+  posterID,
+  displsyedPatternsFromDB,
+}) {
   const GeoMap = useMap();
 
   const getDescriptionDetailElement = (detail: string, isFirst: boolean) => (
@@ -37,12 +45,16 @@ export default function Page({ routeData, routeDesignConfig, isInEditMode, isPri
         <div className={styles.title}>
           <div className={styles.lineDetails}>
             <div className={styles.lineNameNoLogo}>
-              <div className={styles.lineName}
+              <div
+                className={styles.lineName}
                 style={{
                   color: routeDesignConfig.backgroundColor,
                   fontFamily: routeDesignConfig.font,
-                  fontWeight: 'bolder',
-                  fontSize: routeDesignConfig.routeNameAndTypeSize || routeDesignConfig.routeTitleSize || 80,
+                  fontWeight: "bolder",
+                  fontSize:
+                    routeDesignConfig.routeNameAndTypeSize ||
+                    routeDesignConfig.routeTitleSize ||
+                    80,
                 }}
               >
                 {routeDesignConfig.routeName}
@@ -51,9 +63,12 @@ export default function Page({ routeData, routeDesignConfig, isInEditMode, isPri
                   style={{
                     color: routeDesignConfig.backgroundColor,
                     paddingLeft: 20,
-                    fontWeight: 'bolder',
+                    fontWeight: "bolder",
                     fontFamily: routeDesignConfig.font,
-                    fontSize: routeDesignConfig.routeNameAndTypeSize || routeDesignConfig.routeTitleSize || 80,
+                    fontSize:
+                      routeDesignConfig.routeNameAndTypeSize ||
+                      routeDesignConfig.routeTitleSize ||
+                      80,
                   }}
                 >
                   {`${routeDesignConfig.routeType}`}
@@ -63,7 +78,9 @@ export default function Page({ routeData, routeDesignConfig, isInEditMode, isPri
                 <div
                   className={styles.lineDesc}
                   style={{
-                    fontFamily: routeDesignConfig.routeTitleFont || routeDesignConfig.font,
+                    fontFamily:
+                      routeDesignConfig.routeTitleFont ||
+                      routeDesignConfig.font,
                     fontWeight: 200,
                     fontSize: routeDesignConfig.routeTitleSize || 80,
                   }}
@@ -110,19 +127,28 @@ export default function Page({ routeData, routeDesignConfig, isInEditMode, isPri
           font={routeDesignConfig.font}
           stopFontSize={routeDesignConfig.stopFontSize}
           stopFontColor={routeDesignConfig.stopFontColor}
-          stopIDsToDisplayFromConfig={routeDesignConfig.stopIDsToDisplayFromConfig}
+          stopIDsToDisplayFromConfig={
+            routeDesignConfig.stopIDsToDisplayFromConfig
+          }
           stopColor={routeDesignConfig.stopColor}
           stopCircleSize={routeDesignConfig.stopCircleSize}
           stopBackgroundColor={routeDesignConfig.stopBackgroundColor}
           isSingleDot={routeDesignConfig.isSingleDot}
           showGeoLayer={true}
           smoothFactor={undefined}
-          showMarkers={true} 
-          patterns={routeData.patterns}  
-          stopFont={routeDesignConfig.stopFont}      />
+          showMarkers={true}
+          patterns={routeData.patterns}
+          stopFont={routeDesignConfig.stopFont}
+          stopDataFromDB={stopDataFromDB}
+          posterID={posterID}
+          displsyedPatternsFromDB={displsyedPatternsFromDB}
+        />
       </div>
       <div className={styles.transitLifeCred}>
-        <TransitLifeCredit creditFontSize={routeDesignConfig.creditFontSize} font={routeDesignConfig.creditFont} />
+        <TransitLifeCredit
+          creditFontSize={routeDesignConfig.creditFontSize}
+          font={routeDesignConfig.creditFont}
+        />
       </div>
     </div>
   );

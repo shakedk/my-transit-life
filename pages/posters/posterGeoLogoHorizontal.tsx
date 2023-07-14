@@ -5,7 +5,15 @@ import styles from "./posterGeoLogoHorizontal.module.css";
 import TransitLifeCredit from "../../components/tranitLifeCredit";
 import { useMap } from "./utils";
 
-export default function Page({ routeData, routeDesignConfig, isInEditMode, isPrintMode }) {
+export default function Page({
+  routeData,
+  routeDesignConfig,
+  isInEditMode,
+  isPrintMode,
+  stopDataFromDB,
+  posterID,
+  displsyedPatternsFromDB,
+}) {
   const GeoMap = useMap();
 
   const getDescriptionDetailElement = (detail: string, isFirst: boolean) => (
@@ -119,7 +127,21 @@ export default function Page({ routeData, routeDesignConfig, isInEditMode, isPri
           isInEditMode={isInEditMode}
           isPrintMode={isPrintMode}
           showGeoLayer={undefined}
-          smoothFactor={undefined} patterns={undefined} mapOpacity={undefined} pathWeight={undefined} stopFontSize={undefined} stopFontColor={undefined} stopIDsToDisplayFromConfig={undefined} stopColor={undefined} stopCircleSize={undefined} stopBackgroundColor={undefined} isSingleDot={undefined}        />
+          smoothFactor={undefined}
+          patterns={undefined}
+          mapOpacity={undefined}
+          pathWeight={undefined}
+          stopFontSize={undefined}
+          stopFontColor={undefined}
+          stopIDsToDisplayFromConfig={undefined}
+          stopColor={undefined}
+          stopCircleSize={undefined}
+          stopBackgroundColor={undefined}
+          isSingleDot={undefined}
+        />
+        stopDataFromDB={stopDataFromDB}
+        posterID={posterID}
+        displsyedPatternsFromDB={displsyedPatternsFromDB}
       </div>
       <div className={styles.transitLifeCred}>
         <TransitLifeCredit creditFontSize={routeDesignConfig.creditFontSize} />
