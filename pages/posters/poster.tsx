@@ -22,6 +22,7 @@ import DataSelector from "../../components/dataSelectors/DataSelector";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import axios from "axios";
 import { IPattern } from "../../src/types";
+import dynamic from "next/dynamic";
 
 export async function getServerSideProps(context) {
   const routeData = await fetch(
@@ -240,8 +241,12 @@ export default function Page(props) {
                   )}</div>
       </>
     );
+
+    // const TurfComponent = dynamic(() => import('./TurfComponent'), { ssr: false });
+
     return (
       <React.Fragment>
+        {/* <TurfComponent patterns={routeData.patterns}/> */}
         {isPrintMode
           ? getPosterByType(
               posterType as string,

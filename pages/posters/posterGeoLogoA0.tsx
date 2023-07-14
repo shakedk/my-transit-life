@@ -49,7 +49,7 @@ export default function Page({
             : styles.headerNoDescriptionDetails
         }
       >
-        <CustomDrag id={"logo"} isDrggable={isInEditMode}>
+        {/* <CustomDrag id={"logo"} isDrggable={isInEditMode}>
           <div
             style={{
               position: "absolute",
@@ -207,7 +207,7 @@ export default function Page({
           {routeDesignConfig.descriptionDetails && (
             <div className={styles.divider}></div>
           )}
-        </div>
+        </div> */}
       </div>
       <div
         className={

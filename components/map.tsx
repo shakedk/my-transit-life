@@ -21,6 +21,8 @@ import { Icon } from "leaflet";
 import PropTypes from "prop-types";
 import { StopType } from "./stopLabel";
 
+import {dissolve} from '@turf/turf';
+
 const RouteMap = ({
   multiPolyLine,
   patterns,
@@ -365,12 +367,12 @@ const RouteMap = ({
       zoomControl={false}
       attributionControl={false}
       style={{
-        background: backgroundColor || "transparent",
+        // background: backgroundColor || "transparent",
         height: "100%",
         width: "100%",
       }}
     >
-      {showGeoLayer ? getTileLayer(tileLayerName) : null}
+      {/* {showGeoLayer ? getTileLayer(tileLayerName) : null} */}
       {/* When there is only a single pattern - can be removed in the future */}
       <Pane name="route-path" style={{ zIndex: 499, cursor: "default" }}>
         {!patterns && (
@@ -456,7 +458,7 @@ const RouteMap = ({
           patterns.map((pattern) =>
             displsyedPatternsFromDB[pattern.properties.route_id]?.toDisplay ? (
               <>
-                <Polyline
+                {/* <Polyline
                   pathOptions={{
                     color: "snow",
                     weight: pathWeight + 10 || 10,
@@ -465,7 +467,7 @@ const RouteMap = ({
                     pattern.geometry.coordinates,
                   ])}
                   smoothFactor={smoothFactor}
-                />
+                /> */}
                 <Polyline
                   key={pattern.properties.route_id}
                   pathOptions={{
@@ -480,11 +482,7 @@ const RouteMap = ({
               </>
             ) : null
           )}
-        {/* Print Mode Stops */}
-        {isPrintMode &&
-          labels &&
-          labels.filter((stopLabel) => displayedStops[stopLabel.key])}
-        {showMarkers && circleMarkers}
+        
       </Pane>
       <MapEventer />
     </MapContainer>
