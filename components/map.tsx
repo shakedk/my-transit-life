@@ -45,14 +45,17 @@ const RouteMap = ({
   stopBackgroundColor,
   isSingleDot,
   isPrintMode,
+  stopDataFromDB,
+  posterID,
+  displsyedPatternsFromDB
 }) => {
   /**
    * Lat Lon markers, leave here for testing lat lon vs. xy positions
    */
 
-  const [posterID, setPosterID] = useState(null);
-  const [stopDataFromDB, setStopDataFromDB] = useState({});
-  const [displsyedPatternsFromDB, setDisplsyedPatternsFromDB] = useState({});
+  // const [posterID, setPosterID] = useState(null);
+  // const [stopDataFromDB, setStopDataFromDB] = useState({});
+  // const [displsyedPatternsFromDB, setDisplsyedPatternsFromDB] = useState({});
 
   const [displayedStops, setDisplayedStops] = useState(
     stops.reduce((stopObj, stop) => {
@@ -165,19 +168,19 @@ const RouteMap = ({
     axios.put(`/api/poster/${posterID}`, params);
   };
   const router = useRouter();
-  useEffect(() => {
-    async function getData() {
-      const posterType = router.query.posterType;
-      const _routeID = router.query.routeID;
-      const id = await getPosterIDInDB(posterType, _routeID);
+  // useEffect(() => {
+  //   async function getData() {
+  //     const posterType = router.query.posterType;
+  //     const _routeID = router.query.routeID;
+  //     const id = await getPosterIDInDB(posterType, _routeID);
 
-      const res = await axios.get(`/api/poster/${id}`);
-      setPosterID(id);
-      setStopDataFromDB(res.data.stops || {});
-      setDisplsyedPatternsFromDB(res.data.patterns || {});
-    }
-    getData();
-  }, [router.query]);
+  //     const res = await axios.get(`/api/poster/${id}`);
+  //     setPosterID(id);
+  //     setStopDataFromDB(res.data.stops || {});
+  //     setDisplsyedPatternsFromDB(res.data.patterns || {});
+  //   }
+  //   getData();
+  // }, [router.query]);
   const labels = useMemo(() => {
     return (
       stopDataFromDB &&
@@ -556,6 +559,9 @@ RouteMap.prototypes = {
   isSingleDot: PropTypes.bool,
   isInEditMode: PropTypes.bool,
   isPrintMode: PropTypes.bool,
+  stopDataFromDB: PropTypes.any,
+  posterID: PropTypes.string,
+  displsyedPatternsFromDB: PropTypes.any
 };
 
 RouteMap.defaultProps = {

@@ -9,6 +9,9 @@ export default function Page({
   routeDesignConfig,
   isInEditMode,
   isPrintMode,
+  stopDataFromDB,
+  posterID,
+  displsyedPatternsFromDB,
 }) {
   const GeoMap = useMap();
 
@@ -61,6 +64,9 @@ export default function Page({
           stopCircleSize={undefined}
           stopBackgroundColor={undefined}
           isSingleDot={undefined}
+          stopDataFromDB={stopDataFromDB}
+          posterID={posterID}
+          displsyedPatternsFromDB={displsyedPatternsFromDB}
         />
       </div>
       <div
@@ -93,19 +99,19 @@ export default function Page({
           <div className={styles.descriptionDetails}>
             {routeDesignConfig.descriptionDetails &&
               getDescriptionDetailElement(
-                routeDesignConfig.descriptionDetails?.numberOfStopsText,
+                routeDesignConfig.descriptionDetails?.numberOfStopsText
                 // false
               )}
             <div className={styles.descriptionDetailDeivider}>{"|"}</div>
             {routeDesignConfig.descriptionDetails &&
               getDescriptionDetailElement(
-                routeDesignConfig.descriptionDetails?.launchDateText,
+                routeDesignConfig.descriptionDetails?.launchDateText
                 // false
               )}
             <div className={styles.descriptionDetailDeivider}>{"|"}</div>
             {routeDesignConfig.descriptionDetails &&
               getDescriptionDetailElement(
-                routeDesignConfig.descriptionDetails?.launchDateText,
+                routeDesignConfig.descriptionDetails?.launchDateText
                 // true
               )}
           </div>
