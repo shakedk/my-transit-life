@@ -126,23 +126,6 @@ const RouteMap = ({
     };
     axios.put(`/api/poster/${posterID}`, params);
   };
-  const patternDisplayToggleHandler = (
-    posterID: string,
-    patternName: string,
-    toDisplay: boolean
-  ) => {
-    const routeId = patterns.filter(
-      (p) => p.properties.route_long_name == patternName
-    )[0].properties.route_id;
-    const params = {
-      posterID: posterID,
-      patterns: {},
-    };
-    params.patterns[routeId] = {
-      toDisplay,
-    };
-    axios.put(`/api/poster/${posterID}`, params);
-  };
   const stopPropetiesChanedHandler = (
     posterID: string,
     stopID: string,
@@ -334,7 +317,6 @@ const RouteMap = ({
           stopDisplayToggleHandler(posterID, stopID, true);
         } else {
           const pattrenName = overlay.name;
-          patternDisplayToggleHandler(posterID, pattrenName, true);
         }
       },
       overlayremove(overlay) {
@@ -342,10 +324,7 @@ const RouteMap = ({
         if (stopMatch) {
           const stopID = stopMatch[1];
           stopDisplayToggleHandler(posterID, stopID, false);
-        } else {
-          const pattrenName = overlay.name;
-          patternDisplayToggleHandler(posterID, pattrenName, false);
-        }
+                }
       },
     });
 
@@ -381,53 +360,7 @@ const RouteMap = ({
           />
         )}
         {!patterns && routePath}
-        {/* Patterns control */}
-        {patterns && !isPrintMode && (
-          <LayersControl position="topright">
-            {patterns
-              .sort((a, b) => {
-                return a.properties.route_long_name.localeCompare(
-                  b.properties.route_long_name
-                );
-              })
-              .map((pattern) => {
-                return (
-                  <LayersControl.Overlay
-                    key={pattern.properties.route_id}
-                    name={pattern.properties.route_long_name}
-                    checked={
-                      displsyedPatternsFromDB[pattern.properties.route_id]
-                        ?.toDisplay
-                    }
-                  >
-                    <LayerGroup>
-                      <Polyline
-                        pathOptions={{
-                          color: "snow",
-                          weight: pathWeight + 10 || 10,
-                        }}
-                        positions={reverseMultiPolyLine([
-                          pattern.geometry.coordinates,
-                        ])}
-                        smoothFactor={smoothFactor}
-                      />
-                      <Polyline
-                        key={pattern.properties.route_id}
-                        pathOptions={{
-                          color: pathColor,
-                          weight: pathWeight || 10,
-                        }}
-                        positions={reverseMultiPolyLine([
-                          pattern.geometry.coordinates,
-                        ])}
-                        smoothFactor={smoothFactor}
-                      />
-                    </LayerGroup>
-                  </LayersControl.Overlay>
-                );
-              })}
-          </LayersControl>
-        )}
+
         {/* Stop control */}
         {!isPrintMode && (
           <LayersControl position="topright">
@@ -450,8 +383,7 @@ const RouteMap = ({
               })}
           </LayersControl>
         )}
-        {/* Print Mode Patterns */}
-        {isPrintMode &&
+        {
           patterns &&
           patterns.map((pattern) =>
             displsyedPatternsFromDB[pattern.properties.route_id]?.toDisplay ? (

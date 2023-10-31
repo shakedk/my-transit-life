@@ -163,6 +163,7 @@ export default function Page({
               >
                 <div style={isInEditMode ? { border: "1px solid black", padding: "50px" } : {}}>
                   <Textarea
+                    readOnly
                     className="textarea"
                     value={`${routeDesignConfig.routeType} ${routeDesignConfig.routeDesc}`}
                     sx={{
