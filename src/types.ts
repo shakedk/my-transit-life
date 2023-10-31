@@ -15,5 +15,6 @@ export interface IPtNetwork {
 }
 export interface IPattern {
   patternId: string,
-  patternName: string
+  patternName: string,
+  toDisplay: boolean
 }

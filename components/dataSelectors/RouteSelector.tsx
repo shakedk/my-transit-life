@@ -34,7 +34,7 @@ const RouteSelector = ({ networkId }: RouteSelectorProps) => {
       const res = await axios.get<IRouteData>(
         `/api/dataProvider/routeData?routeId=${routeId}`
       );
-      debugger;
+      
       setRouteData(res.data);
     } catch (error) {
       console.error(error);
