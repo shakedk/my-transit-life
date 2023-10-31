@@ -8,17 +8,20 @@ interface PatternSelectorOnMapProps {
 }
 
 const PatternSelectorOnMap = ({ patterns, onSelectChange }: PatternSelectorOnMapProps) => {
-  const [selectedPatterns, setSelectedPatterns] = useState<IPattern[]>([]);
 
-  const patternOptions = patterns.map((p) => ({
+  
+  const getAsOptions = (ptrns: IPattern[]) => ptrns.map((p) => ({
     value: p,
-    label: p.patternName,
+    label: p.patternName, 
   }));
-
+  
+  const selectedPatterns = patterns.filter(p => p.toDisplay);
   const handleSelectChange = (selectedOptions: any) => {
-    const newSelectedPatterns = selectedOptions ? selectedOptions.map((option: any) => option.value) : [];
-    setSelectedPatterns(selectedOptions);
-    onSelectChange(newSelectedPatterns);
+  const newSelectedPatterns = selectedOptions ? selectedOptions.map((option: any) => option.value).map((p: IPattern) => p.patternId) : [];
+  onSelectChange(  patterns.map((p) => ({
+    ...p,
+    toDisplay: newSelectedPatterns.includes(p.patternId),
+  })));
   };
 
   return (
@@ -27,9 +30,9 @@ const PatternSelectorOnMap = ({ patterns, onSelectChange }: PatternSelectorOnMap
       <Select
         isMulti
         id="pattern-select"
-        options={patternOptions}
+        options={getAsOptions(patterns)}
         onChange={handleSelectChange}
-        value={selectedPatterns}
+        value={getAsOptions(selectedPatterns)}
         placeholder="Select"
         isClearable
         isSearchable

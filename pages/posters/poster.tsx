@@ -51,6 +51,7 @@ export default function Page(props) {
   const { posterType } = router.query;
   const routeData = JSON.parse(props.routeData.routeData);
   const routeDesignConfig = JSON.parse(props.routeDesignConfig.routeData);
+  const [isLoading,setIsLoading] = useState(true);
 
   const PosterTemaple = () => {
     React.useEffect(() => {
@@ -61,13 +62,62 @@ export default function Page(props) {
     const [isInEditMode, setIsInEditMode] = useState(!isPrintMode);
     const [posterID, setPosterID] = useState(null);
     const [stopDataFromDB, setStopDataFromDB] = useState({});
-    const [displsyedPatternsFromDB, setDisplsyedPatternsFromDB] = useState(
-      {}
+    // DB returneד only true/false for which pattern (route id) to display
+    // Might be able to remove this down the road.
+    const [displsyedPatternsFromDB, setDisplsyedPatternsFromDB] = useState({});
+    const [patternsForSelection, setPatternsForSelection] =
+      useState<IPattern[]>(null);
+
+    /**
+     * Get pattern options from routeData and selected patterns from
+     * DB and turn on respective patterns
+     */
+    const handlePatternsOnLoad = useCallback(
+      (selectedPatternsFromDB: {
+        [key: string]: {
+          toDisplay: boolean;
+        };
+      }) => {
+        const allPatterns = routeData.patterns;
+        if (!selectedPatternsFromDB) {
+          return
+        }
+        setPatternsForSelection(
+          allPatterns.map((p) => ({
+            patternId: p.properties.route_id,
+            patternName: p.properties.route_long_name,
+            toDisplay: selectedPatternsFromDB[p.properties.route_id]?.toDisplay,
+          }))
+        );
+
+        setDisplsyedPatternsFromDB(selectedPatternsFromDB || {});
+      },
+      []
     );
-    const [selectedPatterns, setSelectedPatterns] = useState<IPattern[]>(null);
+    //
 
-    // I was going to add support for selectedPAtterns in mix wuth displsyedPatternsFromDB
+    const handlePatternSelection = (
+      updatedPatternsWithSelection: IPattern[]
+    ) => {
+      setPatternsForSelection(updatedPatternsWithSelection);
 
+      const displayedPatterns = updatedPatternsWithSelection.reduce(
+        (result, p) => {
+          result[p.patternId] = { toDisplay: p.toDisplay };
+          return result;
+        },
+        {}
+      );
+      setDisplsyedPatternsFromDB(displayedPatterns);
+      const params = {
+        posterID: posterID,
+        patterns: {},
+      };
+      Object.entries(displayedPatterns).forEach(([routeId, toDisplay]) => {params.patterns[routeId] = {
+        toDisplay,
+      };})
+      axios.put(`/api/poster/${posterID}`, params);
+    };
     useEffect(() => {
       async function getData() {
         const posterType = router.query.posterType;
@@ -77,7 +127,8 @@ export default function Page(props) {
         const res = await axios.get(`/api/poster/${id}`);
         setPosterID(id);
         setStopDataFromDB(res.data.stops || {});
-        setDisplsyedPatternsFromDB(res.data.patterns || {});
+        handlePatternsOnLoad(res.data.patterns);
+        setIsLoading(false);
       }
       getData();
     }, [router.query]);
@@ -90,9 +141,6 @@ export default function Page(props) {
         isInEditMode: boolean,
         isPrintMode: boolean
       ) => {
-
-
-
         switch (posterType.toLocaleLowerCase()) {
           case "PosterGeoLogoHorizontal".toLocaleLowerCase():
             return (
@@ -179,7 +227,13 @@ export default function Page(props) {
 
     const editPosterTemplate = (
       <>
-        {/* <DataSelector routeData={routeData} onPatternChange={onPatternChange}/> */}
+        {patternsForSelection && (
+          <DataSelector
+            routeData={routeData}
+            patternsForSelection={patternsForSelection}
+            setPatternsForSelection={handlePatternSelection}
+          />
+        )}
         <Head>
           <title>{routeID}</title>
         </Head>
@@ -231,18 +285,20 @@ export default function Page(props) {
             )}
           </TransformWrapper>
         </div> */}
-        <div>      {getPosterByType(
-                    posterType as string,
-                    routeData,
-                    routeDesignConfig,
-                    isInEditMode,
-                    isPrintMode
-                  )}</div>
+        <div>
+          {getPosterByType(
+            posterType as string,
+            routeData,
+            routeDesignConfig,
+            isInEditMode,
+            isPrintMode
+          )}
+        </div>
       </>
     );
     return (
       <React.Fragment>
-        {isPrintMode
+        {!isLoading && isPrintMode
           ? getPosterByType(
               posterType as string,
               routeData,
@@ -250,7 +306,7 @@ export default function Page(props) {
               isInEditMode,
               isPrintMode
             )
-          : editPosterTemplate}
+          : !isLoading && zxeditPosterTemplate}
       </React.Fragment>
     );
   };
