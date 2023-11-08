@@ -12,6 +12,7 @@ import Head from "next/head";
 import EditToggle from "../../components/editToggle";
 import OpenForPrintButton from "../../components/printButton";
 import PosterBigFrameNoLogo from "./posterBigFrameNoLogo";
+import PosterOct7 from "./posterOct7";
 import PosterFullMapLogo from "./posterFullMapLogo";
 import PosterGeoLogo from "./posterGeoLogo";
 import PosterGeoLogoHorizontal from "./posterGeoLogoHorizontal";
@@ -78,6 +79,15 @@ export default function Page(props) {
           case "PosterBigFrameNoLogo".toLocaleLowerCase():
             return (
               <PosterBigFrameNoLogo
+                routeData={routeData}
+                routeDesignConfig={routeDesignConfig}
+                isInEditMode={isInEditMode}
+                isPrintMode={isPrintMode}
+              />
+            );
+          case "PosterOct7".toLocaleLowerCase():
+            return (
+              <PosterOct7
                 routeData={routeData}
                 routeDesignConfig={routeDesignConfig}
                 isInEditMode={isInEditMode}

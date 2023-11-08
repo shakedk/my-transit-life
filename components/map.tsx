@@ -1,6 +1,7 @@
 /* eslint-disable react/react-in-jsx-scope */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  AttributionControl,
   LayerGroup,
   LayersControl,
   MapContainer,
@@ -68,24 +69,31 @@ const RouteMap = ({
 
   const tileNameToUrl = {
     StamenToner:
-      "https://stamen-tiles-{s}.a.ssl.fastly.net/toner/{z}/{x}/{y}{r}.png",
+      "https://tiles.stadiamaps.com/tiles/stamen_toner/{z}/{x}/{y}{r}.png",
     StamenTonerLite:
-      "https://stamen-tiles-{s}.a.ssl.fastly.net/toner-lite/{z}/{x}/{y}{r}.png",
+      "https://tiles.stadiamaps.com/tiles/stamen_toner_lite/{z}/{x}/{y}{r}.png",
     StamenTonerLines:
-      "https://stamen-tiles-{s}.a.ssl.fastly.net/toner-lines/{z}/{x}/{y}{r}.png",
+      "https://tiles.stadiamaps.com/tiles/stamen_toner_lines/{z}/{x}/{y}{r}.png",
     StamenTonerBackground:
-      "https://stamen-tiles-{s}.a.ssl.fastly.net/toner-background/{z}/{x}/{y}{r}.png",
+      "https://tiles.stadiamaps.com/tiles/stamen_toner_background/{z}/{x}/{y}{r}.png",
     StamenTerrainLines:
-      "https://stamen-tiles-{s}.a.ssl.fastly.net/terrain-lines/{z}/{x}/{y}{r}.png",
-    StamenHybrid:
-      "https://stamen-tiles-{s}.a.ssl.fastly.net/toner-hybrid/{z}/{x}/{y}{r}.png",
+      "https://tiles.stadiamaps.com/tiles/stamen_terrain_lines/{z}/{x}/{y}{r}.png",
     CartoDBLiteNoLabels:
       "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
+    AlidadeSmooth:
+      "https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.png",
+    Mapbox:
+      "https://api.mapbox.com/styles/v1/shakedk/clojp5lnj002v01nz7mzn70w9/tiles/256/{z}/{x}/{y}@2x?access_token=pk.eyJ1Ijoic2hha2VkayIsImEiOiJjbG9qMTZjajEwMTRtMmtwN2F0Mzk0OWVwIn0.VkgbKa4iLFUFERkCOqJC9g",
+      
   };
   const getTileLayer = (tileLayerName) => (
     <TileLayer
       opacity={mapOpacity || 0.5}
-      attribution='Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      attribution={
+        tileLayerName === "Mapbox"
+          ? '© <a style="color:#000000" href="https://www.mapbox.com/about/maps/">Mapbox</a> © <a style="color:#000000" href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+          : 'Map tiles by <a style="color:#000000" href="http://stamen.com">Stamen Design</a>, <a style="color:#000000" href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a style="color:#000000" href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      }
       url={tileNameToUrl[tileLayerName]}
       subdomains="abcd"
       minZoom={0}
@@ -367,6 +375,7 @@ const RouteMap = ({
         width: "100%",
       }}
     >
+      <AttributionControl prefix="© Leaflet"/>
       {showGeoLayer ? getTileLayer(tileLayerName) : null}
       {/* When there is only a single pattern - can be removed in the future */}
       <Pane name="route-path" style={{ zIndex: 499, cursor: "default" }}>

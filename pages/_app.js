@@ -40,6 +40,12 @@ function MyApp({ Component, pageProps }) {
           as="font"
           crossOrigin=""
         />
+        <link
+          rel="preload"
+          href="/fonts/Playfair-Display.ttf"
+          as="font"
+          crossOrigin=""
+        />
       </Head>
       <ThemeProvider theme={theme}>
         <Component {...pageProps} />

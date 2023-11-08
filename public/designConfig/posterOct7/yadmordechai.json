@@ -1,0 +1,28 @@
+{
+  "backgroundColor": "Snow",
+  "mapOpacity": 1,
+  "tileLayerName": "Mapbox",
+
+  "pathColor": "Snow",
+
+  "font": "Playfair Display",
+  "descriptionDetailsFont": "Oswald",
+
+  "routeType": "",
+
+  "routeName": "YAD MORDECHAI",
+
+  "routeDesc": "",
+
+  "routeTitleSize": 450,
+  "lineDetailsFontSize": 176,
+  "bottomDateSize": 112,
+
+  "descriptionDetails": {
+    "numberOfStopsText": "YOU WILL NEVER WALK ALONE"
+  },
+
+
+  "logoPath": "",
+  "mapZoom": 17.5
+}

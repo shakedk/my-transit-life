@@ -1,0 +1,28 @@
+{
+  "backgroundColor": "Snow",
+  "mapOpacity": 1,
+  "tileLayerName": "Mapbox",
+
+  "pathColor": "Snow",
+
+  "font": "Playfair Display",
+  "descriptionDetailsFont": "Oswald",
+
+  "routeType": "",
+
+  "routeName": "Erez",
+
+  "routeDesc": "",
+
+  "routeTitleSize": 700,
+  "lineDetailsFontSize": 176,
+  "bottomDateSize": 112,
+
+  "descriptionDetails": {
+    "numberOfStopsText": "YOU WILL NEVER WALK ALONE"
+  },
+
+
+  "logoPath": "",
+  "mapZoom": 18
+}

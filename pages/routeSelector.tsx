@@ -48,6 +48,8 @@ export default function routeSelector(props) {
       <Head>
         <title>RouteSelector</title>
       </Head>
+      <h1>October 7th</h1>
+      {getButtonsForLink("/posters/poster?posterType=PosterOct7&routeID=")}
       <h1>Geo WITH Logo</h1>
       {getButtonsForLink("/posters/poster?posterType=PosterGeoLogo&routeID=")}
       <h1>Geo WITH Logo Horizontal</h1>
