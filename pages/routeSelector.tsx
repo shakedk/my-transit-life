@@ -28,7 +28,7 @@ export default function routeSelector(props) {
       <div className={styles.container}>
         {routeList.map((transitRoute) => {
           return (
-            <Link key={transitRoute} href={`${link}${transitRoute}`}>
+            <Link key={transitRoute} href={`${link}${transitRoute}&printMode=true`}>
               <a target="_blank">
                 <button className={styles.button}>
                   {Object.keys(routeMap).includes(transitRoute)
