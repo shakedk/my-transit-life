@@ -1,5 +1,5 @@
 .posterContainer {
-  border: 200px GhostWhite solid;
+  border: 200px #fdfffc solid;
   background: white;
   height: 7016px;
   width: 4960px;
@@ -8,12 +8,12 @@
 }
 
 .header {
-  height: 13%;
+  height: 10%;
   position: relative;
 }
 
 .mapContainer {
-  height: 87%;
+  height: 90%;
 }
 
 .headerNoDescriptionDetails {
@@ -26,7 +26,7 @@
 }
 
 .title {
-  display: flex;
+  /* display: flex; */
   flex-direction: column;
   align-items: flex-start;
   justify-content: center;
@@ -96,7 +96,7 @@
 
 .transitLifeCredNoDescriptionDetails {
   position: absolute;
-  top: 6440px;
+  top: 6476px;
   transform: rotate(270deg);
-  left: -240px;
+  left: -205px;
 }

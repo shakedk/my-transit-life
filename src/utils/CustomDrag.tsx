@@ -50,17 +50,16 @@ const handleStop = (event, dragElement) => {
   };
 
 return (
-       <Draggable
-        disabled={!props.isDrggable}
-        onStop={handleStop} 
-        position={{x: x, y:y}}
-        onMouseDown={props.onMouseDown}
-        cancel={props.cancel}
-       > 
-       
-       {props.children}
-       </Draggable>
-      )
+  <Draggable
+    disabled={!props.isDrggable}
+    onStop={handleStop}
+    position={{ x: x, y: y }}
+    onMouseDown={props.onMouseDown}
+    cancel={props.cancel}
+  >
+    {props.children}
+  </Draggable>
+);
 }
 
 export default CustomDrag;
