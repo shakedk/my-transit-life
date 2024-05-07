@@ -2,7 +2,7 @@
 import PropTypes from "prop-types";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Textarea } from "theme-ui";
-import Color from 'color';
+import Color from "color";
 import { Marker, Tooltip } from "react-leaflet";
 
 import { Icon, LatLngExpression } from "leaflet";
@@ -10,6 +10,7 @@ import { Icon, LatLngExpression } from "leaflet";
 import styles from "./stopLabel.module.css";
 const StopLabel = ({
   posterID,
+  showStopLabels,
   stopModifiedName,
   stopPropetiesChanedHandler,
   stop,
@@ -30,10 +31,10 @@ const StopLabel = ({
   // CHANGE ANY!
 
   interface IStopProps {
-    label: string,
-    labelWidth: number,
-    labelHeight: number,
-    position: LatLngExpression
+    label: string;
+    labelWidth: number;
+    labelHeight: number;
+    position: LatLngExpression;
   }
   const [stopProps, setStopProps] = useState<IStopProps>({
     label: stopModifiedName,
@@ -107,12 +108,14 @@ const StopLabel = ({
                 : "/transparentPoint.svg"
               : "/logos/optibus.svg",
           // iconSize: (isInEditMode || stop.stop_name === "OPTIBUS" )? [300, 300] : [100, 100],
-          iconSize: stop.stop_name === "OPTIBUS"  ? [500, 500] : [300, 300],
+          iconSize: stop.stop_name === "OPTIBUS" ? [500, 500] : [300, 300],
         })
       }
       zIndexOffset={2000}
       eventHandlers={eventHandlers}
-    >      {stop.stop_name !== "OPTIBUS" ? (
+    >
+      {" "}
+      {(stop.stop_name !== "OPTIBUS" && showStopLabels) ? (
         <div>
           <Tooltip
             ref={tooltipRef}
@@ -124,8 +127,10 @@ const StopLabel = ({
             <Textarea
               value={stopProps.label}
               disabled={!isInEditMode}
-              backgroundColor={ stopBackgroundColor && Color(stopBackgroundColor).alpha(0.3).string()}
-              
+              backgroundColor={
+                stopBackgroundColor &&
+                Color(stopBackgroundColor).alpha(0.3).string()
+              }
               onChange={(e) => {
                 setStopProps((oldState) => {
                   stopPropetiesChanedHandler(
@@ -184,7 +189,7 @@ const StopLabel = ({
                 zIndex: 500,
                 border: isInEditMode ? "2 solid black" : "none",
                 textAlign: "center",
-                borderRadius: 50
+                borderRadius: 50,
               }}
             ></Textarea>
           </Tooltip>
@@ -206,6 +211,7 @@ StopLabel.propTypes = {
   stopPropetiesChanedHandler: PropTypes.func.isRequired,
   stop: StopType,
   posterID: PropTypes.string,
+  showStopLabels: PropTypes.bool,
   stopOriginalName: PropTypes.string.isRequired,
 
   markerLat: PropTypes.number.isRequired,

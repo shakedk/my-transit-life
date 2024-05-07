@@ -30,7 +30,7 @@ export async function getServerSideProps(context) {
 
   const routeDesignConfig = await fetch(
     `${server}/api/routeDesignConfig${context.query.posterType.replace(
-      "Poster",
+      "poster",
       ""
     )}?routeID=${context.query.routeID}`
   );

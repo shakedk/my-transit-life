@@ -14,7 +14,7 @@ import {
 import "leaflet/dist/leaflet.css";
 import { useRouter } from "next/router";
 import { getPosterIDInDB } from "../pages/posters/utils";
-
+import styles from "./map.module.css";
 import StopLabel from "./stopLabel";
 import axios from "axios";
 import { Icon } from "leaflet";
@@ -44,10 +44,14 @@ const RouteMap = ({
   stopCircleSize,
   stopBackgroundColor,
   isSingleDot,
+  isSimpleDot,
   isPrintMode,
   stopDataFromDB,
   posterID,
-  displsyedPatternsFromDB
+  displsyedPatternsFromDB,
+  routeOverlayPatternNumber,
+  routeOverlayPatternColor,
+  showStopLabels,
 }) => {
   /**
    * Lat Lon markers, leave here for testing lat lon vs. xy positions
@@ -71,23 +75,26 @@ const RouteMap = ({
 
   const tileNameToUrl = {
     StamenToner:
-      "https://stamen-tiles-{s}.a.ssl.fastly.net/toner/{z}/{x}/{y}{r}.png",
+      "https://tiles.stadiamaps.com/tiles/stamen_toner/{z}/{x}/{y}{r}.png",
     StamenTonerLite:
-      "https://stamen-tiles-{s}.a.ssl.fastly.net/toner-lite/{z}/{x}/{y}{r}.png",
+      "https://tiles.stadiamaps.com/tiles/stamen_toner_lite/{z}/{x}/{y}{r}.png",
     StamenTonerLines:
-      "https://stamen-tiles-{s}.a.ssl.fastly.net/toner-lines/{z}/{x}/{y}{r}.png",
+      "https://tiles.stadiamaps.com/tiles/stamen_toner_lines/{z}/{x}/{y}{r}.png",
     StamenTonerBackground:
-      "https://stamen-tiles-{s}.a.ssl.fastly.net/toner-background/{z}/{x}/{y}{r}.png",
+      "https://tiles.stadiamaps.com/tiles/stamen_toner_background/{z}/{x}/{y}{r}.png",
     StamenTerrainLines:
-      "https://stamen-tiles-{s}.a.ssl.fastly.net/terrain-lines/{z}/{x}/{y}{r}.png",
-    StamenHybrid:
-      "https://stamen-tiles-{s}.a.ssl.fastly.net/toner-hybrid/{z}/{x}/{y}{r}.png",
+      "https://tiles.stadiamaps.com/tiles/stamen_terrain_lines/{z}/{x}/{y}{r}.png",
     CartoDBLiteNoLabels:
       "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
+    AlidadeSmooth:
+      "https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.png",
+    Mapbox:
+      "https://api.mapbox.com/styles/v1/shakedk/clqbhnool00ab01pj57js18y6/tiles/256/{z}/{x}/{y}@2x?access_token=pk.eyJ1Ijoic2hha2VkayIsImEiOiJjbG9qMTZjajEwMTRtMmtwN2F0Mzk0OWVwIn0.VkgbKa4iLFUFERkCOqJC9g",
   };
+  
   const getTileLayer = (tileLayerName) => (
     <TileLayer
-      opacity={mapOpacity || 0.5}
+      opacity={mapOpacity || 1}
       attribution='Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
       url={tileNameToUrl[tileLayerName]}
       subdomains="abcd"
@@ -170,6 +177,7 @@ const RouteMap = ({
       stops.map((stop) => {
         return (
           <StopLabel
+            showStopLabels={showStopLabels}
             posterID={posterID}
             key={stop.stop_id}
             stop={stop}
@@ -193,30 +201,40 @@ const RouteMap = ({
       })
     );
   }, [stopDataFromDB, posterID, stops]);
-  const stopCircleSvg = isSingleDot
-    ? `<svg xmlns="http://www.w3.org/2000/svg" width="67" height="67">
-      <g>
-        <circle id="1" cx="34" cy="34" r="1" stroke="${stopBackgroundColor}" stroke-width="1.5" fill="none"/>
-        <circle id="2" cx="34" cy="34" r="1" fill="${stopColor}" />
-    </g>
-    </svg>`
-    : `<svg xmlns="http://www.w3.org/2000/svg" width="67" height="67">
-      <g>
-       <circle id="1" cx="34" cy="34" r="3.2" stroke="snow" stroke-width="1.5" fill="none"/>
-             <circle id="1" cx="34" cy="34" r="3" stroke="${stopColor}" stroke-width="1.5" fill="none"/>
-             <circle id="2" cx="34" cy="34" r="1" fill="${stopColor}" />
-    </g>
-    </svg>`;
+  // const stopCircleSvg = isSingleDot
+  //   ? `<svg xmlns="http://www.w3.org/2000/svg" width="67" height="67">
+  //     <g>
+  //       <circle id="1" cx="34" cy="34" r="1" stroke="${stopBackgroundColor}" stroke-width="1.5" fill="none"/>
+  //       <circle id="2" cx="34" cy="34" r="1" fill="${stopColor}" />
+  //   </g>
+  //   </svg>`
+  //   : isSimpleDot
+  //   ? `<svg xmlns="http://www.w3.org/2000/svg" width="67" height="67">
+  //     <g>
+  //       <circle id="2" cx="34" cy="34" r="0.5" fill="${stopColor}" />
+  //   </g>
+  //   </svg>`
+  //   : `<svg xmlns="http://www.w3.org/2000/svg" width="67" height="67">
+  //   <g>
+  //     <circle id="1" cx="34" cy="34" r="3.2" stroke="snow" stroke-width="1.5" fill="none"/>
+  //     <circle id="1" cx="34" cy="34" r="3" stroke="${stopColor}" stroke-width="1.5" fill="none"/>
+  //     <circle id="2" cx="34" cy="34" r="1" fill="${stopColor}" />
+  // </g>
+  // </svg>`;
 
-  const url = encodeURI("data:image/svg+xml," + stopCircleSvg).replaceAll(
-    "#",
-    "%23"
-  );
+  const url = encodeURI(
+    "data:image/svg+xml," +
+      `<svg xmlns="http://www.w3.org/2000/svg" width="67" height="67">
+       <g>
+         <circle id="2" cx="34" cy="34" r="0.5" fill="${stopColor}" />
+     </g>
+     </svg>`
+  ).replaceAll("#", "%23");
 
   const CustomIcon = Icon.extend({
     options: {
       iconSize: [stopCircleSize, stopCircleSize],
-      iconAnchor: [stopCircleSize / 2, stopCircleSize / 2],
+      iconAnchor: [stopCircleSize / 2 + 17, stopCircleSize / 2 + 17],
     },
   });
 
@@ -236,7 +254,8 @@ const RouteMap = ({
       }),
       [posterID]
     );
-    if (displayedStops[stop.stop_id]) {
+    if (true) {
+    // if (displayedStops[stop.stop_id]) {
       return (
         stop.stop_id !== "OPTIBUS_background" && (
           <Marker
@@ -247,7 +266,7 @@ const RouteMap = ({
               stopDataFromDB[stop.stop_id]?.marker_lat || stop.stop_lat,
               stopDataFromDB[stop.stop_id]?.marker_lon || stop.stop_lon,
             ]}
-            draggable={isInEditMode}
+            draggable={true}
             icon={
               // @ts-ignore
               new CustomIcon({ iconUrl: url })
@@ -259,6 +278,7 @@ const RouteMap = ({
     } else {
       return null;
     }
+    
   });
 
   const anyRoute = useMemo(() => {
@@ -271,9 +291,10 @@ const RouteMap = ({
 
   const middleOfRoute = Math.round(anyRoute[0].length / 2);
   const reverseMultiPolyLine = useCallback((path): [number, number][][] => {
-    return path.map((polyLine) =>
+    const rev = path.map((polyLine) =>
       polyLine.map((coord) => [coord[1], coord[0]])
     );
+    return rev;
   }, []);
 
   const [map, setMap] = useState(null);
@@ -299,15 +320,6 @@ const RouteMap = ({
     }
   }, [stopDataFromDB]);
 
-  const routePath = (
-    <Polyline
-      key="routePath"
-      pathOptions={{ color: pathColor, weight: pathWeight || 10 }}
-      positions={reverseMultiPolyLine(anyRoute)}
-      smoothFactor={smoothFactor}
-    />
-  );
-
   const MapEventer = useCallback(() => {
     useMapEvents({
       overlayadd(overlay) {
@@ -324,12 +336,12 @@ const RouteMap = ({
         if (stopMatch) {
           const stopID = stopMatch[1];
           stopDisplayToggleHandler(posterID, stopID, false);
-                }
+        }
       },
     });
 
     return null;
-  }, [displayedStops, setDisplayedStops, routePath, posterID]);
+  }, [displayedStops, setDisplayedStops, posterID]);
 
   return (
     <MapContainer
@@ -359,7 +371,29 @@ const RouteMap = ({
             smoothFactor={smoothFactor}
           />
         )}
-        {!patterns && routePath}
+        {!patterns && (
+          <Polyline
+            key="routePath"
+            pathOptions={{ color: pathColor, weight: pathWeight || 10 }}
+            positions={reverseMultiPolyLine(anyRoute)}
+            smoothFactor={smoothFactor}
+          />
+        )}
+        {/* Enabled routeOverlayPatternNumber for !patterns only out of laziness */}
+        {!patterns && routeOverlayPatternNumber && (
+          <Polyline
+            className={styles.overlayRoute}
+            pathOptions={{
+              color: routeOverlayPatternColor,
+              weight: pathWeight * 0.7 || 10,
+              // dashArray: "20, 100",
+            }}
+            positions={reverseMultiPolyLine([
+              multiPolyLine[routeOverlayPatternNumber],
+            ])}
+            smoothFactor={smoothFactor}
+          />
+        )}
 
         {/* Stop control */}
         {!isPrintMode && (
@@ -383,10 +417,10 @@ const RouteMap = ({
               })}
           </LayersControl>
         )}
-        {
-          patterns &&
+        {patterns &&
           patterns.map((pattern) =>
-            displsyedPatternsFromDB[pattern.properties.route_id]?.toDisplay ? (
+            // displsyedPatternsFromDB[pattern.properties.route_id]?.toDisplay ?
+            true ? (
               <>
                 <Polyline
                   pathOptions={{
@@ -414,8 +448,10 @@ const RouteMap = ({
           )}
         {/* Print Mode Stops */}
         {isPrintMode &&
-          labels &&
-          labels.filter((stopLabel) => displayedStops[stopLabel.key])}
+          showStopLabels &&
+          labels 
+          // && labels.filter((stopLabel) => displayedStops[stopLabel.key])
+        }
         {showMarkers && circleMarkers}
       </Pane>
       <MapEventer />
@@ -489,11 +525,15 @@ RouteMap.prototypes = {
   stopCircleSize: PropTypes.number,
   stopBackgroundColor: PropTypes.string,
   isSingleDot: PropTypes.bool,
+  isSimpleDot: PropTypes.bool,
   isInEditMode: PropTypes.bool,
   isPrintMode: PropTypes.bool,
   stopDataFromDB: PropTypes.any,
   posterID: PropTypes.string,
-  displsyedPatternsFromDB: PropTypes.any
+  displsyedPatternsFromDB: PropTypes.any,
+  routeOverlayPatternNumber: PropTypes.number || null,
+  routeOverlayPatternColor: PropTypes.string,
+  showStopLabels: PropTypes.bool,
 };
 
 RouteMap.defaultProps = {
