@@ -5,7 +5,10 @@ import styles from "./posterFullMapLogo.module.css";
 import TransitLifeCredit from "../../components/tranitLifeCredit";
 import { useMap } from "./utils";
 
-export default function Page({ routeData, routeDesignConfig, isInEditMode, isPrintMode }) {
+export default function Page({ routeData, routeDesignConfig, isInEditMode, isPrintMode,
+  stopDataFromDB,
+  posterID,
+  displsyedPatternsFromDB }) {
   const GeoMap = useMap();
 
   const getDescriptionDetailElement = (detail: string) => (
@@ -56,15 +59,15 @@ export default function Page({ routeData, routeDesignConfig, isInEditMode, isPri
           </div>
           <div className={styles.descriptionDetails}>
             {getDescriptionDetailElement(
-              routeDesignConfig.descriptionDetails?.numberOfStopsText,
+              routeDesignConfig.descriptionDetails?.numberOfStopsText
               // true
             )}
             {getDescriptionDetailElement(
-              routeDesignConfig.descriptionDetails?.launchDateText,
+              routeDesignConfig.descriptionDetails?.launchDateText
               // false
             )}
             {getDescriptionDetailElement(
-              routeDesignConfig.descriptionDetails?.launchDateText,
+              routeDesignConfig.descriptionDetails?.launchDateText
               // false
             )}
           </div>
@@ -88,7 +91,21 @@ export default function Page({ routeData, routeDesignConfig, isInEditMode, isPri
           smoothFactor={8}
           showMarkers
           isInEditMode={isInEditMode}
-          isPrintMode={isPrintMode} patterns={undefined} mapOpacity={undefined} pathWeight={undefined} stopFontSize={undefined} stopFontColor={undefined} stopIDsToDisplayFromConfig={undefined} stopColor={undefined} stopCircleSize={undefined} stopBackgroundColor={undefined} isSingleDot={undefined}        />
+          isPrintMode={isPrintMode}
+          patterns={undefined}
+          mapOpacity={undefined}
+          pathWeight={undefined}
+          stopFontSize={undefined}
+          stopFontColor={undefined}
+          stopIDsToDisplayFromConfig={undefined}
+          stopColor={undefined}
+          stopCircleSize={undefined}
+          stopBackgroundColor={undefined}
+          isSingleDot={undefined}
+          stopDataFromDB={stopDataFromDB}
+          posterID={posterID}
+          displsyedPatternsFromDB={displsyedPatternsFromDB}
+        />
         <div
           style={{
             position: "absolute",

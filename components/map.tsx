@@ -14,7 +14,7 @@ import {
 import "leaflet/dist/leaflet.css";
 import { useRouter } from "next/router";
 import { getPosterIDInDB } from "../pages/posters/utils";
-
+import styles from "./map.module.css";
 import StopLabel from "./stopLabel";
 import axios from "axios";
 import { Icon } from "leaflet";
@@ -32,9 +32,9 @@ const RouteMap = ({
   pathWeight,
   mapZoom,
   font,
-  showGeoLayer,
-  smoothFactor,
-  showMarkers,
+  showGeoLayer = true,
+  smoothFactor = 5,
+  showMarkers = false,
   isInEditMode,
   stopFontSize,
   stopFontColor,
@@ -44,18 +44,27 @@ const RouteMap = ({
   stopCircleSize,
   stopBackgroundColor,
   isSingleDot,
+  isSimpleDot,
   isPrintMode,
+  stopDataFromDB,
+  posterID,
+  displsyedPatternsFromDB,
+  routeOverlayPatternNumber,
+  routeOverlayPatternColor,
+  showStopLabels,
 }) => {
   /**
    * Lat Lon markers, leave here for testing lat lon vs. xy positions
    */
 
-  const [posterID, setPosterID] = useState(null);
-  const [stopDataFromDB, setStopDataFromDB] = useState({});
-  const [displsyedPatternsFromDB, setDisplsyedPatternsFromDB] = useState({});
+  // const [posterID, setPosterID] = useState(null);
+  // const [stopDataFromDB, setStopDataFromDB] = useState({});
+  // const [displsyedPatternsFromDB, setDisplsyedPatternsFromDB] = useState({});
 
-  const [displayedStops, setDisplayedStops] = useState(
-    stops.reduce((stopObj, stop) => {
+  const initialDisplayedStops = useMemo(() => {
+    return stops.reduce((stopObj, stop) => {
+      // If no config is provided, show all stops
+      // If config is provided, only show stops in the config
       if (
         !stopIDsToDisplayFromConfig ||
         stopIDsToDisplayFromConfig.includes(stop.stop_id)
@@ -63,28 +72,34 @@ const RouteMap = ({
         stopObj[stop.stop_id] = true;
       }
       return stopObj;
-    }, {})
-  );
+    }, {});
+  }, [stops, stopIDsToDisplayFromConfig]);
+
+  const [displayedStops, setDisplayedStops] = useState(initialDisplayedStops);
+
 
   const tileNameToUrl = {
     StamenToner:
-      "https://stamen-tiles-{s}.a.ssl.fastly.net/toner/{z}/{x}/{y}{r}.png",
+      "https://tiles.stadiamaps.com/tiles/stamen_toner/{z}/{x}/{y}{r}.png",
     StamenTonerLite:
-      "https://stamen-tiles-{s}.a.ssl.fastly.net/toner-lite/{z}/{x}/{y}{r}.png",
+      "https://tiles.stadiamaps.com/tiles/stamen_toner_lite/{z}/{x}/{y}{r}.png",
     StamenTonerLines:
-      "https://stamen-tiles-{s}.a.ssl.fastly.net/toner-lines/{z}/{x}/{y}{r}.png",
+      "https://tiles.stadiamaps.com/tiles/stamen_toner_lines/{z}/{x}/{y}{r}.png",
     StamenTonerBackground:
-      "https://stamen-tiles-{s}.a.ssl.fastly.net/toner-background/{z}/{x}/{y}{r}.png",
+      "https://tiles.stadiamaps.com/tiles/stamen_toner_background/{z}/{x}/{y}{r}.png",
     StamenTerrainLines:
-      "https://stamen-tiles-{s}.a.ssl.fastly.net/terrain-lines/{z}/{x}/{y}{r}.png",
-    StamenHybrid:
-      "https://stamen-tiles-{s}.a.ssl.fastly.net/toner-hybrid/{z}/{x}/{y}{r}.png",
+      "https://tiles.stadiamaps.com/tiles/stamen_terrain_lines/{z}/{x}/{y}{r}.png",
     CartoDBLiteNoLabels:
       "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
+    AlidadeSmooth:
+      "https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.png",
+    Mapbox:
+      "https://api.mapbox.com/styles/v1/shakedk/clqbhnool00ab01pj57js18y6/tiles/256/{z}/{x}/{y}@2x?access_token=pk.eyJ1Ijoic2hha2VkayIsImEiOiJjbG9qMTZjajEwMTRtMmtwN2F0Mzk0OWVwIn0.VkgbKa4iLFUFERkCOqJC9g",
   };
+  
   const getTileLayer = (tileLayerName) => (
     <TileLayer
-      opacity={mapOpacity || 0.5}
+      opacity={mapOpacity || 1}
       attribution='Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
       url={tileNameToUrl[tileLayerName]}
       subdomains="abcd"
@@ -123,23 +138,6 @@ const RouteMap = ({
     };
     axios.put(`/api/poster/${posterID}`, params);
   };
-  const patternDisplayToggleHandler = (
-    posterID: string,
-    patternName: string,
-    toDisplay: boolean
-  ) => {
-    const routeId = patterns.filter(
-      (p) => p.properties.route_long_name == patternName
-    )[0].properties.route_id;
-    const params = {
-      posterID: posterID,
-      patterns: {},
-    };
-    params.patterns[routeId] = {
-      toDisplay,
-    };
-    axios.put(`/api/poster/${posterID}`, params);
-  };
   const stopPropetiesChanedHandler = (
     posterID: string,
     stopID: string,
@@ -165,48 +163,58 @@ const RouteMap = ({
     axios.put(`/api/poster/${posterID}`, params);
   };
   const router = useRouter();
-  useEffect(() => {
-    async function getData() {
-      const posterType = router.query.posterType;
-      const _routeID = router.query.routeID;
-      const id = await getPosterIDInDB(posterType, _routeID);
+  // useEffect(() => {
+  //   async function getData() {
+  //     const posterType = router.query.posterType;
+  //     const _routeID = router.query.routeID;
+  //     const id = await getPosterIDInDB(posterType, _routeID);
 
-      const res = await axios.get(`/api/poster/${id}`);
-      setPosterID(id);
-      setStopDataFromDB(res.data.stops || {});
-      setDisplsyedPatternsFromDB(res.data.patterns || {});
-    }
-    getData();
-  }, [router.query]);
+  //     const res = await axios.get(`/api/poster/${id}`);
+  //     setPosterID(id);
+  //     setStopDataFromDB(res.data.stops || {});
+  //     setDisplsyedPatternsFromDB(res.data.patterns || {});
+  //   }
+  //   getData();
+  // }, [router.query]);
   const labels = useMemo(() => {
-    return (
-      stopDataFromDB &&
-      stops.map((stop) => {
-        return (
-          <StopLabel
-            posterID={posterID}
-            key={stop.stop_id}
-            stop={stop}
-            // stopDataFromDB={stopDataFromDB}
-            markerLat={stopDataFromDB[stop.stop_id]?.label_lat || stop.stop_lat}
-            markerLon={stopDataFromDB[stop.stop_id]?.label_lon || stop.stop_lon}
-            labelWidthFromDB={stopDataFromDB[stop.stop_id]?.labelWidth}
-            labelHeightFromDB={stopDataFromDB[stop.stop_id]?.labelHeight}
-            stopModifiedName={
-              stopDataFromDB[stop.stop_id]?.stopModifiedName || stop.stop_name
-            }
-            stopPropetiesChanedHandler={stopPropetiesChanedHandler}
-            stopOriginalName={stop.stop_name}
-            font={stopFont || font}
-            fontSize={stopFontSize}
-            stopFontColor={stopFontColor}
-            isInEditMode={isInEditMode}
-            stopBackgroundColor={stopBackgroundColor}
-          />
-        );
-      })
-    );
-  }, [stopDataFromDB, posterID, stops]);
+    if (!stopDataFromDB) {
+      return [];
+    }
+    return stops.map((stop) => {
+      const markerLat = stopDataFromDB[stop.stop_id]?.label_lat ?? stop.stop_lat;
+      const markerLon = stopDataFromDB[stop.stop_id]?.label_lon ?? stop.stop_lon;
+      
+      // Validate coordinates are valid numbers before creating StopLabel
+      if (typeof markerLat !== 'number' || typeof markerLon !== 'number' || 
+          isNaN(markerLat) || isNaN(markerLon)) {
+        return null;
+      }
+      
+      return (
+        <StopLabel
+          showStopLabels={showStopLabels}
+          posterID={posterID}
+          key={stop.stop_id}
+          stop={stop}
+          // stopDataFromDB={stopDataFromDB}
+          markerLat={markerLat}
+          markerLon={markerLon}
+          labelWidthFromDB={stopDataFromDB[stop.stop_id]?.labelWidth}
+          labelHeightFromDB={stopDataFromDB[stop.stop_id]?.labelHeight}
+          stopModifiedName={
+            stopDataFromDB[stop.stop_id]?.stopModifiedName || stop.stop_name
+          }
+          stopPropetiesChanedHandler={stopPropetiesChanedHandler}
+          stopOriginalName={stop.stop_name}
+          font={stopFont || font}
+          fontSize={stopFontSize}
+          stopFontColor={stopFontColor}
+          isInEditMode={isInEditMode}
+          stopBackgroundColor={stopBackgroundColor}
+        />
+      );
+    }).filter(Boolean); // Remove null entries
+  }, [stopDataFromDB, posterID, stops, showStopLabels, stopPropetiesChanedHandler, stopFont, font, stopFontSize, stopFontColor, isInEditMode, stopBackgroundColor]);
   const stopCircleSvg = isSingleDot
     ? `<svg xmlns="http://www.w3.org/2000/svg" width="67" height="67">
       <g>
@@ -214,66 +222,76 @@ const RouteMap = ({
         <circle id="2" cx="34" cy="34" r="1" fill="${stopColor}" />
     </g>
     </svg>`
-    : `<svg xmlns="http://www.w3.org/2000/svg" width="67" height="67">
+    : isSimpleDot
+    ? `<svg xmlns="http://www.w3.org/2000/svg" width="67" height="67">
       <g>
-       <circle id="1" cx="34" cy="34" r="3.2" stroke="snow" stroke-width="1.5" fill="none"/>
-             <circle id="1" cx="34" cy="34" r="3" stroke="${stopColor}" stroke-width="1.5" fill="none"/>
-             <circle id="2" cx="34" cy="34" r="1" fill="${stopColor}" />
+        <circle id="2" cx="34" cy="34" r="0.5" fill="${stopColor}" />
     </g>
-    </svg>`;
+    </svg>`
+    : `<svg xmlns="http://www.w3.org/2000/svg" width="67" height="67">
+    <g>
+      <circle id="1" cx="34" cy="34" r="3.2" stroke="snow" stroke-width="1.5" fill="none"/>
+      <circle id="1" cx="34" cy="34" r="3" stroke="${stopColor}" stroke-width="1.5" fill="none"/>
+      <circle id="2" cx="34" cy="34" r="1" fill="${stopColor}" />
+  </g>
+  </svg>`;
 
-  const url = encodeURI("data:image/svg+xml," + stopCircleSvg).replaceAll(
-    "#",
-    "%23"
-  );
+  const url = encodeURI(
+    "data:image/svg+xml," + stopCircleSvg
+  ).replaceAll("#", "%23");
 
   const CustomIcon = Icon.extend({
     options: {
       iconSize: [stopCircleSize, stopCircleSize],
-      iconAnchor: [stopCircleSize / 2, stopCircleSize / 2],
+      iconAnchor: [stopCircleSize / 2 + 17, stopCircleSize / 2 + 17],
     },
   });
 
   const circleMarkers = stops.map((stop) => {
-    const markerRef = useRef(null);
-    const eventHandlers = useMemo(
-      () => ({
-        dragend() {
-          const newPosition = markerRef.current.getLatLng();
+    const eventHandlers = {
+      dragend(e) {
+        const marker = e.target;
+        if (marker && marker.getLatLng) {
+          const newPosition = marker.getLatLng();
           stopMarkerCircleChangedHandler(
             posterID,
             stop.stop_id,
             newPosition.lat,
             newPosition.lng
           );
-        },
-      }),
-      [posterID]
-    );
-    if (displayedStops[stop.stop_id]) {
+        }
+      },
+    };
+    
+    
+    if (displayedStops[stop.stop_id] && stop.stop_id !== "OPTIBUS_background") {
+      const markerLat = stopDataFromDB?.[stop.stop_id]?.marker_lat ?? stop.stop_lat;
+      const markerLon = stopDataFromDB?.[stop.stop_id]?.marker_lon ?? stop.stop_lon;
+      
+      // Validate coordinates are valid numbers
+      if (typeof markerLat !== 'number' || typeof markerLon !== 'number' || 
+          isNaN(markerLat) || isNaN(markerLon)) {
+        return null;
+      }
+      
       return (
-        stop.stop_id !== "OPTIBUS_background" && (
-          <Marker
-            key={`${stop.stop_name} (${stop.stop_id})`}
-            eventHandlers={eventHandlers}
-            ref={markerRef}
-            position={[
-              stopDataFromDB[stop.stop_id]?.marker_lat || stop.stop_lat,
-              stopDataFromDB[stop.stop_id]?.marker_lon || stop.stop_lon,
-            ]}
-            draggable={isInEditMode}
-            icon={
-              // @ts-ignore
-              new CustomIcon({ iconUrl: url })
-            }
-            zIndexOffset={500}
-          ></Marker>
-        )
+        <Marker
+          key={`${stop.stop_name} (${stop.stop_id})`}
+          eventHandlers={eventHandlers}
+          position={[markerLat, markerLon]}
+          draggable={true}
+          icon={
+            // @ts-ignore
+            new CustomIcon({ iconUrl: url })
+          }
+          zIndexOffset={500}
+        />
       );
     } else {
       return null;
     }
   });
+
 
   const anyRoute = useMemo(() => {
     if (multiPolyLine) {
@@ -285,9 +303,10 @@ const RouteMap = ({
 
   const middleOfRoute = Math.round(anyRoute[0].length / 2);
   const reverseMultiPolyLine = useCallback((path): [number, number][][] => {
-    return path.map((polyLine) =>
+    const rev = path.map((polyLine) =>
       polyLine.map((coord) => [coord[1], coord[0]])
     );
+    return rev;
   }, []);
 
   const [map, setMap] = useState(null);
@@ -296,31 +315,42 @@ const RouteMap = ({
     if (map) {
       map.fitBounds(reverseMultiPolyLine(anyRoute), { maxZoom: mapZoom });
     }
-  }, [map]);
+  }, [map, anyRoute, mapZoom]);
 
   useEffect(() => {
-    if (Object.keys(stopDataFromDB).length > 0) {
-      setDisplayedStops(
-        Object.keys(stopDataFromDB).reduce((stopsToDisplay, stop_id) => {
-          if (stopDataFromDB[stop_id].toDisplay) {
-            stopsToDisplay[stop_id] = true;
-            return stopsToDisplay;
-          } else {
-            return stopsToDisplay;
-          }
-        }, {})
-      );
+    const newDisplayedStops: { [key: string]: boolean } = {};
+    
+    // First, process stops from DB
+    if (stopDataFromDB && Object.keys(stopDataFromDB).length > 0) {
+      Object.keys(stopDataFromDB).forEach((stop_id) => {
+        // Only include stops that:
+        // 1. Have toDisplay: true in DB, AND
+        // 2. Are in stopIDsToDisplayFromConfig (if config is provided)
+        if (
+          stopDataFromDB[stop_id]?.toDisplay &&
+          (!stopIDsToDisplayFromConfig || stopIDsToDisplayFromConfig.includes(stop_id))
+        ) {
+          newDisplayedStops[stop_id] = true;
+        }
+      });
     }
-  }, [stopDataFromDB]);
-
-  const routePath = (
-    <Polyline
-      key="routePath"
-      pathOptions={{ color: pathColor, weight: pathWeight || 10 }}
-      positions={reverseMultiPolyLine(anyRoute)}
-      smoothFactor={smoothFactor}
-    />
-  );
+    
+    // Also include stops from stopIDsToDisplayFromConfig that don't have DB entries yet
+    // but exist in the stops array
+    if (stopIDsToDisplayFromConfig) {
+      stopIDsToDisplayFromConfig.forEach((stop_id) => {
+        const stopExists = stops.some((stop) => stop.stop_id === stop_id);
+        // If stop exists in stops array and either:
+        // - No DB entry exists yet, OR
+        // - DB entry exists but toDisplay is not explicitly false
+        if (stopExists && (!stopDataFromDB?.[stop_id] || stopDataFromDB[stop_id]?.toDisplay !== false)) {
+          newDisplayedStops[stop_id] = true;
+        }
+      });
+    }
+    
+    setDisplayedStops(newDisplayedStops);
+  }, [stopDataFromDB, stopIDsToDisplayFromConfig, stops]);
 
   const MapEventer = useCallback(() => {
     useMapEvents({
@@ -331,7 +361,6 @@ const RouteMap = ({
           stopDisplayToggleHandler(posterID, stopID, true);
         } else {
           const pattrenName = overlay.name;
-          patternDisplayToggleHandler(posterID, pattrenName, true);
         }
       },
       overlayremove(overlay) {
@@ -339,15 +368,12 @@ const RouteMap = ({
         if (stopMatch) {
           const stopID = stopMatch[1];
           stopDisplayToggleHandler(posterID, stopID, false);
-        } else {
-          const pattrenName = overlay.name;
-          patternDisplayToggleHandler(posterID, pattrenName, false);
         }
       },
     });
 
     return null;
-  }, [displayedStops, setDisplayedStops, routePath, posterID]);
+  }, [displayedStops, setDisplayedStops, posterID]);
 
   return (
     <MapContainer
@@ -377,54 +403,30 @@ const RouteMap = ({
             smoothFactor={smoothFactor}
           />
         )}
-        {!patterns && routePath}
-        {/* Patterns control */}
-        {patterns && !isPrintMode && (
-          <LayersControl position="topright">
-            {patterns
-              .sort((a, b) => {
-                return a.properties.route_long_name.localeCompare(
-                  b.properties.route_long_name
-                );
-              })
-              .map((pattern) => {
-                return (
-                  <LayersControl.Overlay
-                    key={pattern.properties.route_id}
-                    name={pattern.properties.route_long_name}
-                    checked={
-                      displsyedPatternsFromDB[pattern.properties.route_id]
-                        ?.toDisplay
-                    }
-                  >
-                    <LayerGroup>
-                      <Polyline
-                        pathOptions={{
-                          color: "snow",
-                          weight: pathWeight + 10 || 10,
-                        }}
-                        positions={reverseMultiPolyLine([
-                          pattern.geometry.coordinates,
-                        ])}
-                        smoothFactor={smoothFactor}
-                      />
-                      <Polyline
-                        key={pattern.properties.route_id}
-                        pathOptions={{
-                          color: pathColor,
-                          weight: pathWeight || 10,
-                        }}
-                        positions={reverseMultiPolyLine([
-                          pattern.geometry.coordinates,
-                        ])}
-                        smoothFactor={smoothFactor}
-                      />
-                    </LayerGroup>
-                  </LayersControl.Overlay>
-                );
-              })}
-          </LayersControl>
+        {!patterns && (
+          <Polyline
+            key="routePath"
+            pathOptions={{ color: pathColor, weight: pathWeight || 10 }}
+            positions={reverseMultiPolyLine(anyRoute)}
+            smoothFactor={smoothFactor}
+          />
         )}
+        {/* Enabled routeOverlayPatternNumber for !patterns only out of laziness */}
+        {!patterns && routeOverlayPatternNumber && (
+          <Polyline
+            className={styles.overlayRoute}
+            pathOptions={{
+              color: routeOverlayPatternColor,
+              weight: pathWeight * 0.7 || 10,
+              // dashArray: "20, 100",
+            }}
+            positions={reverseMultiPolyLine([
+              multiPolyLine[routeOverlayPatternNumber],
+            ])}
+            smoothFactor={smoothFactor}
+          />
+        )}
+
         {/* Stop control */}
         {!isPrintMode && (
           <LayersControl position="topright">
@@ -447,11 +449,10 @@ const RouteMap = ({
               })}
           </LayersControl>
         )}
-        {/* Print Mode Patterns */}
-        {isPrintMode &&
-          patterns &&
+        {patterns &&
           patterns.map((pattern) =>
-            displsyedPatternsFromDB[pattern.properties.route_id]?.toDisplay ? (
+            // displsyedPatternsFromDB[pattern.properties.route_id]?.toDisplay ?
+            true ? (
               <>
                 <Polyline
                   pathOptions={{
@@ -479,8 +480,14 @@ const RouteMap = ({
           )}
         {/* Print Mode Stops */}
         {isPrintMode &&
-          labels &&
-          labels.filter((stopLabel) => displayedStops[stopLabel.key])}
+          showStopLabels &&
+          labels.filter((label) => displayedStops[label.props.stop.stop_id])
+        }
+        {/* Edit Mode Stops - show labels directly */}
+        {!isPrintMode &&
+          showStopLabels &&
+          labels.filter((label) => displayedStops[label.props.stop.stop_id])
+        }
         {showMarkers && circleMarkers}
       </Pane>
       <MapEventer />
@@ -554,14 +561,16 @@ RouteMap.prototypes = {
   stopCircleSize: PropTypes.number,
   stopBackgroundColor: PropTypes.string,
   isSingleDot: PropTypes.bool,
+  isSimpleDot: PropTypes.bool,
   isInEditMode: PropTypes.bool,
   isPrintMode: PropTypes.bool,
+  stopDataFromDB: PropTypes.any,
+  posterID: PropTypes.string,
+  displsyedPatternsFromDB: PropTypes.any,
+  routeOverlayPatternNumber: PropTypes.number || null,
+  routeOverlayPatternColor: PropTypes.string,
+  showStopLabels: PropTypes.bool,
 };
 
-RouteMap.defaultProps = {
-  showGeoLayer: true,
-  smoothFactor: 5,
-  showMarkers: false,
-};
 
 export default RouteMap;

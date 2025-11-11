@@ -4,37 +4,40 @@ import { IPattern } from "../../src/types";
 
 interface PatternSelectorOnMapProps {
   patterns: IPattern[];
-  onSelectChange: (selectedPattern: IPattern | null) => void;
+  onSelectChange: (selectedPatterns: IPattern[] | null) => void;
 }
 
 const PatternSelectorOnMap = ({ patterns, onSelectChange }: PatternSelectorOnMapProps) => {
-  const [selectedPattern, setSelectedPattern] = useState<IPattern | null>(null);
 
-  const patternOptions = patterns.map((p) => ({
+  
+  const getAsOptions = (ptrns: IPattern[]) => ptrns.map((p) => ({
     value: p,
-    label: p.patternName,
+    label: p.patternName, 
   }));
-
-  const handleSelectChange = (selectedOption: any) => {
-    const selectedPattern = selectedOption ? selectedOption.value : null;
-    setSelectedPattern(selectedPattern);
-    onSelectChange(selectedPattern);
+  
+  const selectedPatterns = patterns.filter(p => p.toDisplay);
+  const handleSelectChange = (selectedOptions: any) => {
+  const newSelectedPatterns = selectedOptions ? selectedOptions.map((option: any) => option.value).map((p: IPattern) => p.patternId) : [];
+  onSelectChange(  patterns.map((p) => ({
+    ...p,
+    toDisplay: newSelectedPatterns.includes(p.patternId),
+  })));
   };
 
   return (
     <div>
-      <label htmlFor="route-select">Select a Route:</label>
+      <label htmlFor="pattern-select">Select Patterns:</label>
       <Select
         isMulti
         id="pattern-select"
-        options={patternOptions}
+        options={getAsOptions(patterns)}
         onChange={handleSelectChange}
-        value={selectedPattern}
+        value={getAsOptions(selectedPatterns)}
         placeholder="Select"
         isClearable
         isSearchable
         className="basic-multi-select"
-    classNamePrefix="select"
+        classNamePrefix="select"
       />
     </div>
   );

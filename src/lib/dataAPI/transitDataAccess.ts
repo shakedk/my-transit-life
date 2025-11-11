@@ -11,7 +11,8 @@ export class TransitDataAccess implements IDataAccess {
     this.BASE_URL = "https://external.transitapp.com/v3/public";
     if (!this.initialized) {
       if (process.env.NODE_ENV === "development") {
-        this.API_KEY = require("./transitApiKey.json");
+        // this.API_KEY = require("./transitApiKey.json");
+        console.log("No transit API KEY")
       } else {
         this.API_KEY = process.env.TRANSIT_API_KEY;
       }

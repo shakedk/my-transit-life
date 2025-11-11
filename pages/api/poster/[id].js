@@ -16,6 +16,7 @@ export default async (req, res) => {
           { merge: true }
         );
     } else if (req.method === "GET") {
+      console.log("POSTER ID (from DB):", id);
       const doc = await db.collection("posters").doc(id).get();
       if (!doc.exists) {
         res.status(404).end();

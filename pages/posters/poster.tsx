@@ -16,10 +16,12 @@ import PosterFullMapLogo from "./posterFullMapLogo";
 import PosterGeoLogo from "./posterGeoLogo";
 import PosterGeoLogoHorizontal from "./posterGeoLogoHorizontal";
 import PosterGeoNoLogo from "./posterGeoNoLogo";
-import { createPosterInDB } from "./utils";
+import { createPosterInDB, getPosterIDInDB } from "./utils";
 import PosterGeoLogoA0 from "./posterGeoLogoA0";
 import DataSelector from "../../components/dataSelectors/DataSelector";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
+import axios from "axios";
+import { IPattern } from "../../src/types";
 
 export async function getServerSideProps(context) {
   const routeData = await fetch(
@@ -49,6 +51,7 @@ export default function Page(props) {
   const { posterType } = router.query;
   const routeData = JSON.parse(props.routeData.routeData);
   const routeDesignConfig = JSON.parse(props.routeDesignConfig.routeData);
+  const [isLoading,setIsLoading] = useState(true);
 
   const PosterTemaple = () => {
     React.useEffect(() => {
@@ -57,10 +60,85 @@ export default function Page(props) {
     const isPrintMode = router.query.printMode === "true";
 
     const [isInEditMode, setIsInEditMode] = useState(!isPrintMode);
+    const [posterID, setPosterID] = useState(null);
+    const [stopDataFromDB, setStopDataFromDB] = useState({});
+    // DB returneד only true/false for which pattern (route id) to display
+    // Might be able to remove this down the road.
+    const [displsyedPatternsFromDB, setDisplsyedPatternsFromDB] = useState({});
+    const [patternsForSelection, setPatternsForSelection] =
+      useState<IPattern[]>(null);
+
+    /**
+     * Get pattern options from routeData and selected patterns from
+     * DB and turn on respective patterns
+     */
+    const handlePatternsOnLoad = useCallback(
+      (selectedPatternsFromDB: {
+        [key: string]: {
+          toDisplay: boolean;
+        };
+      }) => {
+        const allPatterns = routeData.patterns;
+        if (!selectedPatternsFromDB) {
+          return
+        }
+        setPatternsForSelection(
+          allPatterns.map((p) => ({
+            patternId: p.properties.route_id,
+            patternName: p.properties.route_long_name,
+            toDisplay: selectedPatternsFromDB[p.properties.route_id]?.toDisplay,
+          }))
+        );
+
+        setDisplsyedPatternsFromDB(selectedPatternsFromDB || {});
+      },
+      []
+    );
+    //
+
+    const handlePatternSelection = (
+      updatedPatternsWithSelection: IPattern[]
+    ) => {
+      setPatternsForSelection(updatedPatternsWithSelection);
+
+      const displayedPatterns = updatedPatternsWithSelection.reduce(
+        (result, p) => {
+          result[p.patternId] = { toDisplay: p.toDisplay };
+          return result;
+        },
+        {}
+      );
+      setDisplsyedPatternsFromDB(displayedPatterns);
+      const params = {
+        posterID: posterID,
+        patterns: {},
+      };
+      Object.entries(displayedPatterns).forEach(([routeId, toDisplay]) => {params.patterns[routeId] = {
+        toDisplay,
+      };})
+      axios.put(`/api/poster/${posterID}`, params);
+    };
+    useEffect(() => {
+      async function getData() {
+        const posterType = router.query.posterType;
+        const _routeID = router.query.routeID;
+        const id = await getPosterIDInDB(posterType, _routeID);
+
+        console.log("POSTER ID (from DB):", id);
+
+        const res = await axios.get(`/api/poster/${id}`);
+        setPosterID(id);
+        setStopDataFromDB(res.data.stops || {});
+        handlePatternsOnLoad(res.data.patterns);
+        setIsLoading(false);
+      }
+      getData();
+    }, [router.query]);
+
     const getPosterByType = useCallback(
       (
         posterType: string,
-        routeData: object,
+        routeData: any,
         routeDesignConfig: object,
         isInEditMode: boolean,
         isPrintMode: boolean
@@ -73,6 +151,9 @@ export default function Page(props) {
                 routeDesignConfig={routeDesignConfig}
                 isInEditMode={isInEditMode}
                 isPrintMode={isPrintMode}
+                stopDataFromDB={stopDataFromDB}
+                posterID={posterID}
+                displsyedPatternsFromDB={displsyedPatternsFromDB}
               />
             );
           case "PosterBigFrameNoLogo".toLocaleLowerCase():
@@ -82,6 +163,9 @@ export default function Page(props) {
                 routeDesignConfig={routeDesignConfig}
                 isInEditMode={isInEditMode}
                 isPrintMode={isPrintMode}
+                stopDataFromDB={stopDataFromDB}
+                posterID={posterID}
+                displsyedPatternsFromDB={displsyedPatternsFromDB}
               />
             );
           case "PosterFullMapLogo".toLocaleLowerCase():
@@ -91,6 +175,9 @@ export default function Page(props) {
                 routeDesignConfig={routeDesignConfig}
                 isInEditMode={isInEditMode}
                 isPrintMode={isPrintMode}
+                stopDataFromDB={stopDataFromDB}
+                posterID={posterID}
+                displsyedPatternsFromDB={displsyedPatternsFromDB}
               />
             );
           case "PosterGeoLogo".toLocaleLowerCase():
@@ -100,6 +187,9 @@ export default function Page(props) {
                 routeDesignConfig={routeDesignConfig}
                 isInEditMode={isInEditMode}
                 isPrintMode={isPrintMode}
+                stopDataFromDB={stopDataFromDB}
+                posterID={posterID}
+                displsyedPatternsFromDB={displsyedPatternsFromDB}
               />
             );
           case "PosterGeoLogoA0".toLocaleLowerCase():
@@ -110,6 +200,9 @@ export default function Page(props) {
                   routeDesignConfig={routeDesignConfig}
                   isInEditMode={isInEditMode}
                   isPrintMode={isPrintMode}
+                  stopDataFromDB={stopDataFromDB}
+                  posterID={posterID}
+                  displsyedPatternsFromDB={displsyedPatternsFromDB}
                 />
               </div>
             );
@@ -120,20 +213,29 @@ export default function Page(props) {
                 routeDesignConfig={routeDesignConfig}
                 isInEditMode={isInEditMode}
                 isPrintMode={isPrintMode}
+                stopDataFromDB={stopDataFromDB}
+                posterID={posterID}
+                displsyedPatternsFromDB={displsyedPatternsFromDB}
               />
             );
           default:
             return null;
         }
       },
-      [routeID, isInEditMode]
+      [routeID, isInEditMode, displsyedPatternsFromDB, stopDataFromDB]
     );
-    
+
     const intialZoomScale = 0.2;
-    
+
     const editPosterTemplate = (
       <>
-        <DataSelector />
+        {patternsForSelection && (
+          <DataSelector
+            routeData={routeData}
+            patternsForSelection={patternsForSelection}
+            setPatternsForSelection={handlePatternSelection}
+          />
+        )}
         <Head>
           <title>{routeID}</title>
         </Head>
@@ -142,10 +244,10 @@ export default function Page(props) {
           setIsInEditMode={setIsInEditMode}
         />
         <OpenForPrintButton />
-        <div
+        {/* <div
           style={{
-            height: `${intialZoomScale  * 7016 + 50}px`,
-            width: `${intialZoomScale  * 4960 + 50}px`,
+            height: `${intialZoomScale * 7016 + 50}px`,
+            width: `${intialZoomScale * 4960 + 50}px`,
             overflow: "hidden",
             border: "20px solid red",
           }}
@@ -157,7 +259,7 @@ export default function Page(props) {
             }}
             limitToBounds={true}
             minScale={0.2}
-            maxScale={0.5 }
+            maxScale={0.5}
             wheel={{ disabled: true }}
             pinch={{ disabled: true }}
             alignmentAnimation={{ disabled: true }}
@@ -184,12 +286,21 @@ export default function Page(props) {
               </>
             )}
           </TransformWrapper>
+        </div> */}
+        <div>
+          {getPosterByType(
+            posterType as string,
+            routeData,
+            routeDesignConfig,
+            isInEditMode,
+            isPrintMode
+          )}
         </div>
       </>
     );
     return (
       <React.Fragment>
-        {isPrintMode
+        {!isLoading && isPrintMode
           ? getPosterByType(
               posterType as string,
               routeData,
@@ -197,7 +308,7 @@ export default function Page(props) {
               isInEditMode,
               isPrintMode
             )
-          : editPosterTemplate}
+          : !isLoading && editPosterTemplate}
       </React.Fragment>
     );
   };

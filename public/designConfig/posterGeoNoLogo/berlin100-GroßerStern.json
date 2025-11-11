@@ -1,19 +1,19 @@
 {
-  "backgroundColor": "#00B5E5",
+  "backgroundColor": "#FFA015",
   "mapOpacity": 0.2,
   "tileLayerName": "StamenTonerBackground",
 
   "pathColor": "snow",
-  "stopFontColor": "#2F91B7",
-  "stopColor": "#2F91B7",
+  "stopFontColor": "#FFA015",
+  "stopColor": "#FFA015",
   "stopBackgroundColor": "white",
   "font": "FFTransit",
 
   "routeType": "100",
   "routeNameAndTypeSize": 400,
-  "routeTitleSize": 100,
+  "routeTitleSize": 190,
 
-  "lineDetailsFontSize": 50,
+  "lineDetailsFontSize": 100,
   "routeName": "Route",
   "routeDesc": "Zoologischer Garten/Jebensstraße - Memhardstr.",
   "pathWeight": 40,
@@ -23,6 +23,10 @@
     "locationText": "BERLIN, DEUSTCHLAND",
     "launchDateText": "SINCE 1990"
   },
+
+  "logoPath": "../../logos/nyc/nyc 2 train logo.svg",
+
+  "agencyLogoPath": "../../logos/nyc/MTA logo.svg",
 
   "agencyLogoWidth": 120,
   "agencyLogoHeight": 120,
@@ -35,5 +39,5 @@
 
   "creditFontSize": 70,
 
-  "stopIDsToDisplayFromConfig": ["070101007153"]
+  "stopIDsToDisplayFromConfig": ["GroßerStern"]
 }

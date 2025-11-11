@@ -52,11 +52,11 @@ export default function routeSelector(props) {
       {getButtonsForLink("/posters/poster?posterType=PosterGeoLogo&routeID=")}
       <h1>Geo WITH Logo Horizontal</h1>
       {getButtonsForLink(
-        "/posters//poster?posterType=PosterGeoLogoHorizontal&routeID="
+        "/posters/poster?posterType=PosterGeoLogoHorizontal&routeID="
       )}
       <h1>Geo WITHOUT Logo</h1>
       {getButtonsForLink(
-        "/posters//poster?posterType=PosterGeoNoLogo&routeID="
+        "/posters/poster?posterType=PosterGeoNoLogo&routeID="
       )}
       <h1>Full Poster + Logo</h1>
       {getButtonsForLink(
