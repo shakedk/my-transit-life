@@ -142,6 +142,7 @@ export default function Page({
           stopDataFromDB={stopDataFromDB}
           posterID={posterID}
           displsyedPatternsFromDB={displsyedPatternsFromDB}
+          showStopLabels={true}
         />
       </div>
       <div className={styles.transitLifeCred}>

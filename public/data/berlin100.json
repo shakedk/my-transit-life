@@ -489,6 +489,18 @@
       "stop_name": "Optibus Office",
       "stop_lat": 52.499973,
       "stop_lon": 13.427705
+    },
+    {
+      "stop_id": "HausDerKulturenDerWelt",
+      "stop_name": "Haus der Kulturen der Welt",
+      "stop_lat": 52.5176583,
+      "stop_lon": 13.3631019
+    },
+    {
+      "stop_id": "Museumsinsel",
+      "stop_name": "Museumsinsel",
+      "stop_lat": 52.5180358,
+      "stop_lon": 13.4000683
     }
   ]
 }

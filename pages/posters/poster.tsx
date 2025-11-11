@@ -124,6 +124,8 @@ export default function Page(props) {
         const _routeID = router.query.routeID;
         const id = await getPosterIDInDB(posterType, _routeID);
 
+        console.log("POSTER ID (from DB):", id);
+
         const res = await axios.get(`/api/poster/${id}`);
         setPosterID(id);
         setStopDataFromDB(res.data.stops || {});

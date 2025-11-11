@@ -129,7 +129,7 @@ const StopLabel = ({
               disabled={!isInEditMode}
               backgroundColor={
                 stopBackgroundColor &&
-                Color(stopBackgroundColor).alpha(0.3).string()
+                Color(stopBackgroundColor).alpha(0.85).string()
               }
               onChange={(e) => {
                 setStopProps((oldState) => {
