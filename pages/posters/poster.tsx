@@ -64,7 +64,7 @@ export default function Page(props) {
     // Might be able to remove this down the road.
     const [displsyedPatternsFromDB, setDisplsyedPatternsFromDB] = useState({});
     const [patternsForSelection, setPatternsForSelection] =
-      useState<IPattern[]>(null);
+      useState<IPattern[]>([]);
 
     /**
      * Get pattern options from routeData and selected patterns from

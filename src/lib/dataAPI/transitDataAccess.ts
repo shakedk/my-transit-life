@@ -14,7 +14,7 @@ export class TransitDataAccess implements IDataAccess {
         // this.API_KEY = require("./transitApiKey.json");
         console.log("No transit API KEY")
       } else {
-        this.API_KEY = process.env.TRANSIT_API_KEY;
+        this.API_KEY = process.env.TRANSIT_API_KEY ?? "";
       }
       this.initialized = true;
     }
@@ -24,6 +24,7 @@ export class TransitDataAccess implements IDataAccess {
     const dbNetworks = await db.collection("ptNetworks").doc("networks").get();
     if (dbNetworks.exists) {
       const data = dbNetworks.data();
+      if (!data) return [];
       const now = new Date();
       const date = new Date(data.updated);
       const diffInMs = now.getTime() - date.getTime();

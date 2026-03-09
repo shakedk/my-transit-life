@@ -4,7 +4,7 @@ import { IPattern } from "../../src/types";
 
 interface PatternSelectorOnMapProps {
   patterns: IPattern[];
-  onSelectChange: (selectedPatterns: IPattern[] | null) => void;
+  onSelectChange: (selectedPatterns: IPattern[]) => void;
 }
 
 const PatternSelectorOnMap = ({ patterns, onSelectChange }: PatternSelectorOnMapProps) => {
@@ -17,15 +17,17 @@ const PatternSelectorOnMap = ({ patterns, onSelectChange }: PatternSelectorOnMap
   
   const selectedPatterns = patterns.filter(p => p.toDisplay);
   const handleSelectChange = (
-    selectedOptions: { value: IPattern; label: string }[] | null
+    selectedOptions: readonly { value: IPattern; label: string }[] | null
   ) => {
-  const newSelectedPatterns = selectedOptions
-    ? selectedOptions.map((opt) => opt.value.patternId)
-    : [];
-  onSelectChange(  patterns.map((p) => ({
-    ...p,
-    toDisplay: newSelectedPatterns.includes(p.patternId),
-  })));
+    const newSelectedPatterns = selectedOptions
+      ? [...selectedOptions].map((opt) => opt.value.patternId)
+      : [];
+    onSelectChange(
+      patterns.map((p) => ({
+        ...p,
+        toDisplay: newSelectedPatterns.includes(p.patternId),
+      }))
+    );
   };
 
   return (

@@ -1,6 +1,7 @@
 /* eslint-env jest */
 
 import axios from "axios";
+import { getAuthAxios } from "../../lib/api/apiClient";
 import { createPosterInDB, getPosterIDInDB } from "../../lib/posters/utils";
 
 jest.mock("../../lib/api/apiClient", () => ({
@@ -10,8 +11,6 @@ jest.mock("../../lib/api/apiClient", () => ({
 }));
 
 jest.mock("axios");
-
-const { getAuthAxios } = require("../../lib/api/apiClient");
 
 describe("createPosterInDB", () => {
   beforeEach(() => {

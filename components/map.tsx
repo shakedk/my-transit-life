@@ -1,22 +1,103 @@
 /* eslint-disable react/react-in-jsx-scope */
-import { useCallback, useEffect, useMemo, useState } from "react";
-import {
-  LayersControl,
-  MapContainer,
-  Marker,
-  Pane,
-  Polyline,
-  TileLayer,
-  useMapEvents,
-} from "react-leaflet";
+"use client";
 
-import "leaflet/dist/leaflet.css";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { StyleSpecification } from "mapbox-gl";
+import Map, {
+  Marker,
+  Source,
+  Layer,
+  type MapRef,
+} from "react-map-gl/mapbox-legacy";
+import "mapbox-gl/dist/mapbox-gl.css";
 import styles from "./map.module.css";
 import StopLabel from "./stopLabel";
 import { getAuthAxios } from "../src/lib/api/apiClient";
-import { Icon } from "leaflet";
-import PropTypes from "prop-types";
-import { StopType } from "./stopLabel";
+
+const MAPBOX_ACCESS_TOKEN =
+  process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN || "";
+const MAPBOX_STYLE_ID = "shakedk/clqbhnool00ab01pj57js18y6";
+
+const tileNameToRasterUrl: Record<string, string> = {
+  StamenToner:
+    "https://tiles.stadiamaps.com/tiles/stamen_toner/{z}/{x}/{y}.png",
+  StamenTonerLite:
+    "https://tiles.stadiamaps.com/tiles/stamen_toner_lite/{z}/{x}/{y}.png",
+  StamenTonerLines:
+    "https://tiles.stadiamaps.com/tiles/stamen_toner_lines/{z}/{x}/{y}.png",
+  StamenTonerBackground:
+    "https://tiles.stadiamaps.com/tiles/stamen_toner_background/{z}/{x}/{y}.png",
+  StamenTerrainLines:
+    "https://tiles.stadiamaps.com/tiles/stamen_terrain_lines/{z}/{x}/{y}.png",
+  CartoDBLiteNoLabels:
+    "https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png",
+  AlidadeSmooth:
+    "https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}.png",
+};
+
+function getMapStyle(
+  showGeoLayer: boolean,
+  tileLayerName: string | undefined,
+  mapOpacity: number,
+  backgroundColor: string
+): string | StyleSpecification {
+  if (!showGeoLayer) {
+    return {
+      version: 8,
+      sources: {},
+      layers: [
+        {
+          id: "background",
+          type: "background",
+          paint: {
+            "background-color": backgroundColor || "transparent",
+          },
+        },
+      ],
+    };
+  }
+  if (tileLayerName === "Mapbox") {
+    return `mapbox://styles/${MAPBOX_STYLE_ID}`;
+  }
+  const rasterUrl = tileLayerName
+    ? tileNameToRasterUrl[tileLayerName]
+    : null;
+  if (rasterUrl) {
+    return {
+      version: 8,
+      sources: {
+        "raster-tiles": {
+          type: "raster",
+          tiles: [rasterUrl],
+          tileSize: 256,
+        },
+      },
+      layers: [
+        {
+          id: "raster-layer",
+          type: "raster",
+          source: "raster-tiles",
+          paint: { "raster-opacity": mapOpacity },
+        },
+      ],
+    };
+  }
+  return "mapbox://styles/mapbox/light-v11";
+}
+
+function coordinatesToGeoJSON(
+  paths: [number, number][][]
+): GeoJSON.FeatureCollection {
+  const features: GeoJSON.Feature[] = paths.map((coords) => ({
+    type: "Feature",
+    properties: {},
+    geometry: {
+      type: "LineString",
+      coordinates: coords,
+    },
+  }));
+  return { type: "FeatureCollection", features };
+}
 
 const RouteMap = ({
   multiPolyLine,
@@ -30,7 +111,7 @@ const RouteMap = ({
   mapZoom,
   font,
   showGeoLayer = true,
-  smoothFactor = 5,
+  smoothFactor = 5, // eslint-disable-line @typescript-eslint/no-unused-vars -- was for Leaflet; Mapbox renders natively
   showMarkers = false,
   isInEditMode,
   stopFontSize,
@@ -49,168 +130,192 @@ const RouteMap = ({
   routeOverlayPatternNumber = undefined,
   routeOverlayPatternColor = undefined,
   showStopLabels = false,
+}: {
+  multiPolyLine?: [number, number][][];
+  patterns?: Array<{
+    properties: { route_id: string };
+    geometry: { coordinates: [number, number][] };
+  }>;
+  stops: Array<{
+    stop_id: string;
+    stop_name: string;
+    stop_lat: number;
+    stop_lon: number;
+  }>;
+  backgroundColor?: string;
+  mapOpacity?: number;
+  tileLayerName?: string;
+  pathColor?: string;
+  pathWeight?: number;
+  mapZoom?: number;
+  font?: string;
+  showGeoLayer?: boolean;
+  smoothFactor?: number;
+  showMarkers?: boolean;
+  isInEditMode?: boolean;
+  stopFontSize?: number;
+  stopFontColor?: string;
+  stopFont?: string;
+  stopIDsToDisplayFromConfig?: string[];
+  stopColor?: string;
+  stopCircleSize?: number;
+  stopBackgroundColor?: string;
+  isSingleDot?: boolean;
+  isSimpleDot?: boolean;
+  isPrintMode?: boolean;
+  stopDataFromDB?: Record<
+    string,
+    {
+      marker_lat?: number;
+      marker_lon?: number;
+      label_lat?: number;
+      label_lon?: number;
+      labelWidth?: number;
+      labelHeight?: number;
+      stopModifiedName?: string;
+      toDisplay?: boolean;
+    }
+  >;
+  posterID?: string;
+  displsyedPatternsFromDB?: Record<string, { toDisplay?: boolean }>;
+  routeOverlayPatternNumber?: number;
+  routeOverlayPatternColor?: string;
+  showStopLabels?: boolean;
 }) => {
-  /**
-   * Lat Lon markers, leave here for testing lat lon vs. xy positions
-   */
-
-  // const [posterID, setPosterID] = useState(null);
-  // const [stopDataFromDB, setStopDataFromDB] = useState({});
-  // const [displsyedPatternsFromDB, setDisplsyedPatternsFromDB] = useState({});
+  const mapRef = useRef<MapRef | null>(null);
 
   const initialDisplayedStops = useMemo(() => {
-    return stops.reduce((stopObj, stop) => {
-      // If no config is provided, show all stops
-      // If config is provided, only show stops in the config
-      if (
-        !stopIDsToDisplayFromConfig ||
-        stopIDsToDisplayFromConfig.includes(stop.stop_id)
-      ) {
-        stopObj[stop.stop_id] = true;
-      }
-      return stopObj;
-    }, {});
+    return stops.reduce(
+      (stopObj: Record<string, boolean>, stop) => {
+        if (
+          !stopIDsToDisplayFromConfig ||
+          stopIDsToDisplayFromConfig.includes(stop.stop_id)
+        ) {
+          stopObj[stop.stop_id] = true;
+        }
+        return stopObj;
+      },
+      {}
+    );
   }, [stops, stopIDsToDisplayFromConfig]);
 
-  const [displayedStops, setDisplayedStops] = useState(initialDisplayedStops);
+  const [displayedStops, setDisplayedStops] =
+    useState<Record<string, boolean>>(initialDisplayedStops);
 
-
-  const tileNameToUrl = {
-    StamenToner:
-      "https://tiles.stadiamaps.com/tiles/stamen_toner/{z}/{x}/{y}{r}.png",
-    StamenTonerLite:
-      "https://tiles.stadiamaps.com/tiles/stamen_toner_lite/{z}/{x}/{y}{r}.png",
-    StamenTonerLines:
-      "https://tiles.stadiamaps.com/tiles/stamen_toner_lines/{z}/{x}/{y}{r}.png",
-    StamenTonerBackground:
-      "https://tiles.stadiamaps.com/tiles/stamen_toner_background/{z}/{x}/{y}{r}.png",
-    StamenTerrainLines:
-      "https://tiles.stadiamaps.com/tiles/stamen_terrain_lines/{z}/{x}/{y}{r}.png",
-    CartoDBLiteNoLabels:
-      "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
-    AlidadeSmooth:
-      "https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.png",
-    Mapbox:
-      `https://api.mapbox.com/styles/v1/shakedk/clqbhnool00ab01pj57js18y6/tiles/256/{z}/{x}/{y}@2x?access_token=${process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN || ""}`,
-  };
-  
-  const getTileLayer = (tileLayerName) => (
-    <TileLayer
-      opacity={mapOpacity || 1}
-      attribution='Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-      url={tileNameToUrl[tileLayerName]}
-      subdomains="abcd"
-      minZoom={0}
-      maxZoom={20}
-    />
+  const mapStyle = useMemo(
+    () =>
+      getMapStyle(
+        showGeoLayer ?? true,
+        tileLayerName,
+        mapOpacity ?? 1,
+        backgroundColor || "transparent"
+      ),
+    [showGeoLayer, tileLayerName, mapOpacity, backgroundColor]
   );
 
-  const stopMarkerCircleChangedHandler = (
-    posterID: string,
-    stopID: string,
-    marker_lat: number,
-    marker_lon: number
-  ) => {
-    const params = {
-      posterID: posterID,
-      stops: {},
-    };
-    params.stops[stopID] = {
-      marker_lat,
-      marker_lon,
-    };
-    getAuthAxios().put(`/api/poster/${posterID}`, params);
-  };
-  const stopDisplayToggleHandler = (
-    posterID: string,
-    stopID: string,
-    toDisplay: boolean
-  ) => {
-    const params = {
-      posterID: posterID,
-      stops: {},
-    };
-    params.stops[stopID] = {
-      toDisplay,
-    };
-    getAuthAxios().put(`/api/poster/${posterID}`, params);
-  };
-  const stopPropetiesChanedHandler = (
-    posterID: string,
-    stopID: string,
-    label_lat: number,
-    label_lon: number,
-    labelWidth: number,
-    labelHeight: number,
-    stopOriginalName: string,
-    stopModifiedName: string
-  ) => {
-    const params = {
-      posterID: posterID,
-      stops: {},
-    };
-    params.stops[stopID] = {
-      stopOriginalName,
-      stopModifiedName,
-      label_lat,
-      label_lon,
-      labelWidth,
-      labelHeight,
-    };
-    getAuthAxios().put(`/api/poster/${posterID}`, params);
-  };
-  // useEffect(() => {
-  //   async function getData() {
-  //     const posterType = router.query.posterType;
-  //     const _routeID = router.query.routeID;
-  //     const id = await getPosterIDInDB(posterType, _routeID);
+  const stopMarkerCircleChangedHandler = useCallback(
+    (posterID: string, stopID: string, marker_lat: number, marker_lon: number) => {
+      getAuthAxios().put(`/api/poster/${posterID}`, {
+        posterID,
+        stops: { [stopID]: { marker_lat, marker_lon } },
+      });
+    },
+    []
+  );
 
-  //     const res = await axios.get(`/api/poster/${id}`);
-  //     setPosterID(id);
-  //     setStopDataFromDB(res.data.stops || {});
-  //     setDisplsyedPatternsFromDB(res.data.patterns || {});
-  //   }
-  //   getData();
-  // }, [router.query]);
+  const stopDisplayToggleHandler = useCallback(
+    (posterID: string, stopID: string, toDisplay: boolean) => {
+      getAuthAxios().put(`/api/poster/${posterID}`, {
+        posterID,
+        stops: { [stopID]: { toDisplay } },
+      });
+      setDisplayedStops((prev) => ({ ...prev, [stopID]: toDisplay }));
+    },
+    []
+  );
+
+  const stopPropetiesChanedHandler = useCallback(
+    (
+      posterID: string,
+      stopID: string,
+      label_lat: number,
+      label_lon: number,
+      labelWidth: number,
+      labelHeight: number,
+      stopOriginalName: string,
+      stopModifiedName: string
+    ) => {
+      getAuthAxios().put(`/api/poster/${posterID}`, {
+        posterID,
+        stops: {
+          [stopID]: {
+            stopOriginalName,
+            stopModifiedName,
+            label_lat,
+            label_lon,
+            labelWidth,
+            labelHeight,
+          },
+        },
+      });
+    },
+    []
+  );
+
   const labels = useMemo(() => {
-    if (!stopDataFromDB) {
-      return [];
-    }
-    return stops.map((stop) => {
-      const markerLat = stopDataFromDB[stop.stop_id]?.label_lat ?? stop.stop_lat;
-      const markerLon = stopDataFromDB[stop.stop_id]?.label_lon ?? stop.stop_lon;
-      
-      // Validate coordinates are valid numbers before creating StopLabel
-      if (typeof markerLat !== 'number' || typeof markerLon !== 'number' || 
-          isNaN(markerLat) || isNaN(markerLon)) {
-        return null;
-      }
-      
-      return (
-        <StopLabel
-          showStopLabels={showStopLabels}
-          posterID={posterID}
-          key={stop.stop_id}
-          stop={stop}
-          // stopDataFromDB={stopDataFromDB}
-          markerLat={markerLat}
-          markerLon={markerLon}
-          labelWidthFromDB={stopDataFromDB[stop.stop_id]?.labelWidth}
-          labelHeightFromDB={stopDataFromDB[stop.stop_id]?.labelHeight}
-          stopModifiedName={
-            stopDataFromDB[stop.stop_id]?.stopModifiedName || stop.stop_name
-          }
-          stopPropetiesChanedHandler={stopPropetiesChanedHandler}
-          stopOriginalName={stop.stop_name}
-          font={stopFont || font}
-          fontSize={stopFontSize}
-          stopFontColor={stopFontColor}
-          isInEditMode={isInEditMode}
-          stopBackgroundColor={stopBackgroundColor}
-        />
-      );
-    }).filter(Boolean); // Remove null entries
-  }, [stopDataFromDB, posterID, stops, showStopLabels, stopPropetiesChanedHandler, stopFont, font, stopFontSize, stopFontColor, isInEditMode, stopBackgroundColor]);
+    if (!stopDataFromDB) return [];
+    return stops
+      .map((stop) => {
+        const markerLat =
+          stopDataFromDB[stop.stop_id]?.label_lat ?? stop.stop_lat;
+        const markerLon =
+          stopDataFromDB[stop.stop_id]?.label_lon ?? stop.stop_lon;
+        if (
+          typeof markerLat !== "number" ||
+          typeof markerLon !== "number" ||
+          isNaN(markerLat) ||
+          isNaN(markerLon)
+        ) {
+          return null;
+        }
+        return (
+          <StopLabel
+            key={stop.stop_id}
+            showStopLabels={showStopLabels}
+            posterID={posterID}
+            stop={stop}
+            markerLat={markerLat}
+            markerLon={markerLon}
+            labelWidthFromDB={stopDataFromDB[stop.stop_id]?.labelWidth}
+            labelHeightFromDB={stopDataFromDB[stop.stop_id]?.labelHeight}
+            stopModifiedName={
+              stopDataFromDB[stop.stop_id]?.stopModifiedName || stop.stop_name
+            }
+            stopPropetiesChanedHandler={stopPropetiesChanedHandler}
+            stopOriginalName={stop.stop_name}
+            font={stopFont || font}
+            fontSize={stopFontSize}
+            stopFontColor={stopFontColor}
+            isInEditMode={isInEditMode ?? false}
+            stopBackgroundColor={stopBackgroundColor}
+          />
+        );
+      })
+      .filter(Boolean);
+  }, [
+    stopDataFromDB,
+    posterID,
+    stops,
+    showStopLabels,
+    stopPropetiesChanedHandler,
+    stopFont,
+    font,
+    stopFontSize,
+    stopFontColor,
+    isInEditMode,
+    stopBackgroundColor,
+  ]);
+
   const stopCircleSvg = isSingleDot
     ? `<svg xmlns="http://www.w3.org/2000/svg" width="67" height="67">
       <g>
@@ -232,341 +337,319 @@ const RouteMap = ({
   </g>
   </svg>`;
 
-  const url = encodeURI(
+  const circleIconUrl = encodeURI(
     "data:image/svg+xml," + stopCircleSvg
   ).replaceAll("#", "%23");
 
-  const CustomIcon = Icon.extend({
-    options: {
-      iconSize: [stopCircleSize, stopCircleSize],
-      iconAnchor: [stopCircleSize / 2 + 17, stopCircleSize / 2 + 17],
-    },
-  });
-
-  const circleMarkers = stops.map((stop) => {
-    const eventHandlers = {
-      dragend(e) {
-        const marker = e.target;
-        if (marker && marker.getLatLng) {
-          const newPosition = marker.getLatLng();
-          stopMarkerCircleChangedHandler(
-            posterID,
-            stop.stop_id,
-            newPosition.lat,
-            newPosition.lng
-          );
+  const circleMarkers = useMemo(() => {
+    return stops
+      .map((stop) => {
+        if (
+          !displayedStops[stop.stop_id] ||
+          stop.stop_id === "OPTIBUS_background"
+        ) {
+          return null;
         }
-      },
-    };
-    
-    
-    if (displayedStops[stop.stop_id] && stop.stop_id !== "OPTIBUS_background") {
-      const markerLat = stopDataFromDB?.[stop.stop_id]?.marker_lat ?? stop.stop_lat;
-      const markerLon = stopDataFromDB?.[stop.stop_id]?.marker_lon ?? stop.stop_lon;
-      
-      // Validate coordinates are valid numbers
-      if (typeof markerLat !== 'number' || typeof markerLon !== 'number' || 
-          isNaN(markerLat) || isNaN(markerLon)) {
-        return null;
-      }
-      
-      return (
-        <Marker
-          key={`${stop.stop_name} (${stop.stop_id})`}
-          eventHandlers={eventHandlers}
-          position={[markerLat, markerLon]}
-          draggable={true}
-          icon={
-            // @ts-ignore
-            new CustomIcon({ iconUrl: url })
-          }
-          zIndexOffset={500}
-        />
-      );
-    } else {
-      return null;
-    }
-  });
-
+        const markerLat =
+          stopDataFromDB?.[stop.stop_id]?.marker_lat ?? stop.stop_lat;
+        const markerLon =
+          stopDataFromDB?.[stop.stop_id]?.marker_lon ?? stop.stop_lon;
+        if (
+          typeof markerLat !== "number" ||
+          typeof markerLon !== "number" ||
+          isNaN(markerLat) ||
+          isNaN(markerLon)
+        ) {
+          return null;
+        }
+        return (
+          <Marker
+            key={`circle-${stop.stop_id}`}
+            longitude={markerLon}
+            latitude={markerLat}
+            draggable={true}
+            onDragEnd={(e) => {
+              const { lng, lat } = e.target.getLngLat();
+              stopMarkerCircleChangedHandler(
+                posterID ?? "",
+                stop.stop_id,
+                lat,
+                lng
+              );
+            }}
+          >
+            <div
+              style={{
+                backgroundImage: `url(${circleIconUrl})`,
+                backgroundSize: `${stopCircleSize || 10}px ${stopCircleSize || 10}px`,
+                backgroundRepeat: "no-repeat",
+                backgroundPosition: "center",
+                width: (stopCircleSize || 10) + 34,
+                height: (stopCircleSize || 10) + 34,
+                cursor: "grab",
+              }}
+            />
+          </Marker>
+        );
+      })
+      .filter(Boolean);
+  }, [
+    stops,
+    displayedStops,
+    stopDataFromDB,
+    posterID,
+    stopMarkerCircleChangedHandler,
+    circleIconUrl,
+    stopCircleSize,
+  ]);
 
   const anyRoute = useMemo(() => {
-    if (multiPolyLine) {
-      return multiPolyLine;
-    } else {
-      return [patterns[0].geometry.coordinates];
-    }
+    if (multiPolyLine) return multiPolyLine;
+    if (patterns?.[0]) return [patterns[0].geometry.coordinates];
+    return [[]];
   }, [patterns, multiPolyLine]);
 
-  const middleOfRoute = Math.round(anyRoute[0].length / 2);
-  const reverseMultiPolyLine = useCallback((path): [number, number][][] => {
-    const rev = path.map((polyLine) =>
-      polyLine.map((coord) => [coord[1], coord[0]])
-    );
-    return rev;
-  }, []);
+  const routeGeoJSON = useMemo(
+    () => coordinatesToGeoJSON(anyRoute),
+    [anyRoute]
+  );
 
-  const [map, setMap] = useState(null);
+  const middleCoord =
+    anyRoute[0]?.length > 0
+      ? anyRoute[0][Math.round(anyRoute[0].length / 2)]
+      : [0, 0];
+  const initialViewState = useMemo(
+    () => ({
+      longitude: middleCoord[0],
+      latitude: middleCoord[1],
+      zoom: mapZoom ?? 12,
+    }),
+    [middleCoord[0], middleCoord[1], mapZoom]
+  );
 
   useEffect(() => {
-    if (map) {
-      map.fitBounds(reverseMultiPolyLine(anyRoute), { maxZoom: mapZoom });
+    const map = mapRef.current?.getMap?.();
+    if (map && anyRoute.length > 0 && anyRoute[0].length > 0) {
+      const bounds = anyRoute.flat().reduce(
+        (acc, coord) => {
+          acc[0] = Math.min(acc[0], coord[0]);
+          acc[1] = Math.min(acc[1], coord[1]);
+          acc[2] = Math.max(acc[2], coord[0]);
+          acc[3] = Math.max(acc[3], coord[1]);
+          return acc;
+        },
+        [Infinity, Infinity, -Infinity, -Infinity]
+      );
+      map.fitBounds(
+        [
+          [bounds[0], bounds[1]],
+          [bounds[2], bounds[3]],
+        ],
+        { maxZoom: mapZoom ?? 12, padding: 20 }
+      );
     }
-  }, [map, anyRoute, mapZoom]);
+  }, [anyRoute, mapZoom]);
 
   useEffect(() => {
-    const newDisplayedStops: { [key: string]: boolean } = {};
-    
-    // First, process stops from DB
+    const newDisplayedStops: Record<string, boolean> = {};
     if (stopDataFromDB && Object.keys(stopDataFromDB).length > 0) {
       Object.keys(stopDataFromDB).forEach((stop_id) => {
-        // Only include stops that:
-        // 1. Have toDisplay: true in DB, AND
-        // 2. Are in stopIDsToDisplayFromConfig (if config is provided)
         if (
           stopDataFromDB[stop_id]?.toDisplay &&
-          (!stopIDsToDisplayFromConfig || stopIDsToDisplayFromConfig.includes(stop_id))
+          (!stopIDsToDisplayFromConfig ||
+            stopIDsToDisplayFromConfig.includes(stop_id))
         ) {
           newDisplayedStops[stop_id] = true;
         }
       });
     }
-    
-    // Also include stops from stopIDsToDisplayFromConfig that don't have DB entries yet
-    // but exist in the stops array
     if (stopIDsToDisplayFromConfig) {
       stopIDsToDisplayFromConfig.forEach((stop_id) => {
-        const stopExists = stops.some((stop) => stop.stop_id === stop_id);
-        // If stop exists in stops array and either:
-        // - No DB entry exists yet, OR
-        // - DB entry exists but toDisplay is not explicitly false
-        if (stopExists && (!stopDataFromDB?.[stop_id] || stopDataFromDB[stop_id]?.toDisplay !== false)) {
+        const stopExists = stops.some((s) => s.stop_id === stop_id);
+        if (
+          stopExists &&
+          (!stopDataFromDB?.[stop_id] ||
+            stopDataFromDB[stop_id]?.toDisplay !== false)
+        ) {
           newDisplayedStops[stop_id] = true;
         }
       });
     }
-    
     setDisplayedStops(newDisplayedStops);
   }, [stopDataFromDB, stopIDsToDisplayFromConfig, stops]);
 
-  const MapEventer = useCallback(() => {
-    useMapEvents({
-      overlayadd(overlay) {
-        const stopMatch = overlay.name.match(/\((.*?)\)/);
-        if (stopMatch) {
-          const stopID = stopMatch[1];
-          stopDisplayToggleHandler(posterID, stopID, true);
-        } else {
-          void overlay.name; // pattern name available for future use
-        }
-      },
-      overlayremove(overlay) {
-        const stopMatch = overlay.name.match(/\((.*?)\)/);
-        if (stopMatch) {
-          const stopID = stopMatch[1];
-          stopDisplayToggleHandler(posterID, stopID, false);
-        }
-      },
-    });
+  const displayedPatterns =
+    patterns?.filter(
+      (p) =>
+        displsyedPatternsFromDB[p.properties.route_id]?.toDisplay ?? true
+    ) ?? [];
 
-    return null;
-  }, [displayedStops, setDisplayedStops, posterID]);
+  const sortedLabels = useMemo(
+    () =>
+      [...labels].sort((a, b) => {
+        const aName = `${(a as React.ReactElement).props.stop.stop_name} (${(a as React.ReactElement).props.stop.stop_id})`;
+        const bName = `${(b as React.ReactElement).props.stop.stop_name} (${(b as React.ReactElement).props.stop.stop_id})`;
+        return aName.localeCompare(bName);
+      }),
+    [labels]
+  );
 
   return (
-    <MapContainer
-      ref={setMap}
+    <div
       id="map"
-      center={reverseMultiPolyLine(anyRoute)[0][middleOfRoute]}
-      zoom={12}
-      zoomSnap={0.1}
-      scrollWheelZoom={false}
-      doubleClickZoom={false}
-      dragging={false}
-      zoomControl={false}
-      attributionControl={false}
       style={{
         background: backgroundColor || "transparent",
         height: "100%",
         width: "100%",
+        position: "relative",
       }}
     >
-      {showGeoLayer ? getTileLayer(tileLayerName) : null}
-      {/* When there is only a single pattern - can be removed in the future */}
-      <Pane name="route-path" style={{ zIndex: 499, cursor: "default" }}>
-        {!patterns && (
-          <Polyline
-            pathOptions={{ color: "snow", weight: pathWeight + 10 || 10 }}
-            positions={reverseMultiPolyLine(anyRoute)}
-            smoothFactor={smoothFactor}
-          />
-        )}
-        {!patterns && (
-          <Polyline
-            key="routePath"
-            pathOptions={{ color: pathColor, weight: pathWeight || 10 }}
-            positions={reverseMultiPolyLine(anyRoute)}
-            smoothFactor={smoothFactor}
-          />
-        )}
-        {/* Enabled routeOverlayPatternNumber for !patterns only out of laziness */}
-        {!patterns && routeOverlayPatternNumber && (
-          <Polyline
-            className={styles.overlayRoute}
-            pathOptions={{
-              color: routeOverlayPatternColor,
-              weight: pathWeight * 0.7 || 10,
-              // dashArray: "20, 100",
-            }}
-            positions={reverseMultiPolyLine([
-              multiPolyLine[routeOverlayPatternNumber],
-            ])}
-            smoothFactor={smoothFactor}
-          />
+      <Map
+        ref={mapRef}
+        mapboxAccessToken={MAPBOX_ACCESS_TOKEN}
+        initialViewState={initialViewState}
+        mapStyle={mapStyle}
+        style={{ width: "100%", height: "100%" }}
+        scrollZoom={false}
+        doubleClickZoom={false}
+        dragPan={false}
+        dragRotate={false}
+        touchZoomRotate={false}
+        attributionControl={false}
+        preserveDrawingBuffer={true}
+      >
+
+        {/* Route polylines */}
+        {!patterns && anyRoute[0]?.length > 0 && (
+          <>
+            <Source id="route-outline" type="geojson" data={routeGeoJSON}>
+              <Layer
+                id="route-outline-layer"
+                type="line"
+                paint={{
+                  "line-color": "snow",
+                  "line-width": (pathWeight ?? 10) + 10,
+                }}
+              />
+            </Source>
+            <Source id="route-path" type="geojson" data={routeGeoJSON}>
+              <Layer
+                id="route-path-layer"
+                type="line"
+                paint={{
+                  "line-color": pathColor || "#000",
+                  "line-width": pathWeight ?? 10,
+                }}
+              />
+            </Source>
+            {routeOverlayPatternNumber != null &&
+              multiPolyLine?.[routeOverlayPatternNumber] && (
+                <Source
+                  id="route-overlay"
+                  type="geojson"
+                  data={coordinatesToGeoJSON([
+                    multiPolyLine[routeOverlayPatternNumber],
+                  ])}
+                >
+                  <Layer
+                    id="route-overlay-layer"
+                    type="line"
+                    paint={{
+                      "line-color": routeOverlayPatternColor || "rgba(255,0,0,0.8)",
+                      "line-width": (pathWeight ?? 10) * 0.7,
+                    }}
+                  />
+                </Source>
+              )}
+          </>
         )}
 
-        {/* Stop control */}
-        {!isPrintMode && (
-          <LayersControl position="topright">
-            {labels
-              .sort((a, b) => {
-                const aName = `${a.props.stop.stop_name} (${a.props.stop.stop_id})`;
-                const bName = `${b.props.stop.stop_name} (${b.props.stop.stop_id})`;
-                return aName.localeCompare(bName);
-              })
-              .map((label) => {
+        {patterns &&
+          displayedPatterns.map((pattern) => (
+            <Source
+              key={pattern.properties.route_id}
+              id={`pattern-${pattern.properties.route_id}`}
+              type="geojson"
+              data={coordinatesToGeoJSON([pattern.geometry.coordinates])}
+            >
+              <Layer
+                id={`pattern-outline-${pattern.properties.route_id}`}
+                type="line"
+                paint={{
+                  "line-color": "snow",
+                  "line-width": (pathWeight ?? 10) + 10,
+                }}
+              />
+              <Layer
+                id={`pattern-path-${pattern.properties.route_id}`}
+                type="line"
+                paint={{
+                  "line-color": pathColor || "#000",
+                  "line-width": pathWeight ?? 10,
+                }}
+              />
+            </Source>
+          ))}
+
+        {/* Stop toggle panel (replaces LayersControl) */}
+        {!isPrintMode && sortedLabels.length > 0 && (
+          <div
+            className={styles.stopTogglePanel}
+            style={{ position: "absolute", top: 10, right: 10, zIndex: 1000 }}
+          >
+            <div
+              style={{
+                background: "white",
+                padding: 8,
+                borderRadius: 4,
+                maxHeight: 300,
+                overflowY: "auto",
+                boxShadow: "0 2px 6px rgba(0,0,0,0.2)",
+              }}
+            >
+              {sortedLabels.map((label) => {
+                const stop = (label as React.ReactElement).props
+                  .stop as (typeof stops)[0];
                 return (
-                  <LayersControl.Overlay
-                    key={`${label.props.stop.stop_name} (${label.props.stop.stop_id})`}
-                    name={`${label.props.stop.stop_name} (${label.props.stop.stop_id})`}
-                    checked={displayedStops[label.props.stop.stop_id]}
+                  <label
+                    key={stop.stop_id}
+                    style={{
+                      display: "block",
+                      marginBottom: 4,
+                      fontSize: 12,
+                      cursor: "pointer",
+                    }}
                   >
-                    {label}
-                  </LayersControl.Overlay>
+                    <input
+                      type="checkbox"
+                      checked={displayedStops[stop.stop_id] ?? false}
+                      onChange={(e) =>
+                        stopDisplayToggleHandler(
+                          posterID ?? "",
+                          stop.stop_id,
+                          e.target.checked
+                        )
+                      }
+                    />
+                    {` ${stop.stop_name} (${stop.stop_id})`}
+                  </label>
                 );
               })}
-          </LayersControl>
+            </div>
+          </div>
         )}
-        {patterns &&
-          patterns.map((pattern) =>
-            (displsyedPatternsFromDB[pattern.properties.route_id]?.toDisplay ??
-              true) ? (
-              <>
-                <Polyline
-                  pathOptions={{
-                    color: "snow",
-                    weight: pathWeight + 10 || 10,
-                  }}
-                  positions={reverseMultiPolyLine([
-                    pattern.geometry.coordinates,
-                  ])}
-                  smoothFactor={smoothFactor}
-                />
-                <Polyline
-                  key={pattern.properties.route_id}
-                  pathOptions={{
-                    color: pathColor,
-                    weight: pathWeight || 10,
-                  }}
-                  positions={reverseMultiPolyLine([
-                    pattern.geometry.coordinates,
-                  ])}
-                  smoothFactor={smoothFactor}
-                />
-              </>
-            ) : null
+
+        {/* Stop labels and markers */}
+        {showStopLabels &&
+          labels.filter((label) =>
+            displayedStops[
+              (label as React.ReactElement).props.stop.stop_id as string
+            ]
           )}
-        {/* Print Mode Stops */}
-        {isPrintMode &&
-          showStopLabels &&
-          labels.filter((label) => displayedStops[label.props.stop.stop_id])
-        }
-        {/* Edit Mode Stops - show labels directly */}
-        {!isPrintMode &&
-          showStopLabels &&
-          labels.filter((label) => displayedStops[label.props.stop.stop_id])
-        }
         {showMarkers && circleMarkers}
-      </Pane>
-      <MapEventer />
-    </MapContainer>
+      </Map>
+    </div>
   );
 };
-
-RouteMap.propTypes = {
-  // Should be [number, number][]
-  multiPolyLine: PropTypes.arrayOf(
-    PropTypes.arrayOf(
-      PropTypes.arrayOf(function (propValue, propName) {
-        if (
-          !Array.isArray(propValue) ||
-          propValue.length !== 2 ||
-          !propValue.every((n) => typeof n === "number")
-        ) {
-          return new Error(`${propName} needs to be an array of two numbers`);
-        }
-
-        return null;
-      })
-    )
-  ),
-  patterns: PropTypes.arrayOf(
-    PropTypes.shape({
-      type: PropTypes.string,
-      properties: PropTypes.shape({
-        route_id: PropTypes.string.isRequired,
-        agency_id: PropTypes.string,
-        route_short_name: PropTypes.string.isRequired,
-        route_long_name: PropTypes.string.isRequired,
-        route_desc: PropTypes.string,
-        route_type: PropTypes.string,
-        route_color: PropTypes.string,
-      }),
-      geometry: PropTypes.shape({
-        type: PropTypes.string,
-        coordinates: PropTypes.arrayOf(
-          PropTypes.arrayOf(function (propValue, propName) {
-            if (
-              !Array.isArray(propValue) ||
-              propValue.length !== 2 ||
-              !propValue.every((n) => typeof n === "number")
-            ) {
-              return new Error(
-                `${propName} needs to be an array of two numbers`
-              );
-            }
-
-            return null;
-          })
-        ),
-      }),
-    })
-  ),
-  stops: PropTypes.arrayOf(StopType).isRequired,
-  backgroundColor: PropTypes.string,
-  tileLayerName: PropTypes.oneOf(["StamenToner", null]),
-  pathColor: PropTypes.string,
-  pathWeight: PropTypes.number || null,
-  mapZoom: PropTypes.number,
-  font: PropTypes.string,
-  showGeoLayer: PropTypes.bool,
-  smoothFactor: PropTypes.number,
-  showMarkers: PropTypes.bool,
-  stopFontSize: PropTypes.number,
-  stopFontColor: PropTypes.string,
-  stopIDsToDisplayFromConfig: PropTypes.array,
-  mapOpacity: PropTypes.number,
-  stopCircleSize: PropTypes.number,
-  stopBackgroundColor: PropTypes.string,
-  isSingleDot: PropTypes.bool,
-  isSimpleDot: PropTypes.bool,
-  isInEditMode: PropTypes.bool,
-  isPrintMode: PropTypes.bool,
-  stopDataFromDB: PropTypes.any,
-  posterID: PropTypes.string,
-  displsyedPatternsFromDB: PropTypes.any,
-  routeOverlayPatternNumber: PropTypes.number || null,
-  routeOverlayPatternColor: PropTypes.string,
-  showStopLabels: PropTypes.bool,
-};
-
 
 export default RouteMap;

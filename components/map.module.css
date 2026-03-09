@@ -3,3 +3,7 @@
        For gradient effect, use SVG linearGradient in the component. */
     stroke: rgba(255, 0, 0, 0.8);
 }
+
+.stopTogglePanel {
+    pointer-events: auto;
+}
