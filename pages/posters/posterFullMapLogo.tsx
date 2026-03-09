@@ -1,148 +1,41 @@
-import { Badge, Image } from "theme-ui";
 import React from "react";
+import PosterLayout from "../../components/posters/PosterLayout";
+import { getPosterServerSideProps } from "../../src/lib/posters/utils";
 import styles from "./posterFullMapLogo.module.css";
 
-import TransitLifeCredit from "../../components/tranitLifeCredit";
-import {
-  useMap,
-  getPosterServerSideProps,
-} from "../../src/lib/posters/utils";
-
-export const getServerSideProps = (context) =>
+export const getServerSideProps = (context: { query: Record<string, string | string[] | undefined> }) =>
   getPosterServerSideProps(context, "PosterFullMapLogo");
 
-export default function Page(props) {
+export default function Page(props: {
+  routeData?: { routeData?: string } | Record<string, unknown>;
+  routeDesignConfig?: { routeData?: string } | Record<string, unknown>;
+  isInEditMode?: boolean;
+  isPrintMode?: boolean;
+  stopDataFromDB?: Record<string, unknown>;
+  posterID?: string | null;
+  displsyedPatternsFromDB?: Record<string, { toDisplay?: boolean }>;
+}) {
   const routeData =
     props.routeData?.routeData != null
-      ? JSON.parse(props.routeData.routeData)
+      ? JSON.parse((props.routeData as { routeData: string }).routeData)
       : props.routeData;
   const routeDesignConfig =
     props.routeDesignConfig?.routeData != null
-      ? JSON.parse(props.routeDesignConfig.routeData)
+      ? JSON.parse((props.routeDesignConfig as { routeData: string }).routeData)
       : props.routeDesignConfig;
   if (!routeData || !routeDesignConfig) return null;
-  const isInEditMode = props.isInEditMode ?? false;
-  const isPrintMode = props.isPrintMode ?? false;
-  const stopDataFromDB = props.stopDataFromDB ?? {};
-  const posterID = props.posterID ?? null;
-  const displsyedPatternsFromDB = props.displsyedPatternsFromDB ?? {};
-  const GeoMap = useMap();
 
-  const getDescriptionDetailElement = (detail: string) => (
-    <div>
-      <Badge
-        sx={{
-          zIndex: 100,
-          fontSize: routeDesignConfig.lineDetailsFontSize || 30,
-          fontWeight: "normal",
-          padding: 0,
-          paddingBottom: 2,
-          fontFamily: routeDesignConfig.font,
-        }}
-        bg="transparent"
-      >
-        {detail}
-      </Badge>
-    </div>
+  return (
+    <PosterLayout
+      routeData={routeData}
+      routeDesignConfig={routeDesignConfig}
+      isInEditMode={props.isInEditMode ?? false}
+      isPrintMode={props.isPrintMode ?? false}
+      stopDataFromDB={props.stopDataFromDB ?? {}}
+      posterID={props.posterID ?? null}
+      displsyedPatternsFromDB={props.displsyedPatternsFromDB ?? {}}
+      layout="posterFullMapLogo"
+      styles={styles}
+    />
   );
-  const PosterFullMapLogo = () => (
-    <div className={styles.posterContainer}>
-      <div
-        className={styles.header}
-        style={{ backgroundColor: routeDesignConfig.backgroundColor }}
-      >
-        <div className={styles.title}>
-          <div className={styles.lineDetails}>
-            <div className={styles.lineNameNoLogo}>
-              <div
-                className={styles.lineName}
-                style={{
-                  fontFamily: routeDesignConfig.font,
-                  fontSize: routeDesignConfig.routeTitleSize || 80,
-                }}
-              >
-                {routeDesignConfig.routeName}
-              </div>
-              <div
-                className={styles.lineTypeDesc}
-                style={{
-                  fontFamily: routeDesignConfig.font,
-                  fontSize: routeDesignConfig.routeTitleSize || 80,
-                }}
-              >
-                {`${routeDesignConfig.routeType} ${routeDesignConfig.routeDesc}`}
-              </div>
-            </div>
-          </div>
-          <div className={styles.descriptionDetails}>
-            {getDescriptionDetailElement(
-              routeDesignConfig.descriptionDetails?.numberOfStopsText
-              // true
-            )}
-            {getDescriptionDetailElement(
-              routeDesignConfig.descriptionDetails?.launchDateText
-              // false
-            )}
-            {getDescriptionDetailElement(
-              routeDesignConfig.descriptionDetails?.launchDateText
-              // false
-            )}
-          </div>
-        </div>
-      </div>
-      <div
-        className={styles.mapContainer}
-        style={{
-          position: "relative",
-        }}
-      >
-        <GeoMap
-          multiPolyLine={routeData.multiPolyLine}
-          showGeoLayer={false}
-          stops={routeData.stops}
-          backgroundColor={routeDesignConfig.backgroundColor}
-          tileLayerName={routeDesignConfig.tileLayerName}
-          pathColor={routeDesignConfig.pathColor}
-          mapZoom={routeDesignConfig.mapZoom + 0.5} //As we have more space to show the route
-          font={routeDesignConfig.font}
-          smoothFactor={8}
-          showMarkers
-          isInEditMode={isInEditMode}
-          isPrintMode={isPrintMode}
-          patterns={undefined}
-          mapOpacity={undefined}
-          pathWeight={undefined}
-          stopFontSize={undefined}
-          stopFontColor={undefined}
-          stopIDsToDisplayFromConfig={undefined}
-          stopColor={undefined}
-          stopCircleSize={undefined}
-          stopBackgroundColor={undefined}
-          isSingleDot={undefined}
-          stopDataFromDB={stopDataFromDB}
-          posterID={posterID}
-          displsyedPatternsFromDB={displsyedPatternsFromDB}
-        />
-        <div
-          style={{
-            position: "absolute",
-            top: `${routeDesignConfig.agencyLogoTop}px`,
-            right: `${routeDesignConfig.agencyLogoRight}px`,
-          }}
-        >
-          <Image
-            src={routeDesignConfig.agencyLogoPath}
-            sx={{
-              width: routeDesignConfig.agencyLogoWidth,
-              height: routeDesignConfig.agencyLogoHeight,
-            }}
-          ></Image>
-        </div>
-      </div>
-      <div className={styles.transitLifeCred}>
-        <TransitLifeCredit creditFontSize={routeDesignConfig.creditFontSize} />
-      </div>
-    </div>
-  );
-  return <PosterFullMapLogo />;
 }

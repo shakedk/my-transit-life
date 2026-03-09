@@ -1,169 +1,41 @@
-import { Badge } from "theme-ui";
-// import styles from "./posterGeoNoLogo.module.css";
+import React from "react";
+import PosterLayout from "../../components/posters/PosterLayout";
+import { getPosterServerSideProps } from "../../src/lib/posters/utils";
 import styles from "./posterGeoNoLogoA0.module.css";
-import React from 'react';
-// import styles from "./posterGeoNoLogoA0.module.module.css";
-// import styles from "./posterGeoNoLogoA0.module.module.css";
-// import styles from "./posterGeoNoLogoA0.module.module.css";
-// import styles from "./posterGeoNoLogoA0.module.module.css";
 
-import TransitLifeCredit from "../../components/tranitLifeCredit";
-import {
-  useMap,
-  getPosterServerSideProps,
-} from "../../src/lib/posters/utils";
-
-export const getServerSideProps = (context) =>
+export const getServerSideProps = (context: { query: Record<string, string | string[] | undefined> }) =>
   getPosterServerSideProps(context, "PosterGeoNoLogo");
 
-export default function Page(props) {
+export default function Page(props: {
+  routeData?: { routeData?: string } | Record<string, unknown>;
+  routeDesignConfig?: { routeData?: string } | Record<string, unknown>;
+  isInEditMode?: boolean;
+  isPrintMode?: boolean;
+  stopDataFromDB?: Record<string, unknown>;
+  posterID?: string | null;
+  displsyedPatternsFromDB?: Record<string, { toDisplay?: boolean }>;
+}) {
   const routeData =
     props.routeData?.routeData != null
-      ? JSON.parse(props.routeData.routeData)
+      ? JSON.parse((props.routeData as { routeData: string }).routeData)
       : props.routeData;
   const routeDesignConfig =
     props.routeDesignConfig?.routeData != null
-      ? JSON.parse(props.routeDesignConfig.routeData)
+      ? JSON.parse((props.routeDesignConfig as { routeData: string }).routeData)
       : props.routeDesignConfig;
   if (!routeData || !routeDesignConfig) return null;
-  const isInEditMode = props.isInEditMode ?? false;
-  const isPrintMode = props.isPrintMode ?? false;
-  const stopDataFromDB = props.stopDataFromDB ?? {};
-  const posterID = props.posterID ?? null;
-  const displsyedPatternsFromDB = props.displsyedPatternsFromDB ?? {};
-  const GeoMap = useMap();
 
-  const getDescriptionDetailElement = (detail: string, isFirst: boolean) => (
-    <div>
-      <Badge
-        sx={{
-          zIndex: 100,
-          fontSize: routeDesignConfig.lineDetailsFontSize || 18,
-          fontWeight: "normal",
-          padding: 0,
-          paddingBottom: isFirst ? 2 : 1,
-          fontFamily: routeDesignConfig.font,
-        }}
-        color="black"
-        bg="transparent"
-      >
-        {detail}
-      </Badge>
-    </div>
+  return (
+    <PosterLayout
+      routeData={routeData}
+      routeDesignConfig={routeDesignConfig}
+      isInEditMode={props.isInEditMode ?? false}
+      isPrintMode={props.isPrintMode ?? false}
+      stopDataFromDB={props.stopDataFromDB ?? {}}
+      posterID={props.posterID ?? null}
+      displsyedPatternsFromDB={props.displsyedPatternsFromDB ?? {}}
+      layout="posterGeoNoLogo"
+      styles={styles}
+    />
   );
-  const PosterGeoNoLogo = () => (
-    <div className={styles.posterContainer}>
-      <div className={styles.header}>
-        <div className={styles.title}>
-          <div className={styles.lineDetails}>
-            <div className={styles.lineNameNoLogo}>
-              <div
-                className={styles.lineName}
-                style={{
-                  color: routeDesignConfig.backgroundColor,
-                  fontFamily: routeDesignConfig.font,
-                  fontWeight: "bolder",
-                  fontSize:
-                    routeDesignConfig.routeNameAndTypeSize ||
-                    routeDesignConfig.routeTitleSize ||
-                    80,
-                }}
-              >
-                {routeDesignConfig.routeName}
-                <div
-                  className={styles.lineType}
-                  style={{
-                    color: routeDesignConfig.backgroundColor,
-                    paddingLeft: 20,
-                    fontWeight: "bolder",
-                    fontFamily: routeDesignConfig.font,
-                    fontSize:
-                      routeDesignConfig.routeNameAndTypeSize ||
-                      routeDesignConfig.routeTitleSize ||
-                      80,
-                  }}
-                >
-                  {`${routeDesignConfig.routeType}`}
-                </div>
-              </div>
-              <div className={styles.lineTypeDesc}>
-                <div
-                  className={styles.lineDesc}
-                  style={{
-                    fontFamily:
-                      routeDesignConfig.routeTitleFont ||
-                      routeDesignConfig.font,
-                    fontWeight: 200,
-                    fontSize: routeDesignConfig.routeTitleSize || 80,
-                  }}
-                >
-                  {`${routeDesignConfig.routeDesc}`}
-                </div>
-              </div>
-            </div>
-          </div>
-          {routeDesignConfig.descriptionDetails && (
-            <div className={styles.descriptionDetails}>
-              {getDescriptionDetailElement(
-                routeDesignConfig.descriptionDetails?.numberOfStopsText,
-                true
-              )}
-              {getDescriptionDetailElement(
-                routeDesignConfig.descriptionDetails?.locationText,
-                false
-              )}
-              <br />
-              {getDescriptionDetailElement(
-                routeDesignConfig.descriptionDetails?.launchDateText,
-                false
-              )}
-            </div>
-          )}
-          {routeDesignConfig.descriptionDetails && (
-            <div className={styles.divider}></div>
-          )}
-        </div>
-      </div>
-      <div className={styles.mapContainer}>
-        <GeoMap
-          multiPolyLine={routeData.multiPolyLine}
-          stops={routeData.stops}
-          backgroundColor={routeDesignConfig.backgroundColor}
-          mapOpacity={routeDesignConfig.mapOpacity}
-          tileLayerName={routeDesignConfig.tileLayerName}
-          pathColor={routeDesignConfig.pathColor}
-          pathWeight={routeDesignConfig.pathWeight}
-          mapZoom={routeDesignConfig.mapZoom}
-          isInEditMode={isInEditMode}
-          isPrintMode={isPrintMode}
-          font={routeDesignConfig.font}
-          stopFontSize={routeDesignConfig.stopFontSize}
-          stopFontColor={routeDesignConfig.stopFontColor}
-          stopIDsToDisplayFromConfig={
-            routeDesignConfig.stopIDsToDisplayFromConfig
-          }
-          stopColor={routeDesignConfig.stopColor}
-          stopCircleSize={routeDesignConfig.stopCircleSize}
-          stopBackgroundColor={routeDesignConfig.stopBackgroundColor}
-          isSingleDot={routeDesignConfig.isSingleDot}
-          showGeoLayer={true}
-          smoothFactor={undefined}
-          showMarkers={true}
-          patterns={routeData.patterns}
-          stopFont={routeDesignConfig.stopFont}
-          stopDataFromDB={stopDataFromDB}
-          posterID={posterID}
-          displsyedPatternsFromDB={displsyedPatternsFromDB}
-          showStopLabels={true}
-        />
-      </div>
-      <div className={styles.transitLifeCred}>
-        <TransitLifeCredit
-          creditFontSize={routeDesignConfig.creditFontSize}
-          font={routeDesignConfig.creditFont}
-        />
-      </div>
-    </div>
-  );
-  return <PosterGeoNoLogo />;
 }

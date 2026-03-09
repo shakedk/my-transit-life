@@ -1,308 +1,41 @@
-/* eslint-disable react/react-in-jsx-scope */
-/* eslint-disable react/prop-types */
-import { Badge, Image } from "theme-ui";
+import React from "react";
+import PosterLayout from "../../components/posters/PosterLayout";
+import { getPosterServerSideProps } from "../../src/lib/posters/utils";
 import styles from "./posterGeoLogoA0.module.css";
-import TransitLifeCredit from "../../components/tranitLifeCredit";
-import CustomDrag from "../../src/utils/CustomDrag";
-import {
-  useMap,
-  getPosterServerSideProps,
-} from "../../src/lib/posters/utils";
 
-export const getServerSideProps = (context) =>
+export const getServerSideProps = (context: { query: Record<string, string | string[] | undefined> }) =>
   getPosterServerSideProps(context, "PosterGeoLogoA0");
 
-export default function Page(props) {
+export default function Page(props: {
+  routeData?: { routeData?: string } | Record<string, unknown>;
+  routeDesignConfig?: { routeData?: string } | Record<string, unknown>;
+  isInEditMode?: boolean;
+  isPrintMode?: boolean;
+  stopDataFromDB?: Record<string, unknown>;
+  posterID?: string | null;
+  displsyedPatternsFromDB?: Record<string, { toDisplay?: boolean }>;
+}) {
   const routeData =
     props.routeData?.routeData != null
-      ? JSON.parse(props.routeData.routeData)
+      ? JSON.parse((props.routeData as { routeData: string }).routeData)
       : props.routeData;
   const routeDesignConfig =
     props.routeDesignConfig?.routeData != null
-      ? JSON.parse(props.routeDesignConfig.routeData)
+      ? JSON.parse((props.routeDesignConfig as { routeData: string }).routeData)
       : props.routeDesignConfig;
   if (!routeData || !routeDesignConfig) return null;
-  const isInEditMode = props.isInEditMode ?? false;
-  const isPrintMode = props.isPrintMode ?? false;
-  const stopDataFromDB = props.stopDataFromDB ?? {};
-  const posterID = props.posterID ?? null;
-  const displsyedPatternsFromDB = props.displsyedPatternsFromDB ?? {};
-  const GeoMap = useMap();
 
-  function contains_heb(str) {
-    return /[\u0590-\u05FF]/.test(str);
-  }
-
-  const getDescriptionDetailElement = (detail: string, isFirst: boolean) => (
-    <div>
-      <Badge
-        sx={{
-          zIndex: 100,
-          fontSize: routeDesignConfig.lineDetailsFontSize || 18,
-          fontWeight: "normal",
-          padding: 0,
-          paddingBottom: isFirst ? 2 : 1,
-          fontFamily: routeDesignConfig.font,
-        }}
-        color="black"
-        bg="transparent"
-      >
-        {detail}
-      </Badge>
-    </div>
+  return (
+    <PosterLayout
+      routeData={routeData}
+      routeDesignConfig={routeDesignConfig}
+      isInEditMode={props.isInEditMode ?? false}
+      isPrintMode={props.isPrintMode ?? false}
+      stopDataFromDB={props.stopDataFromDB ?? {}}
+      posterID={props.posterID ?? null}
+      displsyedPatternsFromDB={props.displsyedPatternsFromDB ?? {}}
+      layout="posterGeoLogoA0"
+      styles={styles}
+    />
   );
-  const PosterGeoLogoA0 = () => (
-    <div className={styles.posterContainer}>
-      <div
-        className={
-          routeDesignConfig.descriptionDetails
-            ? styles.header
-            : styles.headerNoDescriptionDetails
-        }
-      >
-        <CustomDrag id={"logo"} isDraggable={isInEditMode}>
-          <div
-            style={{
-              zIndex: 1000,
-              position: "absolute",
-              top: `${routeDesignConfig.agencyLogoTop}px`,
-              right: `${routeDesignConfig.agencyLogoRight}px`,
-            }}
-          >
-            <Image
-              src={routeDesignConfig.agencyLogoPath}
-              sx={{
-                width: routeDesignConfig.agencyLogoWidth,
-                height: routeDesignConfig.agencyLogoHeight,
-              }}
-            ></Image>
-          </div>
-        </CustomDrag>
-        {/* <div className={styles.title}> */}
-          <div
-            className={
-              routeDesignConfig.descriptionDetails
-                ? styles.lineDetails
-                : styles.lineDetailsNoDescriptionDetails
-            }
-          >
-            <div
-              className={
-                contains_heb(routeDesignConfig.routeName)
-                  ? styles.lineNameAndLogo
-                  : styles.lineNameAndLogoHeb
-              }
-            >
-              {routeDesignConfig.logoPath ? (
-                <Image
-                  src={routeDesignConfig.logoPath}
-                  sx={{
-                    padding: routeDesignConfig.logoPadding || 0,
-                    width: routeDesignConfig.logoWidth || 140,
-                    height: routeDesignConfig.logoHeight || 140,
-                  }}
-                ></Image>
-              ) : (
-                routeDesignConfig.routeName && (
-                  <CustomDrag
-                    id={"lineName"}
-                    isDraggable={isInEditMode}
-                    cancel={".textareaLineName"}
-                  >
-                    <div
-                      style={
-                        isInEditMode
-                          ? { border: "1px solid black", padding: "50px" }
-                          : {}
-                      }
-                    >
-                      <div
-                        // readOnly
-                        className="textareaLineName"
-                        // value={routeDesignConfig.routeName}
-                        style={{
-                          // position: "absolute",
-                          // resize: "both",
-                          color:
-                            routeDesignConfig.routeNameColor ||
-                            routeDesignConfig.backgroundColor,
-                          background:
-                            routeDesignConfig.routeNameBackground ||
-                            "transparent",
-                          fontFamily: routeDesignConfig.font,
-                          fontSize: routeDesignConfig.logoFontSize || 80,
-                          paddingLeft:
-                            (routeDesignConfig.routeNameBackground &&
-                              routeDesignConfig.routeNamePaddingLeft) ||
-                            15,
-                          paddingRight:
-                            (routeDesignConfig.routeNameBackground &&
-                              routeDesignConfig.routeNamePaddingRight) ||
-                            15,
-                          paddingTop:
-                            (routeDesignConfig.routeNameBackground &&
-                              routeDesignConfig.routeNamePaddingTop) ||
-                            5,
-                          paddingBottom:
-                            (routeDesignConfig.routeNameBackground &&
-                              routeDesignConfig.routeNamePaddingBottom) ||
-                            5,
-                          marginRight:
-                            (routeDesignConfig.routeNameBackground && 40) || 0,
-                          fontWeight:
-                            routeDesignConfig.routeNameFontWeight || "bolder",
-                          height:
-                            (routeDesignConfig.routeNameBackground &&
-                              `${routeDesignConfig.routeNameHeight}px`) ||
-                            "auto",
-                            width: '5000px',
-                          overflowWrap: "break-word",
-                          textAlign: "left",
-                        }}
-                      >
-                        {routeDesignConfig.routeName}
-                        </div>
-                    </div>
-                  </CustomDrag>
-                )
-              )}
-              {routeDesignConfig.routeDesc && (
-                <CustomDrag
-                  id={"roudeDesc"}
-                  isDraggable={isInEditMode}
-                  cancel={".textareaRouteDesc"}
-
-                  // NOTE
-                  // NOTE
-                  // NOTE
-                  // NOTE
-                  // NOTE
-                  // NOTE
-                  // Commented out so I can edit stop names, should find a way to fix this.
-
-                  // onMouseDown={(e) => {
-                  //   const { clientX, clientY, target } = e;
-                  //   const { left, top, width, height } = target.getBoundingClientRect();
-
-                  //   const bottomRightCornerX = left + width;
-                  //   const bottomRightCornerY = top + height;
-
-                  //   if (Math.abs(clientX - bottomRightCornerX) < 100 && Math.abs(clientY - bottomRightCornerY) < 100) {
-                  //     e.stopPropagation();
-                  //   }
-                  // }}
-                >
-                  <div
-                    style={
-                      isInEditMode
-                        ? { border: "1px solid black", padding: "50px" }
-                        : {}
-                    }
-                  >
-                    <div
-                      // readOnly
-                      className="textareaRouteDesc"
-                      style={{
-                        zIndex: 100,
-                        resize: "both",
-                        fontSize: routeDesignConfig.routeTitleSize || 60,
-                        fontWeight:
-                          routeDesignConfig.routeTitleFontWeight || "auto",
-                        padding: 0,
-                        fontFamily: routeDesignConfig.font,
-                        overflowWrap: "break-word",
-                        textAlign: "center",
-                        color: routeDesignConfig.routeDescColor,
-                        // direction: "rtl",
-                        border: isInEditMode ? "1px solid black" : "none",
-                        width: '4000px'
-                      }}
-                      // p={4}
-                      color={routeDesignConfig.routeDescColor}
-                      // bg="transparent"
-                    >
-                      {`${routeDesignConfig.routeType} ${routeDesignConfig.routeDesc}`}
-                      </div>
-                  </div>
-                </CustomDrag>
-              )}
-            </div>
-          </div>
-          <CustomDrag id={"details"} isDraggable={isInEditMode}>
-            <div className={styles.descriptionDetails}>
-              {getDescriptionDetailElement(
-                routeDesignConfig.descriptionDetails?.numberOfStopsText,
-                true
-              )}
-              {getDescriptionDetailElement(
-                routeDesignConfig.descriptionDetails?.launchDateText,
-                false
-              )}
-              <br />
-              {getDescriptionDetailElement(
-                routeDesignConfig.descriptionDetails?.launchDateText,
-                false
-              )}
-            </div>
-          </CustomDrag>
-          {routeDesignConfig.descriptionDetails && (
-            <div className={styles.divider}></div>
-          )}
-        {/* </div> */}
-      </div>
-      <div
-        className={
-          routeDesignConfig.descriptionDetails
-            ? styles.mapContainer
-            : styles.mapContainerNoDescriptionDetails
-        }
-      >
-        <GeoMap
-          patterns={routeData.patterns}
-          multiPolyLine={routeData.multiPolyLine}
-          stopBackgroundColor={routeDesignConfig.stopBackgroundColor}
-          isSingleDot={routeDesignConfig.isSingleDot}
-          isSimpleDot={routeDesignConfig.isSimpleDot}
-          stops={routeData.stops}
-          pathWeight={routeDesignConfig.pathWeight}
-          backgroundColor={routeDesignConfig.backgroundColor}
-          tileLayerName={routeDesignConfig.tileLayerName}
-          pathColor={routeDesignConfig.pathColor}
-          mapZoom={routeDesignConfig.mapZoom}
-          font={routeDesignConfig.font}
-          showMarkers={true}
-          isInEditMode={isInEditMode}
-          isPrintMode={isPrintMode}
-          stopFontSize={routeDesignConfig.stopFontSize}
-          stopFontColor={routeDesignConfig.stopFontColor}
-          stopIDsToDisplayFromConfig={
-            routeDesignConfig.stopIDsToDisplayFromConfig
-          }
-          stopColor={routeDesignConfig.stopColor}
-          stopCircleSize={routeDesignConfig.stopCircleSize}
-          mapOpacity={undefined}
-          showGeoLayer={undefined}
-          smoothFactor={undefined}
-          stopDataFromDB={stopDataFromDB}
-          posterID={posterID}
-          displsyedPatternsFromDB={displsyedPatternsFromDB}
-          routeOverlayPatternNumber={
-            routeDesignConfig.routeOverlayPatternNumber
-          }
-          routeOverlayPatternColor={routeDesignConfig.routeOverlayPatternColor}
-          showStopLabels={routeDesignConfig.showStopLabels && true}
-        />
-      </div>
-      <div
-        className={
-          routeDesignConfig.descriptionDetails
-            ? styles.transitLifeCred
-            : styles.transitLifeCredNoDescriptionDetails
-        }
-      >
-        <TransitLifeCredit creditFontSize={routeDesignConfig.creditFontSize} />
-      </div>
-    </div>
-  );
-  return <PosterGeoLogoA0 />;
 }

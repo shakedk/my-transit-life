@@ -9,13 +9,14 @@ import { server } from "../../config";
 import Head from "next/head";
 import EditToggle from "../../components/editToggle";
 import OpenForPrintButton from "../../components/printButton";
-import PosterBigFrameNoLogo from "./posterBigFrameNoLogo";
-import PosterFullMapLogo from "./posterFullMapLogo";
-import PosterGeoLogo from "./posterGeoLogo";
-import PosterGeoLogoHorizontal from "./posterGeoLogoHorizontal";
-import PosterGeoNoLogo from "./posterGeoNoLogo";
+import PosterLayout from "../../components/posters/PosterLayout";
 import { createPosterInDB, getPosterIDInDB } from "../../src/lib/posters/utils";
-import PosterGeoLogoA0 from "./posterGeoLogoA0";
+import stylesGeoNoLogo from "./posterGeoNoLogoA0.module.css";
+import stylesGeoLogo from "./posterGeoLogo.module.css";
+import stylesGeoLogoHorizontal from "./posterGeoLogoHorizontal.module.css";
+import stylesGeoLogoA0 from "./posterGeoLogoA0.module.css";
+import stylesFullMapLogo from "./posterFullMapLogo.module.css";
+import stylesBigFrameNoLogo from "./posterBigFrameNoLogo.module.css";
 import DataSelector from "../../components/dataSelectors/DataSelector";
 import axios from "axios";
 import { getAuthAxios } from "../../src/lib/api/apiClient";
@@ -133,92 +134,60 @@ export default function Page(props) {
       getData();
     }, [router.query, handlePatternsOnLoad]);
 
+    const posterLayouts: Record<
+      string,
+      { layout: "posterGeoNoLogo" | "posterGeoLogo" | "posterGeoLogoHorizontal" | "posterGeoLogoA0" | "posterFullMapLogo" | "posterBigFrameNoLogo"; styles: typeof stylesGeoNoLogo }
+    > = {
+      postergeologohorizontal: {
+        layout: "posterGeoLogoHorizontal",
+        styles: stylesGeoLogoHorizontal,
+      },
+      posterbigframenologo: {
+        layout: "posterBigFrameNoLogo",
+        styles: stylesBigFrameNoLogo,
+      },
+      posterfullmaplogo: {
+        layout: "posterFullMapLogo",
+        styles: stylesFullMapLogo,
+      },
+      postergeologo: {
+        layout: "posterGeoLogo",
+        styles: stylesGeoLogo,
+      },
+      postergeologoa0: {
+        layout: "posterGeoLogoA0",
+        styles: stylesGeoLogoA0,
+      },
+      postergeonologo: {
+        layout: "posterGeoNoLogo",
+        styles: stylesGeoNoLogo,
+      },
+    };
+
     const getPosterByType = useCallback(
       (
         posterType: string,
         routeData: Record<string, unknown>,
-        routeDesignConfig: object,
+        routeDesignConfig: Record<string, unknown>,
         isInEditMode: boolean,
         isPrintMode: boolean
       ) => {
-        switch (posterType.toLocaleLowerCase()) {
-          case "PosterGeoLogoHorizontal".toLocaleLowerCase():
-            return (
-              <PosterGeoLogoHorizontal
-                routeData={routeData}
-                routeDesignConfig={routeDesignConfig}
-                isInEditMode={isInEditMode}
-                isPrintMode={isPrintMode}
-                stopDataFromDB={stopDataFromDB}
-                posterID={posterID}
-                displsyedPatternsFromDB={displsyedPatternsFromDB}
-              />
-            );
-          case "PosterBigFrameNoLogo".toLocaleLowerCase():
-            return (
-              <PosterBigFrameNoLogo
-                routeData={routeData}
-                routeDesignConfig={routeDesignConfig}
-                isInEditMode={isInEditMode}
-                isPrintMode={isPrintMode}
-                stopDataFromDB={stopDataFromDB}
-                posterID={posterID}
-                displsyedPatternsFromDB={displsyedPatternsFromDB}
-              />
-            );
-          case "PosterFullMapLogo".toLocaleLowerCase():
-            return (
-              <PosterFullMapLogo
-                routeData={routeData}
-                routeDesignConfig={routeDesignConfig}
-                isInEditMode={isInEditMode}
-                isPrintMode={isPrintMode}
-                stopDataFromDB={stopDataFromDB}
-                posterID={posterID}
-                displsyedPatternsFromDB={displsyedPatternsFromDB}
-              />
-            );
-          case "PosterGeoLogo".toLocaleLowerCase():
-            return (
-              <PosterGeoLogo
-                routeData={routeData}
-                routeDesignConfig={routeDesignConfig}
-                isInEditMode={isInEditMode}
-                isPrintMode={isPrintMode}
-                stopDataFromDB={stopDataFromDB}
-                posterID={posterID}
-                displsyedPatternsFromDB={displsyedPatternsFromDB}
-              />
-            );
-          case "PosterGeoLogoA0".toLocaleLowerCase():
-            return (
-              <div>
-                <PosterGeoLogoA0
-                  routeData={routeData}
-                  routeDesignConfig={routeDesignConfig}
-                  isInEditMode={isInEditMode}
-                  isPrintMode={isPrintMode}
-                  stopDataFromDB={stopDataFromDB}
-                  posterID={posterID}
-                  displsyedPatternsFromDB={displsyedPatternsFromDB}
-                />
-              </div>
-            );
-          case "PosterGeoNoLogo".toLocaleLowerCase():
-            return (
-              <PosterGeoNoLogo
-                routeData={routeData}
-                routeDesignConfig={routeDesignConfig}
-                isInEditMode={isInEditMode}
-                isPrintMode={isPrintMode}
-                stopDataFromDB={stopDataFromDB}
-                posterID={posterID}
-                displsyedPatternsFromDB={displsyedPatternsFromDB}
-              />
-            );
-          default:
-            return null;
-        }
+        const config = posterLayouts[posterType.toLocaleLowerCase()];
+        if (!config) return null;
+
+        return (
+          <PosterLayout
+            routeData={routeData}
+            routeDesignConfig={routeDesignConfig as React.ComponentProps<typeof PosterLayout>["routeDesignConfig"]}
+            isInEditMode={isInEditMode}
+            isPrintMode={isPrintMode}
+            stopDataFromDB={stopDataFromDB}
+            posterID={posterID}
+            displsyedPatternsFromDB={displsyedPatternsFromDB}
+            layout={config.layout}
+            styles={config.styles}
+          />
+        );
       },
       [routeID, isInEditMode, displsyedPatternsFromDB, stopDataFromDB, posterID]
     );
