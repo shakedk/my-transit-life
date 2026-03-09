@@ -1,7 +1,6 @@
 /* eslint-disable react/react-in-jsx-scope */
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  LayerGroup,
   LayersControl,
   MapContainer,
   Marker,
@@ -12,11 +11,9 @@ import {
 } from "react-leaflet";
 
 import "leaflet/dist/leaflet.css";
-import { useRouter } from "next/router";
-import { getPosterIDInDB } from "../pages/posters/utils";
 import styles from "./map.module.css";
 import StopLabel from "./stopLabel";
-import axios from "axios";
+import { getAuthAxios } from "../src/lib/api/apiClient";
 import { Icon } from "leaflet";
 import PropTypes from "prop-types";
 import { StopType } from "./stopLabel";
@@ -38,20 +35,20 @@ const RouteMap = ({
   isInEditMode,
   stopFontSize,
   stopFontColor,
-  stopFont,
+  stopFont = undefined,
   stopIDsToDisplayFromConfig,
   stopColor,
   stopCircleSize,
   stopBackgroundColor,
   isSingleDot,
-  isSimpleDot,
+  isSimpleDot = undefined,
   isPrintMode,
   stopDataFromDB,
   posterID,
-  displsyedPatternsFromDB,
-  routeOverlayPatternNumber,
-  routeOverlayPatternColor,
-  showStopLabels,
+  displsyedPatternsFromDB = {},
+  routeOverlayPatternNumber = undefined,
+  routeOverlayPatternColor = undefined,
+  showStopLabels = false,
 }) => {
   /**
    * Lat Lon markers, leave here for testing lat lon vs. xy positions
@@ -94,7 +91,7 @@ const RouteMap = ({
     AlidadeSmooth:
       "https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.png",
     Mapbox:
-      "https://api.mapbox.com/styles/v1/shakedk/clqbhnool00ab01pj57js18y6/tiles/256/{z}/{x}/{y}@2x?access_token=pk.eyJ1Ijoic2hha2VkayIsImEiOiJjbG9qMTZjajEwMTRtMmtwN2F0Mzk0OWVwIn0.VkgbKa4iLFUFERkCOqJC9g",
+      `https://api.mapbox.com/styles/v1/shakedk/clqbhnool00ab01pj57js18y6/tiles/256/{z}/{x}/{y}@2x?access_token=${process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN || ""}`,
   };
   
   const getTileLayer = (tileLayerName) => (
@@ -122,7 +119,7 @@ const RouteMap = ({
       marker_lat,
       marker_lon,
     };
-    axios.put(`/api/poster/${posterID}`, params);
+    getAuthAxios().put(`/api/poster/${posterID}`, params);
   };
   const stopDisplayToggleHandler = (
     posterID: string,
@@ -136,7 +133,7 @@ const RouteMap = ({
     params.stops[stopID] = {
       toDisplay,
     };
-    axios.put(`/api/poster/${posterID}`, params);
+    getAuthAxios().put(`/api/poster/${posterID}`, params);
   };
   const stopPropetiesChanedHandler = (
     posterID: string,
@@ -160,9 +157,8 @@ const RouteMap = ({
       labelWidth,
       labelHeight,
     };
-    axios.put(`/api/poster/${posterID}`, params);
+    getAuthAxios().put(`/api/poster/${posterID}`, params);
   };
-  const router = useRouter();
   // useEffect(() => {
   //   async function getData() {
   //     const posterType = router.query.posterType;
@@ -360,7 +356,7 @@ const RouteMap = ({
           const stopID = stopMatch[1];
           stopDisplayToggleHandler(posterID, stopID, true);
         } else {
-          const pattrenName = overlay.name;
+          void overlay.name; // pattern name available for future use
         }
       },
       overlayremove(overlay) {
@@ -451,8 +447,8 @@ const RouteMap = ({
         )}
         {patterns &&
           patterns.map((pattern) =>
-            // displsyedPatternsFromDB[pattern.properties.route_id]?.toDisplay ?
-            true ? (
+            (displsyedPatternsFromDB[pattern.properties.route_id]?.toDisplay ??
+              true) ? (
               <>
                 <Polyline
                   pathOptions={{
@@ -495,15 +491,15 @@ const RouteMap = ({
   );
 };
 
-RouteMap.prototypes = {
+RouteMap.propTypes = {
   // Should be [number, number][]
   multiPolyLine: PropTypes.arrayOf(
     PropTypes.arrayOf(
-      PropTypes.arrayOf(function (props, propName) {
+      PropTypes.arrayOf(function (propValue, propName) {
         if (
-          !Array.isArray(props.TWO_NUMBERS) ||
-          props.TWO_NUMBERS.length != 2 ||
-          !props.TWO_NUMBERS.every(Number.isInteger)
+          !Array.isArray(propValue) ||
+          propValue.length !== 2 ||
+          !propValue.every((n) => typeof n === "number")
         ) {
           return new Error(`${propName} needs to be an array of two numbers`);
         }
@@ -527,11 +523,11 @@ RouteMap.prototypes = {
       geometry: PropTypes.shape({
         type: PropTypes.string,
         coordinates: PropTypes.arrayOf(
-          PropTypes.arrayOf(function (props, propName) {
+          PropTypes.arrayOf(function (propValue, propName) {
             if (
-              !Array.isArray(props.TWO_NUMBERS) ||
-              props.TWO_NUMBERS.length != 2 ||
-              !props.TWO_NUMBERS.every(Number.isInteger)
+              !Array.isArray(propValue) ||
+              propValue.length !== 2 ||
+              !propValue.every((n) => typeof n === "number")
             ) {
               return new Error(
                 `${propName} needs to be an array of two numbers`

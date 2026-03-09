@@ -5,7 +5,7 @@ import { IPattern, IPtNetwork } from "../../src/types";
 import PatternSelectorOnMap from "./PatternSelectorOnMap";
 
 interface IDataSelector {
-  routeData?: any;
+  routeData?: Record<string, unknown>;
   setPatternsForSelection: React.Dispatch<React.SetStateAction<IPattern[]>>;
   patternsForSelection: IPattern[];
 }
@@ -14,7 +14,7 @@ const DataSelector = ({ routeData, patternsForSelection, setPatternsForSelection
     null
   );
 
-  const handleNetworkSelectChange = (selectedNetwork: IPtNetwork) => {
+  const handleNetworkSelectChange = (selectedNetwork: IPtNetwork | null) => {
     setSelectedNetwork(selectedNetwork);
   };
   

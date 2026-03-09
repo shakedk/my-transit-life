@@ -4,12 +4,15 @@ import Select from "react-select";
 import { IPtNetwork } from "../../src/types";
 
 interface NetworkSelectProps {
-  onSelectChange: (selectedNetwork: IPtNetwork) => void;
+  onSelectChange: (selectedNetwork: IPtNetwork | null) => void;
 }
 
 const NetworkSelect = ({ onSelectChange }: NetworkSelectProps) => {
   const [ptNetworks, setPtNetworks] = useState<IPtNetwork[]>([]);
-  const [selectedNetwork, setSelectedNetwork] = useState<IPtNetwork | null>(null);
+  const [selectedNetwork, setSelectedNetwork] = useState<{
+    value: string;
+    label: string;
+  } | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
@@ -27,13 +30,19 @@ const NetworkSelect = ({ onSelectChange }: NetworkSelectProps) => {
     fetchData();
   }, []);
 
-  const handleSelectChange = (selectedOption: any) => {
-    const selectedNetworkId = selectedOption.value;
-    const selectedNetwork = ptNetworks.find(
-      (network) => network.networkId === selectedNetworkId
+  const handleSelectChange = (
+    selectedOption: { value: string; label: string } | null
+  ) => {
+    if (!selectedOption) {
+      setSelectedNetwork(null);
+      onSelectChange(null);
+      return;
+    }
+    const foundNetwork = ptNetworks.find(
+      (network) => network.networkId === selectedOption.value
     );
-    setSelectedNetwork(selectedOption || null);
-    onSelectChange(selectedNetwork || null);
+    setSelectedNetwork(selectedOption);
+    onSelectChange(foundNetwork || null);
   };
 
   const options = ptNetworks.map((network) => ({

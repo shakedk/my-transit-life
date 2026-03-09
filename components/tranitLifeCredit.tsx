@@ -22,8 +22,8 @@ const TransitLifeCredit = (props) => {
   );
 };
 
-TransitLifeCredit.prototype = {
-  fontSize: PropTypes.string,
+TransitLifeCredit.propTypes = {
+  creditFontSize: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
   font: PropTypes.string,
 };
 export default TransitLifeCredit;

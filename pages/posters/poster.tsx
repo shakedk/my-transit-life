@@ -1,9 +1,7 @@
 import { useRouter } from "next/router";
 import React, {
-  Suspense,
   useCallback,
   useEffect,
-  useRef,
   useState,
 } from "react";
 import { server } from "../../config";
@@ -16,11 +14,11 @@ import PosterFullMapLogo from "./posterFullMapLogo";
 import PosterGeoLogo from "./posterGeoLogo";
 import PosterGeoLogoHorizontal from "./posterGeoLogoHorizontal";
 import PosterGeoNoLogo from "./posterGeoNoLogo";
-import { createPosterInDB, getPosterIDInDB } from "./utils";
+import { createPosterInDB, getPosterIDInDB } from "../../src/lib/posters/utils";
 import PosterGeoLogoA0 from "./posterGeoLogoA0";
 import DataSelector from "../../components/dataSelectors/DataSelector";
-import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import axios from "axios";
+import { getAuthAxios } from "../../src/lib/api/apiClient";
 import { IPattern } from "../../src/types";
 
 export async function getServerSideProps(context) {
@@ -30,7 +28,7 @@ export async function getServerSideProps(context) {
 
   const routeDesignConfig = await fetch(
     `${server}/api/routeDesignConfig${context.query.posterType.replace(
-      "poster",
+      /poster/i,
       ""
     )}?routeID=${context.query.routeID}`
   );
@@ -92,7 +90,7 @@ export default function Page(props) {
 
         setDisplsyedPatternsFromDB(selectedPatternsFromDB || {});
       },
-      []
+      [routeData]
     );
     //
 
@@ -116,7 +114,7 @@ export default function Page(props) {
       Object.entries(displayedPatterns).forEach(([routeId, toDisplay]) => {params.patterns[routeId] = {
         toDisplay,
       };})
-      axios.put(`/api/poster/${posterID}`, params);
+      getAuthAxios().put(`/api/poster/${posterID}`, params);
     };
     useEffect(() => {
       async function getData() {
@@ -133,12 +131,12 @@ export default function Page(props) {
         setIsLoading(false);
       }
       getData();
-    }, [router.query]);
+    }, [router.query, handlePatternsOnLoad]);
 
     const getPosterByType = useCallback(
       (
         posterType: string,
-        routeData: any,
+        routeData: Record<string, unknown>,
         routeDesignConfig: object,
         isInEditMode: boolean,
         isPrintMode: boolean
@@ -222,10 +220,8 @@ export default function Page(props) {
             return null;
         }
       },
-      [routeID, isInEditMode, displsyedPatternsFromDB, stopDataFromDB]
+      [routeID, isInEditMode, displsyedPatternsFromDB, stopDataFromDB, posterID]
     );
-
-    const intialZoomScale = 0.2;
 
     const editPosterTemplate = (
       <>

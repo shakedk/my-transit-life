@@ -1,20 +1,39 @@
 import db from "../../../src/lib/db";
+import {
+  posterCreateSchema,
+  withMethod,
+  sendError,
+} from "../../../src/lib/api/validation";
+import { withAuth } from "../../../src/lib/auth/requireAuth";
 
-export default async (req, res) => {
+async function handler(req, res) {
   try {
-    const { slug } = req.body;
+    const parseResult = posterCreateSchema.safeParse(req.body);
+    if (!parseResult.success) {
+      return sendError(res, 400, "Invalid request: slug, posterType, and routeID are required");
+    }
+
+    const { slug, posterType, routeID } = parseResult.data;
+
     const posters = await db.collection("posters").get();
     const postersData = posters.docs.map((poster) => poster.data());
+
     if (postersData.some((poster) => poster.slug === slug)) {
-      res.status(200).end();
-    } else {
-      const { id } = await db.collection("posters").add({
-        ...req.body,
-        created: new Date().toISOString(),
-      });
-      res.status(200).json({ id });
+      return res.status(200).end();
     }
+
+    const { id } = await db.collection("posters").add({
+      slug,
+      posterType,
+      routeID,
+      created: new Date().toISOString(),
+      ...(req.authUser && { userId: req.authUser.uid }),
+    });
+    return res.status(200).json({ id });
   } catch (e) {
-    res.status(400).end();
+    console.error("poster create error:", e);
+    return sendError(res, 500, "Failed to create poster");
   }
-};
+}
+
+export default withMethod("POST", withAuth(["POST"], handler));

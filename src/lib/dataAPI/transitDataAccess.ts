@@ -3,7 +3,7 @@ import { IDataAccess } from "./dataAccess";
 import db from "../db";
 
 export class TransitDataAccess implements IDataAccess {
-  initialized: boolean = false;
+  initialized = false;
   API_KEY: string;
   BASE_URL: string;
 

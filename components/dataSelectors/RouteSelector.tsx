@@ -9,7 +9,10 @@ interface RouteSelectorProps {
 
 const RouteSelector = ({ networkId }: RouteSelectorProps) => {
   const [ptRoutes, setPtRoutes] = useState<IRoute[]>([]);
-  const [selectedRoute, setSelectedRoute] = useState<IRoute | null>(null);
+  const [selectedRoute, setSelectedRoute] = useState<{
+    value: string;
+    label: string;
+  } | null>(null);
   const [routeData, setRouteData] = useState<IRouteData | null>(null);
 
   useEffect(() => {
@@ -41,7 +44,9 @@ const RouteSelector = ({ networkId }: RouteSelectorProps) => {
     }
   };
 
-  const handleRouteChange = (selectedOption: any) => {
+  const handleRouteChange = (
+    selectedOption: { value: string; label: string } | null
+  ) => {
     setSelectedRoute(selectedOption);
     if (selectedOption) {
       fetchRouteData(selectedOption.value);

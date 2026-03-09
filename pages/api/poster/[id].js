@@ -1,33 +1,57 @@
 import db from "../../../src/lib/db";
+import {
+  posterIdSchema,
+  sanitizePosterUpdateBody,
+  withMethod,
+  sendError,
+} from "../../../src/lib/api/validation";
+import { withAuth } from "../../../src/lib/auth/requireAuth";
 
-export default async (req, res) => {
-  const { id } = req.query;
+async function handler(req, res) {
+  const idResult = posterIdSchema.safeParse(req.query.id);
+  if (!idResult.success) {
+    return sendError(res, 400, "Invalid poster id");
+  }
+
+  const id = idResult.data;
 
   try {
     if (req.method === "PUT") {
+      const sanitized = sanitizePosterUpdateBody(req.body);
       await db
         .collection("posters")
         .doc(id)
         .set(
           {
-            ...req.body,
+            ...sanitized,
             updated: new Date().toISOString(),
           },
           { merge: true }
         );
-    } else if (req.method === "GET") {
-      console.log("POSTER ID (from DB):", id);
+      return res.status(200).end();
+    }
+
+    if (req.method === "GET") {
       const doc = await db.collection("posters").doc(id).get();
       if (!doc.exists) {
-        res.status(404).end();
-      } else {
-        res.status(200).json(doc.data());
+        return res.status(404).json({ error: "Poster not found" });
       }
-    } else if (req.method === "DELETE") {
-      await db.collection("posters").doc(id).delete();
+      return res.status(200).json(doc.data());
     }
-    res.status(200).end();
+
+    if (req.method === "DELETE") {
+      await db.collection("posters").doc(id).delete();
+      return res.status(200).end();
+    }
+
+    return res.status(405).json({ error: "Method not allowed" });
   } catch (e) {
-    res.status(400).end();
+    console.error("poster [id] error:", e);
+    return sendError(res, 500, "Internal error");
   }
-};
+}
+
+export default withMethod(
+  ["GET", "PUT", "DELETE"],
+  withAuth(["PUT", "DELETE"], handler)
+);

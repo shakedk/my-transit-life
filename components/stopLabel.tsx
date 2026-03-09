@@ -90,7 +90,7 @@ const StopLabel = ({
         }
       },
     }),
-    [posterID]
+    [posterID, stopPropetiesChanedHandler, stopOriginalName, stop.stop_id]
   );
 
   return (

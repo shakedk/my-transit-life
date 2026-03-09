@@ -18,3 +18,13 @@ export interface IPattern {
   patternName: string,
   toDisplay: boolean
 }
+
+export interface IRouteData {
+  routeName: string;
+  routeId: string;
+  routePath?: [number, number][];
+  routeStops?: IStop[];
+  multiPolyLine?: [number, number][][];
+  stops?: IStop[];
+  patterns?: unknown[];
+}

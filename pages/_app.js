@@ -5,9 +5,12 @@ import './main.css'
 import Head from 'next/head';
 import React from 'react';
 import { AppWrapper } from '../src/context/state'; // import based on where you put it
+import { AuthProvider } from '../src/context/AuthContext';
+import AuthHeader from '../components/AuthHeader';
 
 function MyApp({ Component, pageProps }) {
   return (
+    <AuthProvider>
     <AppWrapper>
       <Head>
         <link
@@ -42,9 +45,11 @@ function MyApp({ Component, pageProps }) {
         />
       </Head>
       <ThemeProvider theme={theme}>
+        <AuthHeader />
         <Component {...pageProps} />
       </ThemeProvider>
     </AppWrapper>
+    </AuthProvider>
   );
 }
 

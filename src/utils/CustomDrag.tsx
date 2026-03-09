@@ -1,9 +1,10 @@
 /* eslint-disable react/prop-types */
 import axios from "axios";
+import { getAuthAxios } from "../lib/api/apiClient";
 import { useRouter } from "next/router";
 import React, { useEffect, useState } from "react";
 import Draggable from "react-draggable";
-import { getPosterIDInDB } from "../../pages/posters/utils";
+import { getPosterIDInDB } from "../lib/posters/utils";
 
 
 const CustomDrag = (props) => {
@@ -27,9 +28,9 @@ const CustomDrag = (props) => {
       }
     }
     getData();
-  }, [router.query]);
+  }, [router.query, props.id]);
   
-  const customDraggbleSaveData = (
+  const customDraggableSaveData = (
     elementID: string,
     x: number,
     y: number
@@ -40,18 +41,18 @@ const CustomDrag = (props) => {
     params[`element_${elementID}`] = {
       x, y
     };
-    axios.put(`/api/poster/${posterID}`, params);
+    getAuthAxios().put(`/api/poster/${posterID}`, params);
   };
 
 const handleStop = (event, dragElement) => {
     setX(dragElement.x)
     setY(dragElement.y)
-    customDraggbleSaveData(props.id, dragElement.x, dragElement.y)
+    customDraggableSaveData(props.id, dragElement.x, dragElement.y)
   };
 
 return (
   <Draggable
-    disabled={!props.isDrggable}
+    disabled={!props.isDraggable}
     onStop={handleStop}
     position={{ x: x, y: y }}
     onMouseDown={props.onMouseDown}

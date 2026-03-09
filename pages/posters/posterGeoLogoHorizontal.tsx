@@ -3,17 +3,29 @@ import { Badge, Image } from "theme-ui";
 import styles from "./posterGeoLogoHorizontal.module.css";
 
 import TransitLifeCredit from "../../components/tranitLifeCredit";
-import { useMap } from "./utils";
+import {
+  useMap,
+  getPosterServerSideProps,
+} from "../../src/lib/posters/utils";
 
-export default function Page({
-  routeData,
-  routeDesignConfig,
-  isInEditMode,
-  isPrintMode,
-  stopDataFromDB,
-  posterID,
-  displsyedPatternsFromDB,
-}) {
+export const getServerSideProps = (context) =>
+  getPosterServerSideProps(context, "PosterGeoLogoHorizontal");
+
+export default function Page(props) {
+  const routeData =
+    props.routeData?.routeData != null
+      ? JSON.parse(props.routeData.routeData)
+      : props.routeData;
+  const routeDesignConfig =
+    props.routeDesignConfig?.routeData != null
+      ? JSON.parse(props.routeDesignConfig.routeData)
+      : props.routeDesignConfig;
+  if (!routeData || !routeDesignConfig) return null;
+  const isInEditMode = props.isInEditMode ?? false;
+  const isPrintMode = props.isPrintMode ?? false;
+  const stopDataFromDB = props.stopDataFromDB ?? {};
+  const posterID = props.posterID ?? null;
+  const displsyedPatternsFromDB = props.displsyedPatternsFromDB ?? {};
   const GeoMap = useMap();
 
   const getDescriptionDetailElement = (detail: string, isFirst: boolean) => (
@@ -138,10 +150,10 @@ export default function Page({
           stopCircleSize={undefined}
           stopBackgroundColor={undefined}
           isSingleDot={undefined}
+          stopDataFromDB={stopDataFromDB}
+          posterID={posterID}
+          displsyedPatternsFromDB={displsyedPatternsFromDB}
         />
-        stopDataFromDB={stopDataFromDB}
-        posterID={posterID}
-        displsyedPatternsFromDB={displsyedPatternsFromDB}
       </div>
       <div className={styles.transitLifeCred}>
         <TransitLifeCredit creditFontSize={routeDesignConfig.creditFontSize} />

@@ -2,21 +2,31 @@
 /* eslint-disable react/prop-types */
 import { Badge, Image } from "theme-ui";
 import styles from "./posterGeoLogo.module.css";
-import { useMap } from "./utils";
-
-
 import TransitLifeCredit from "../../components/tranitLifeCredit";
 import CustomDrag from "../../src/utils/CustomDrag";
+import {
+  useMap,
+  getPosterServerSideProps,
+} from "../../src/lib/posters/utils";
 
-export default function Page({
-  routeData,
-  routeDesignConfig,
-  isInEditMode,
-  isPrintMode,
-  stopDataFromDB,
-  posterID,
-  displsyedPatternsFromDB,
-}) {
+export const getServerSideProps = (context) =>
+  getPosterServerSideProps(context, "PosterGeoLogo");
+
+export default function Page(props) {
+  const routeData =
+    props.routeData?.routeData != null
+      ? JSON.parse(props.routeData.routeData)
+      : props.routeData;
+  const routeDesignConfig =
+    props.routeDesignConfig?.routeData != null
+      ? JSON.parse(props.routeDesignConfig.routeData)
+      : props.routeDesignConfig;
+  if (!routeData || !routeDesignConfig) return null;
+  const isInEditMode = props.isInEditMode ?? false;
+  const isPrintMode = props.isPrintMode ?? false;
+  const stopDataFromDB = props.stopDataFromDB ?? {};
+  const posterID = props.posterID ?? null;
+  const displsyedPatternsFromDB = props.displsyedPatternsFromDB ?? {};
   const GeoMap = useMap();
 
   function contains_heb(str) {
@@ -50,7 +60,7 @@ export default function Page({
             : styles.headerNoDescriptionDetails
         }
       >
-        <CustomDrag id={"logo"} isDrggable={isInEditMode}>
+        <CustomDrag id={"logo"} isDraggable={isInEditMode}>
           <div
             style={{
               position: "absolute",
@@ -92,7 +102,7 @@ export default function Page({
                   }}
                 ></Image>
               ) : (
-                <CustomDrag id={"lineName"} isDrggable={isInEditMode}>
+                <CustomDrag id={"lineName"} isDraggable={isInEditMode}>
                   <div
                     className={styles.lineName}
                     style={{
@@ -130,7 +140,7 @@ export default function Page({
                   </div>
                 </CustomDrag>
               )}
-              <CustomDrag id={"roudeDesc"} isDrggable={isInEditMode}>
+              <CustomDrag id={"roudeDesc"} isDraggable={isInEditMode}>
                 <Badge
                   sx={{
                     zIndex: 100,
@@ -150,7 +160,7 @@ export default function Page({
               </CustomDrag>
             </div>
           </div>
-          <CustomDrag id={"details"} isDrggable={isInEditMode}>
+          <CustomDrag id={"details"} isDraggable={isInEditMode}>
             <div className={styles.descriptionDetails}>
               {getDescriptionDetailElement(
                 routeDesignConfig.descriptionDetails?.numberOfStopsText,

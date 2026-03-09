@@ -1,13 +1,22 @@
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
+## Authentication
+
+Poster create, update, and delete operations require authentication in production. The app uses Firebase Auth with **Google sign-in only**.
+
+**Development mode**: Auth is bypassed when `NODE_ENV=development` — no login required for local development.
+
+**Production setup**:
+1. Copy `.env.example` to `.env.local`
+2. In [Firebase Console](https://console.firebase.google.com), enable **Google** sign-in (Authentication → Sign-in method)
+3. Add your web app config values to `.env.local` (Project Settings → General → Your apps)
+
 ## Getting Started
 
 First, run the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.

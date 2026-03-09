@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import Select from "react-select";
 import { IPattern } from "../../src/types";
 
@@ -16,8 +16,12 @@ const PatternSelectorOnMap = ({ patterns, onSelectChange }: PatternSelectorOnMap
   }));
   
   const selectedPatterns = patterns.filter(p => p.toDisplay);
-  const handleSelectChange = (selectedOptions: any) => {
-  const newSelectedPatterns = selectedOptions ? selectedOptions.map((option: any) => option.value).map((p: IPattern) => p.patternId) : [];
+  const handleSelectChange = (
+    selectedOptions: { value: IPattern; label: string }[] | null
+  ) => {
+  const newSelectedPatterns = selectedOptions
+    ? selectedOptions.map((opt) => opt.value.patternId)
+    : [];
   onSelectChange(  patterns.map((p) => ({
     ...p,
     toDisplay: newSelectedPatterns.includes(p.patternId),

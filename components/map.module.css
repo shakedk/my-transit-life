@@ -1,3 +1,5 @@
 .overlayRoute {
-    stroke: linear-gradient(90deg, rgba(255, 0, 0, 0) 0%, rgba(255, 0, 0, 1) 100%); /* Adjust the gradient colors as needed */
+    /* CSS stroke does not support linear-gradient; use solid color instead.
+       For gradient effect, use SVG linearGradient in the component. */
+    stroke: rgba(255, 0, 0, 0.8);
 }
