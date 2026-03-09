@@ -9,10 +9,8 @@ const OpenForPrintButton = () => {
   const router = useRouter();
   const url = `${server}${router.asPath}&printMode=true`;
   return (
-    <Link href={url}>
-      <a target="_blank">
-        <Button>Open for Print</Button>
-      </a>
+    <Link href={url} target="_blank">
+      <Button>Open for Print</Button>
     </Link>
   );
 };

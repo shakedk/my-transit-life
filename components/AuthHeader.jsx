@@ -20,8 +20,8 @@ export default function AuthHeader() {
       }}
     >
       <Flex sx={{ alignItems: "center", justifyContent: "space-between" }}>
-        <Link href="/" passHref>
-          <Text as="a" sx={{ fontWeight: "bold", textDecoration: "none", color: "text" }}>
+        <Link href="/">
+          <Text as="span" sx={{ fontWeight: "bold", textDecoration: "none", color: "text" }}>
             My Transit Life
           </Text>
         </Link>
@@ -35,8 +35,8 @@ export default function AuthHeader() {
             </Button>
           </Flex>
         ) : (
-          <Link href="/signin" passHref>
-            <Button as="a">Sign in</Button>
+          <Link href="/signin">
+            <Button as="span">Sign in</Button>
           </Link>
         )}
       </Flex>
