@@ -13,7 +13,7 @@ const StopLabel = ({
   posterID,
   showStopLabels,
   stopModifiedName,
-  stopPropetiesChanedHandler,
+  stopPropertiesChangedHandler,
   stop,
   stopOriginalName,
   markerLat,
@@ -29,7 +29,7 @@ const StopLabel = ({
   posterID?: string;
   showStopLabels?: boolean;
   stopModifiedName: string;
-  stopPropetiesChanedHandler: (
+  stopPropertiesChangedHandler: (
     posterID: string,
     stopID: string,
     label_lat: number,
@@ -91,7 +91,7 @@ const StopLabel = ({
     if (marker != null && marker.getLngLat) {
       const { lng, lat } = marker.getLngLat();
       setStopProps((oldState) => {
-        stopPropetiesChanedHandler(
+        stopPropertiesChangedHandler(
           posterID ?? "",
           stop.stop_id,
           lat,
@@ -108,7 +108,7 @@ const StopLabel = ({
         };
       });
     }
-  }, [posterID, stopPropetiesChanedHandler, stopOriginalName, stop.stop_id]);
+  }, [posterID, stopPropertiesChangedHandler, stopOriginalName, stop.stop_id]);
 
   const iconUrl =
     stop.stop_name !== "OPTIBUS"
@@ -160,7 +160,7 @@ const StopLabel = ({
             }
             onChange={(e) => {
               setStopProps((oldState) => {
-                stopPropetiesChanedHandler(
+                stopPropertiesChangedHandler(
                   posterID ?? "",
                   stop.stop_id,
                   oldState.latitude,
@@ -179,7 +179,7 @@ const StopLabel = ({
             onMouseUp={(e) => {
               if (isInEditMode) {
                 setStopProps((oldState) => {
-                  stopPropetiesChanedHandler(
+                  stopPropertiesChangedHandler(
                     posterID ?? "",
                     stop.stop_id,
                     oldState.latitude,
@@ -228,7 +228,7 @@ export const StopType = PropTypes.shape({
 
 StopLabel.propTypes = {
   stopModifiedName: PropTypes.string.isRequired,
-  stopPropetiesChanedHandler: PropTypes.func.isRequired,
+  stopPropertiesChangedHandler: PropTypes.func.isRequired,
   stop: StopType,
   posterID: PropTypes.string,
   showStopLabels: PropTypes.bool,

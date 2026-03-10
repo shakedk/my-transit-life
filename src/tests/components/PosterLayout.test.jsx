@@ -84,7 +84,7 @@ describe("PosterLayout", () => {
     isPrintMode: false,
     stopDataFromDB: {},
     posterID: null,
-    displsyedPatternsFromDB: {},
+    displayedPatternsFromDB: {},
     styles: minimalStyles,
   };
 

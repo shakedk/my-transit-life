@@ -13,7 +13,7 @@ export default function Page(props: {
   isPrintMode?: boolean;
   stopDataFromDB?: Record<string, unknown>;
   posterID?: string | null;
-  displsyedPatternsFromDB?: Record<string, { toDisplay?: boolean }>;
+  displayedPatternsFromDB?: Record<string, { toDisplay?: boolean }>;
 }) {
   const routeData =
     props.routeData?.routeData != null
@@ -33,7 +33,7 @@ export default function Page(props: {
       isPrintMode={props.isPrintMode ?? false}
       stopDataFromDB={props.stopDataFromDB ?? {}}
       posterID={props.posterID ?? null}
-      displsyedPatternsFromDB={props.displsyedPatternsFromDB ?? {}}
+      displayedPatternsFromDB={props.displayedPatternsFromDB ?? {}}
       layout="posterGeoLogoA0"
       styles={styles}
     />

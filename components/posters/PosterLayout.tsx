@@ -82,7 +82,7 @@ export interface PosterLayoutProps {
   isPrintMode: boolean;
   stopDataFromDB: Record<string, unknown>;
   posterID: string | null;
-  displsyedPatternsFromDB: Record<string, { toDisplay?: boolean }>;
+  displayedPatternsFromDB: Record<string, { toDisplay?: boolean }>;
   layout: PosterVariant;
   styles: Record<string, string>;
 }
@@ -98,7 +98,7 @@ export default function PosterLayout({
   isPrintMode,
   stopDataFromDB,
   posterID,
-  displsyedPatternsFromDB,
+  displayedPatternsFromDB,
   layout,
   styles: css,
 }: PosterLayoutProps) {
@@ -595,7 +595,7 @@ export default function PosterLayout({
         isSimpleDot={routeDesignConfig.isSimpleDot}
         stopDataFromDB={stopDataFromDBTyped}
         posterID={posterID ?? undefined}
-        displsyedPatternsFromDB={displsyedPatternsFromDB}
+        displayedPatternsFromDB={displayedPatternsFromDB}
         routeOverlayPatternNumber={
           config.isA0Variant
             ? routeDesignConfig.routeOverlayPatternNumber

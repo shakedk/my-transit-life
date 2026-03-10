@@ -126,7 +126,7 @@ const RouteMap = ({
   isPrintMode,
   stopDataFromDB,
   posterID,
-  displsyedPatternsFromDB = {},
+  displayedPatternsFromDB = {},
   routeOverlayPatternNumber = undefined,
   routeOverlayPatternColor = undefined,
   showStopLabels = false,
@@ -177,7 +177,7 @@ const RouteMap = ({
     }
   >;
   posterID?: string;
-  displsyedPatternsFromDB?: Record<string, { toDisplay?: boolean }>;
+  displayedPatternsFromDB?: Record<string, { toDisplay?: boolean }>;
   routeOverlayPatternNumber?: number;
   routeOverlayPatternColor?: string;
   showStopLabels?: boolean;
@@ -234,7 +234,7 @@ const RouteMap = ({
     []
   );
 
-  const stopPropetiesChanedHandler = useCallback(
+  const stopPropertiesChangedHandler = useCallback(
     (
       posterID: string,
       stopID: string,
@@ -291,7 +291,7 @@ const RouteMap = ({
             stopModifiedName={
               stopDataFromDB[stop.stop_id]?.stopModifiedName || stop.stop_name
             }
-            stopPropetiesChanedHandler={stopPropetiesChanedHandler}
+            stopPropertiesChangedHandler={stopPropertiesChangedHandler}
             stopOriginalName={stop.stop_name}
             font={stopFont || font}
             fontSize={stopFontSize}
@@ -307,7 +307,7 @@ const RouteMap = ({
     posterID,
     stops,
     showStopLabels,
-    stopPropetiesChanedHandler,
+    stopPropertiesChangedHandler,
     stopFont,
     font,
     stopFontSize,
@@ -481,7 +481,7 @@ const RouteMap = ({
   const displayedPatterns =
     patterns?.filter(
       (p) =>
-        displsyedPatternsFromDB[p.properties.route_id]?.toDisplay ?? true
+        displayedPatternsFromDB[p.properties.route_id]?.toDisplay ?? true
     ) ?? [];
 
   const sortedLabels = useMemo(

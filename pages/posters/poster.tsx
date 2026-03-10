@@ -11,7 +11,7 @@ import EditToggle from "../../components/editToggle";
 import OpenForPrintButton from "../../components/printButton";
 import PosterLayout from "../../components/posters/PosterLayout";
 import { createPosterInDB, getPosterIDInDB } from "../../src/lib/posters/utils";
-import stylesGeoNoLogo from "./posterGeoNoLogoA0.module.css";
+import stylesGeoNoLogo from "./posterGeoNoLogo.module.css";
 import stylesGeoLogo from "./posterGeoLogo.module.css";
 import stylesGeoLogoHorizontal from "./posterGeoLogoHorizontal.module.css";
 import stylesGeoLogoA0 from "./posterGeoLogoA0.module.css";
@@ -52,7 +52,7 @@ export default function Page(props) {
   const routeDesignConfig = JSON.parse(props.routeDesignConfig.routeData);
   const [isLoading,setIsLoading] = useState(true);
 
-  const PosterTemaple = () => {
+  const PosterTemplate = () => {
     React.useEffect(() => {
       createPosterInDB(posterType, routeID);
     }, [routeID]);
@@ -63,7 +63,7 @@ export default function Page(props) {
     const [stopDataFromDB, setStopDataFromDB] = useState({});
     // DB returneד only true/false for which pattern (route id) to display
     // Might be able to remove this down the road.
-    const [displsyedPatternsFromDB, setDisplsyedPatternsFromDB] = useState({});
+    const [displayedPatternsFromDB, setDisplayedPatternsFromDB] = useState({});
     const [patternsForSelection, setPatternsForSelection] =
       useState<IPattern[]>([]);
 
@@ -89,7 +89,7 @@ export default function Page(props) {
           }))
         );
 
-        setDisplsyedPatternsFromDB(selectedPatternsFromDB || {});
+        setDisplayedPatternsFromDB(selectedPatternsFromDB || {});
       },
       [routeData]
     );
@@ -107,7 +107,7 @@ export default function Page(props) {
         },
         {}
       );
-      setDisplsyedPatternsFromDB(displayedPatterns);
+      setDisplayedPatternsFromDB(displayedPatterns);
       const params = {
         posterID: posterID,
         patterns: {},
@@ -183,13 +183,13 @@ export default function Page(props) {
             isPrintMode={isPrintMode}
             stopDataFromDB={stopDataFromDB}
             posterID={posterID}
-            displsyedPatternsFromDB={displsyedPatternsFromDB}
+            displayedPatternsFromDB={displayedPatternsFromDB}
             layout={config.layout}
             styles={config.styles}
           />
         );
       },
-      [routeID, isInEditMode, displsyedPatternsFromDB, stopDataFromDB, posterID]
+      [routeID, isInEditMode, displayedPatternsFromDB, stopDataFromDB, posterID, posterType]
     );
 
     const editPosterTemplate = (
@@ -277,5 +277,5 @@ export default function Page(props) {
       </React.Fragment>
     );
   };
-  return <PosterTemaple />;
+  return <PosterTemplate />;
 }
