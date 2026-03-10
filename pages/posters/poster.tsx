@@ -9,6 +9,9 @@ import { server } from "../../config";
 import Head from "next/head";
 import EditToggle from "../../components/editToggle";
 import OpenForPrintButton from "../../components/printButton";
+import PosterSizeSelector, {
+  type PosterSizeOption,
+} from "../../components/PosterSizeSelector";
 import PosterLayout from "../../components/posters/PosterLayout";
 import { createPosterInDB, getPosterIDInDB } from "../../src/lib/posters/utils";
 import stylesGeoNoLogo from "./posterGeoNoLogo.module.css";
@@ -59,6 +62,7 @@ export default function Page(props) {
     const isPrintMode = router.query.printMode === "true";
 
     const [isInEditMode, setIsInEditMode] = useState(!isPrintMode);
+    const [previewScale, setPreviewScale] = useState<PosterSizeOption>("fit");
     const [posterID, setPosterID] = useState(null);
     const [stopDataFromDB, setStopDataFromDB] = useState({});
     // DB returneד only true/false for which pattern (route id) to display
@@ -189,7 +193,16 @@ export default function Page(props) {
           />
         );
       },
-      [routeID, isInEditMode, displayedPatternsFromDB, stopDataFromDB, posterID, posterType]
+      [
+        routeData,
+        routeDesignConfig,
+        isInEditMode,
+        isPrintMode,
+        displayedPatternsFromDB,
+        stopDataFromDB,
+        posterID,
+        posterType,
+      ]
     );
 
     const editPosterTemplate = (
@@ -204,11 +217,18 @@ export default function Page(props) {
         <Head>
           <title>{routeID}</title>
         </Head>
-        <EditToggle
-          isInEditMode={isInEditMode}
-          setIsInEditMode={setIsInEditMode}
-        />
-        <OpenForPrintButton />
+        <div style={{ display: "flex", gap: 16, alignItems: "center", flexWrap: "wrap", marginBottom: 8 }}>
+          <EditToggle
+            isInEditMode={isInEditMode}
+            setIsInEditMode={setIsInEditMode}
+          />
+          <PosterSizeSelector
+            value={previewScale}
+            onChange={setPreviewScale}
+            disabled={isPrintMode}
+          />
+          <OpenForPrintButton />
+        </div>
         {/* <div
           style={{
             height: `${intialZoomScale * 7016 + 50}px`,
@@ -252,14 +272,31 @@ export default function Page(props) {
             )}
           </TransformWrapper>
         </div> */}
-        <div>
-          {getPosterByType(
-            posterType as string,
-            routeData,
-            routeDesignConfig,
-            isInEditMode,
-            isPrintMode
-          )}
+        <div
+          style={{
+            overflow: "auto",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "flex-start",
+            minHeight: 400,
+          }}
+        >
+          <div
+            style={{
+              transform: `scale(${
+                previewScale === "fit" ? 0.25 : Number(previewScale) / 100
+              })`,
+              transformOrigin: "top center",
+            }}
+          >
+            {getPosterByType(
+              posterType as string,
+              routeData,
+              routeDesignConfig,
+              isInEditMode,
+              isPrintMode
+            )}
+          </div>
         </div>
       </>
     );

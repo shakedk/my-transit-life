@@ -11,13 +11,13 @@ describe("HomePage", () => {
     ).toBeInTheDocument();
   });
 
-  it("renders links to route selector and sample poster", () => {
+  it("renders links to route selector and example posters", () => {
     render(<HomePage />);
     expect(
-      screen.getByRole("link", { name: /browse predefined routes/i })
+      screen.getByRole("link", { name: /browse all routes/i })
     ).toHaveAttribute("href", "/routeSelector");
     expect(
-      screen.getByRole("link", { name: /open sample poster/i })
+      screen.getByRole("link", { name: /nyc subway/i })
     ).toHaveAttribute("href", "/posters/poster?posterType=PosterGeoLogo&routeID=nyc2");
   });
 });

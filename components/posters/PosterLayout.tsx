@@ -1,6 +1,6 @@
 import React from "react";
 import { Badge, Image } from "theme-ui";
-import TransitLifeCredit from "../tranitLifeCredit";
+import TransitLifeCredit from "../transitLifeCredit";
 import CustomDrag from "../../src/utils/CustomDrag";
 import { useMap } from "../../src/lib/posters/utils";
 import {
@@ -158,6 +158,7 @@ export default function PosterLayout({
       >
         <Image
           src={routeDesignConfig.agencyLogoPath}
+          alt=""
           sx={{
             width: routeDesignConfig.agencyLogoWidth,
             height: routeDesignConfig.agencyLogoHeight,
@@ -263,6 +264,7 @@ export default function PosterLayout({
           {routeDesignConfig.logoPath ? (
             <Image
               src={routeDesignConfig.logoPath}
+              alt=""
               sx={{
                 padding: routeDesignConfig.logoPadding || 0,
                 width: routeDesignConfig.logoWidth || 140,
@@ -327,7 +329,7 @@ export default function PosterLayout({
           )}
           {routeDesignConfig.routeDesc &&
             wrapWithDrag(
-              "roudeDesc",
+              "routeDesc",
               <div
                 style={
                   isInEditMode
@@ -425,6 +427,7 @@ export default function PosterLayout({
         {routeDesignConfig.logoPath ? (
           <Image
             src={routeDesignConfig.logoPath}
+            alt=""
             sx={{
               padding: routeDesignConfig.logoPadding || 0,
               width: routeDesignConfig.logoWidth || 140,
@@ -437,7 +440,7 @@ export default function PosterLayout({
           lineNameContent
         )}
         {config.useCustomDrag
-          ? wrapWithDrag("roudeDesc", routeDescContent)
+          ? wrapWithDrag("routeDesc", routeDescContent)
           : routeDescContent}
       </div>
     );
@@ -454,10 +457,10 @@ export default function PosterLayout({
         <div className={css.descriptionDetails}>
           {details.numberOfStopsText &&
             getDescriptionDetailElement(details.numberOfStopsText)}
-          <div className={css.descriptionDetailDeivider}>{"|"}</div>
+          <div className={css.descriptionDetailDivider}>{"|"}</div>
           {details.launchDateText &&
             getDescriptionDetailElement(details.launchDateText)}
-          <div className={css.descriptionDetailDeivider}>{"|"}</div>
+          <div className={css.descriptionDetailDivider}>{"|"}</div>
           {details.launchDateText &&
             getDescriptionDetailElement(details.launchDateText)}
         </div>

@@ -71,7 +71,7 @@ const minimalStyles = {
   lineTypeDesc: "lineTypeDesc",
   lineDesc: "lineDesc",
   descriptionDetails: "descriptionDetails",
-  descriptionDetailDeivider: "descriptionDetailDeivider",
+  descriptionDetailDivider: "descriptionDetailDivider",
   divider: "divider",
   transitLifeCred: "transitLifeCred",
 };
