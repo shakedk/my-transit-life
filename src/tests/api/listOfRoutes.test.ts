@@ -5,12 +5,19 @@ import handler from "../../../pages/api/listOfRoutes";
 
 jest.mock("fs");
 
-const mockedFs = fs;
+const mockedFs = fs as unknown as {
+  readdirSync: jest.Mock;
+  statSync: jest.Mock;
+};
 
 function createMockRes() {
-  const res = {};
-  res.status = jest.fn(() => res);
-  res.json = jest.fn(() => res);
+  const res: {
+    status: jest.Mock;
+    json: jest.Mock;
+  } = {
+    status: jest.fn(() => res as unknown as any),
+    json: jest.fn(() => res as unknown as any),
+  };
   return res;
 }
 
@@ -23,10 +30,10 @@ describe("/api/listOfRoutes", () => {
     mockedFs.readdirSync.mockReturnValue(["TLV1.json", "TLV2.json"]);
     mockedFs.statSync.mockReturnValue({ isDirectory: () => false });
 
-    const req = { method: "GET" };
+    const req = { method: "GET" } as any;
     const res = createMockRes();
 
-    await handler(req, res);
+    await handler(req, res as any);
 
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalled();
@@ -41,10 +48,10 @@ describe("/api/listOfRoutes", () => {
       throw new Error("fs error");
     });
 
-    const req = { method: "GET" };
+    const req = { method: "GET" } as any;
     const res = createMockRes();
 
-    await handler(req, res);
+    await handler(req, res as any);
 
     expect(res.status).toHaveBeenCalledWith(500);
     expect(res.json).toHaveBeenCalledWith({ error: "Failed to list routes" });
@@ -52,11 +59,12 @@ describe("/api/listOfRoutes", () => {
   });
 
   it("returns 405 for POST method", async () => {
-    const req = { method: "POST" };
+    const req = { method: "POST" } as any;
     const res = createMockRes();
 
-    await handler(req, res);
+    await handler(req, res as any);
 
     expect(res.status).toHaveBeenCalledWith(405);
   });
 });
+

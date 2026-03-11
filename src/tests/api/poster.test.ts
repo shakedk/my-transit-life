@@ -3,7 +3,9 @@
 jest.mock("../../../src/lib/db", () => ({
   collection: jest.fn(() => ({
     doc: jest.fn(() => ({
-      get: jest.fn(() => Promise.resolve({ exists: true, data: () => ({ slug: "test" }) })),
+      get: jest.fn(() =>
+        Promise.resolve({ exists: true, data: () => ({ slug: "test" }) })
+      ),
       set: jest.fn(() => Promise.resolve()),
       delete: jest.fn(() => Promise.resolve()),
     })),
@@ -26,7 +28,7 @@ jest.mock("../../../src/lib/db", () => ({
 }));
 
 jest.mock("../../../src/lib/auth/requireAuth", () => ({
-  withAuth: (_methods, handler) => handler,
+  withAuth: (_methods: string[], handler: any) => handler,
 }));
 
 import posterIndexHandler from "../../../pages/api/poster/index";
@@ -34,20 +36,27 @@ import posterByIdHandler from "../../../pages/api/poster/[id]";
 import getBySlugHandler from "../../../pages/api/poster/getBySlug";
 import db from "../../../src/lib/db";
 
-const mockDb = db;
+const mockDb = db as unknown as {
+  collection: jest.Mock;
+};
 
 function createMockRes() {
-  const res = {};
-  res.status = jest.fn(() => res);
-  res.json = jest.fn(() => res);
-  res.end = jest.fn(() => res);
+  const res: {
+    status: jest.Mock;
+    json: jest.Mock;
+    end: jest.Mock;
+  } = {
+    status: jest.fn(() => res as unknown as any),
+    json: jest.fn(() => res as unknown as any),
+    end: jest.fn(() => res as unknown as any),
+  };
   return res;
 }
 
 describe("/api/poster/index", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockDb.collection().get.mockResolvedValue({
+    (mockDb.collection() as any).get.mockResolvedValue({
       docs: [],
       empty: true,
     });
@@ -57,10 +66,10 @@ describe("/api/poster/index", () => {
     const req = {
       method: "POST",
       body: {},
-    };
+    } as any;
     const res = createMockRes();
 
-    await posterIndexHandler(req, res);
+    await posterIndexHandler(req, res as any);
 
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({
@@ -76,10 +85,10 @@ describe("/api/poster/index", () => {
         posterType: "posterGeoLogo",
         routeID: "TLV1",
       },
-    };
+    } as any;
     const res = createMockRes();
 
-    await posterIndexHandler(req, res);
+    await posterIndexHandler(req, res as any);
 
     expect(res.status).toHaveBeenCalledWith(400);
   });
@@ -92,19 +101,19 @@ describe("/api/poster/index", () => {
         posterType: "posterGeoLogo",
         routeID: "../../../etc/passwd",
       },
-    };
+    } as any;
     const res = createMockRes();
 
-    await posterIndexHandler(req, res);
+    await posterIndexHandler(req, res as any);
 
     expect(res.status).toHaveBeenCalledWith(400);
   });
 
   it("returns 405 for GET method", async () => {
-    const req = { method: "GET", body: {} };
+    const req = { method: "GET", body: {} } as any;
     const res = createMockRes();
 
-    await posterIndexHandler(req, res);
+    await posterIndexHandler(req, res as any);
 
     expect(res.status).toHaveBeenCalledWith(405);
   });
@@ -119,10 +128,10 @@ describe("/api/poster/[id]", () => {
     const req = {
       method: "GET",
       query: { id: "../../../etc/passwd" },
-    };
+    } as any;
     const res = createMockRes();
 
-    await posterByIdHandler(req, res);
+    await posterByIdHandler(req, res as any);
 
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({ error: "Invalid poster id" });
@@ -132,10 +141,10 @@ describe("/api/poster/[id]", () => {
     const req = {
       method: "GET",
       query: { id: "poster;id" },
-    };
+    } as any;
     const res = createMockRes();
 
-    await posterByIdHandler(req, res);
+    await posterByIdHandler(req, res as any);
 
     expect(res.status).toHaveBeenCalledWith(400);
   });
@@ -144,10 +153,10 @@ describe("/api/poster/[id]", () => {
     const req = {
       method: "POST",
       query: { id: "valid-id" },
-    };
+    } as any;
     const res = createMockRes();
 
-    await posterByIdHandler(req, res);
+    await posterByIdHandler(req, res as any);
 
     expect(res.status).toHaveBeenCalledWith(405);
   });
@@ -162,10 +171,10 @@ describe("/api/poster/getBySlug", () => {
     const req = {
       method: "GET",
       query: { slug: "../../../etc/passwd" },
-    };
+    } as any;
     const res = createMockRes();
 
-    await getBySlugHandler(req, res);
+    await getBySlugHandler(req, res as any);
 
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({ error: "Invalid slug" });
@@ -175,10 +184,10 @@ describe("/api/poster/getBySlug", () => {
     const req = {
       method: "GET",
       query: { slug: "bad slug" },
-    };
+    } as any;
     const res = createMockRes();
 
-    await getBySlugHandler(req, res);
+    await getBySlugHandler(req, res as any);
 
     expect(res.status).toHaveBeenCalledWith(400);
   });
@@ -187,11 +196,12 @@ describe("/api/poster/getBySlug", () => {
     const req = {
       method: "POST",
       query: { slug: "valid-slug" },
-    };
+    } as any;
     const res = createMockRes();
 
-    await getBySlugHandler(req, res);
+    await getBySlugHandler(req, res as any);
 
     expect(res.status).toHaveBeenCalledWith(405);
   });
 });
+

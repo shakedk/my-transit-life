@@ -18,6 +18,10 @@ describe("HomePage", () => {
     ).toHaveAttribute("href", "/routeSelector");
     expect(
       screen.getByRole("link", { name: /nyc subway/i })
-    ).toHaveAttribute("href", "/posters/poster?posterType=PosterGeoLogo&routeID=nyc2");
+    ).toHaveAttribute(
+      "href",
+      "/posters/poster?posterType=PosterGeoLogo&routeID=nyc2"
+    );
   });
 });
+

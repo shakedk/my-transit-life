@@ -16,7 +16,13 @@ describe("validation schemas", () => {
   it("accepts valid routeID and rejects path traversal patterns", () => {
     expect(routeIdSchema.safeParse("ABC_123-route").success).toBe(true);
 
-    const invalidValues = ["", "../etc/passwd", "foo/../../bar", "route id", "שלום"];
+    const invalidValues = [
+      "",
+      "../etc/passwd",
+      "foo/../../bar",
+      "route id",
+      "שלום",
+    ];
     invalidValues.forEach((value) => {
       const result = routeIdSchema.safeParse(value);
       expect(result.success).toBe(false);
@@ -62,6 +68,12 @@ describe("sanitizePosterUpdateBody", () => {
       element_title: { x: 10, y: 20, extra: "ignored" },
       element_bad: { x: "not-number", y: 20 },
       arbitrary: "should-be-removed",
+      designConfig: {
+        backgroundColor: "#ffffff",
+        mapOpacity: 0.8,
+        showStopLabels: true,
+        nested: { notAllowed: true },
+      },
     };
 
     const sanitized = sanitizePosterUpdateBody(body);
@@ -85,12 +97,17 @@ describe("sanitizePosterUpdateBody", () => {
         },
       },
       element_title: { x: 10, y: 20 },
+      designConfig: {
+        backgroundColor: "#ffffff",
+        mapOpacity: 0.8,
+        showStopLabels: true,
+      },
     });
   });
 
   it("returns empty object for invalid body", () => {
-    expect(sanitizePosterUpdateBody(null)).toEqual({});
-    expect(sanitizePosterUpdateBody("not-an-object")).toEqual({});
+    expect(sanitizePosterUpdateBody(null as unknown as object)).toEqual({});
+    expect(sanitizePosterUpdateBody("not-an-object" as unknown as object)).toEqual({});
   });
 });
 
@@ -112,9 +129,13 @@ describe("isPathWithinBase", () => {
 
 describe("withMethod and sendError", () => {
   const createMockRes = () => {
-    const res = {};
-    res.status = jest.fn(() => res);
-    res.json = jest.fn(() => res);
+    const res: {
+      status: jest.Mock;
+      json: jest.Mock;
+    } = {
+      status: jest.fn(() => res as unknown as any),
+      json: jest.fn(() => res as unknown as any),
+    };
     return res;
   };
 
@@ -125,7 +146,7 @@ describe("withMethod and sendError", () => {
     const wrapped = withMethod("GET", handler);
     const res = createMockRes();
 
-    await wrapped({ method: "GET" }, res);
+    await wrapped({ method: "GET" } as any, res as any);
 
     expect(handler).toHaveBeenCalledTimes(1);
     expect(res.status).toHaveBeenCalledWith(200);
@@ -137,7 +158,7 @@ describe("withMethod and sendError", () => {
     const wrapped = withMethod(["GET", "POST"], handler);
     const res = createMockRes();
 
-    await wrapped({ method: "DELETE" }, res);
+    await wrapped({ method: "DELETE" } as any, res as any);
 
     expect(handler).not.toHaveBeenCalled();
     expect(res.status).toHaveBeenCalledWith(405);
@@ -147,7 +168,7 @@ describe("withMethod and sendError", () => {
   it("sendError sends consistent error response", () => {
     const res = createMockRes();
 
-    sendError(res, 400, "Bad input");
+    sendError(res as any, 400, "Bad input");
 
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({ error: "Bad input" });

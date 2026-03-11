@@ -13,13 +13,15 @@ jest.mock("../../lib/api/apiClient", () => ({
 jest.mock("axios");
 
 describe("createPosterInDB", () => {
+  const mockedGetAuthAxios = getAuthAxios as jest.Mock;
+
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
   it("calls POST with correct slug format", async () => {
     const mockPost = jest.fn(() => Promise.resolve());
-    getAuthAxios.mockReturnValue({ post: mockPost });
+    mockedGetAuthAxios.mockReturnValue({ post: mockPost });
 
     await createPosterInDB("posterGeoLogo", "TLV1-variant");
 
@@ -32,33 +34,37 @@ describe("createPosterInDB", () => {
 
   it("handles errors without throwing", async () => {
     const mockPost = jest.fn(() => Promise.reject(new Error("network error")));
-    getAuthAxios.mockReturnValue({ post: mockPost });
+    mockedGetAuthAxios.mockReturnValue({ post: mockPost });
     const consoleSpy = jest.spyOn(console, "log").mockImplementation();
 
-    await expect(createPosterInDB("posterGeoLogo", "TLV1")).resolves.not.toThrow();
+    await expect(
+      createPosterInDB("posterGeoLogo", "TLV1")
+    ).resolves.not.toThrow();
     expect(consoleSpy).toHaveBeenCalled();
     consoleSpy.mockRestore();
   });
 });
 
 describe("getPosterIDInDB", () => {
+  const mockedAxios = axios as jest.Mocked<typeof axios>;
+
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
   it("returns posterID from API response", async () => {
-    axios.get.mockResolvedValueOnce({ data: { posterID: "abc123" } });
+    mockedAxios.get.mockResolvedValueOnce({ data: { posterID: "abc123" } });
 
     const result = await getPosterIDInDB("posterGeoLogo", "TLV1");
 
-    expect(axios.get).toHaveBeenCalledWith("/api/poster/getBySlug", {
+    expect(mockedAxios.get).toHaveBeenCalledWith("/api/poster/getBySlug", {
       params: { slug: "poster-geo-logo-tlv1" },
     });
     expect(result).toBe("abc123");
   });
 
   it("returns undefined on error", async () => {
-    axios.get.mockRejectedValueOnce(new Error("not found"));
+    mockedAxios.get.mockRejectedValueOnce(new Error("not found"));
     const consoleSpy = jest.spyOn(console, "log").mockImplementation();
 
     const result = await getPosterIDInDB("posterGeoLogo", "TLV1");
@@ -67,3 +73,4 @@ describe("getPosterIDInDB", () => {
     consoleSpy.mockRestore();
   });
 });
+

@@ -35,16 +35,14 @@ jest.mock("../../../src/lib/posters/utils", () => ({
 }));
 
 jest.mock("../../../src/utils/CustomDrag", () => {
-  return function MockCustomDrag({ children }) {
+  return function MockCustomDrag({ children }: { children: React.ReactNode }) {
     return <div data-testid="mock-custom-drag">{children}</div>;
   };
 });
 
 const minimalRouteData = {
   multiPolyLine: [[[0, 0], [1, 1]]],
-  stops: [
-    { stop_id: "s1", stop_name: "Stop 1", stop_lat: 32, stop_lon: 34 },
-  ],
+  stops: [{ stop_id: "s1", stop_name: "Stop 1", stop_lat: 32, stop_lon: 34 }],
   patterns: [],
 };
 
@@ -89,26 +87,18 @@ describe("PosterLayout", () => {
   };
 
   it("renders posterGeoNoLogo layout", () => {
-    render(
-      <PosterLayout
-        {...defaultProps}
-        layout="posterGeoNoLogo"
-      />
-    );
+    render(<PosterLayout {...defaultProps} layout="posterGeoNoLogo" />);
 
     expect(screen.getByText("Route 5")).toBeInTheDocument();
     expect(screen.getByText("Downtown")).toBeInTheDocument();
     expect(screen.getByTestId("mock-map")).toBeInTheDocument();
-    expect(screen.getByText(/Produced by www.transitlife.co/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Produced by www.transitlife.co/i)
+    ).toBeInTheDocument();
   });
 
   it("renders posterGeoLogo layout with route name", () => {
-    render(
-      <PosterLayout
-        {...defaultProps}
-        layout="posterGeoLogo"
-      />
-    );
+    render(<PosterLayout {...defaultProps} layout="posterGeoLogo" />);
 
     expect(screen.getByText(/Route 5/)).toBeInTheDocument();
     expect(screen.getByText(/Bus Downtown/)).toBeInTheDocument();
@@ -116,12 +106,7 @@ describe("PosterLayout", () => {
   });
 
   it("renders posterBigFrameNoLogo with map first and uppercase", () => {
-    render(
-      <PosterLayout
-        {...defaultProps}
-        layout="posterBigFrameNoLogo"
-      />
-    );
+    render(<PosterLayout {...defaultProps} layout="posterBigFrameNoLogo" />);
 
     expect(screen.getByText("ROUTE 5")).toBeInTheDocument();
     expect(screen.getByText("BUS DOWNTOWN")).toBeInTheDocument();
@@ -129,12 +114,7 @@ describe("PosterLayout", () => {
   });
 
   it("renders posterFullMapLogo layout", () => {
-    render(
-      <PosterLayout
-        {...defaultProps}
-        layout="posterFullMapLogo"
-      />
-    );
+    render(<PosterLayout {...defaultProps} layout="posterFullMapLogo" />);
 
     expect(screen.getByText("Route 5")).toBeInTheDocument();
     expect(screen.getByText("Bus Downtown")).toBeInTheDocument();
@@ -166,13 +146,11 @@ describe("PosterLayout", () => {
 
   it("applies posterContainer class from styles", () => {
     const { container } = render(
-      <PosterLayout
-        {...defaultProps}
-        layout="posterGeoNoLogo"
-      />
+      <PosterLayout {...defaultProps} layout="posterGeoNoLogo" />
     );
 
     const posterEl = container.querySelector(".posterContainer");
     expect(posterEl).toBeInTheDocument();
   });
 });
+

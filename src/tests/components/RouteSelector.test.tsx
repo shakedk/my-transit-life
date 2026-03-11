@@ -7,6 +7,8 @@ import axios from "axios";
 
 jest.mock("axios");
 
+const mockedAxios = axios as jest.Mocked<typeof axios>;
+
 describe("RouteSelector", () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -20,10 +22,8 @@ describe("RouteSelector", () => {
   });
 
   it("fetches routes when networkId is provided", async () => {
-    axios.get.mockResolvedValueOnce({
-      data: [
-        { routeId: "R1", routeName: "Route 1", stops: [], shape: [] },
-      ],
+    mockedAxios.get.mockResolvedValueOnce({
+      data: [{ routeId: "R1", routeName: "Route 1", stops: [], shape: [] }],
     });
 
     render(<RouteSelector networkId="net-1" />);
@@ -31,9 +31,10 @@ describe("RouteSelector", () => {
     expect(screen.getByText("Select a Route:")).toBeInTheDocument();
 
     await waitFor(() => {
-      expect(axios.get).toHaveBeenCalledWith(
+      expect(mockedAxios.get).toHaveBeenCalledWith(
         "/api/dataProvider/ptRoutes?networkId=net-1"
       );
     });
   });
 });
+

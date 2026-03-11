@@ -5,12 +5,18 @@ import fs from "fs";
 
 jest.mock("fs");
 
-const mockedFs = fs;
+const mockedFs = fs as unknown as {
+  readFileSync: jest.Mock;
+};
 
 function createMockRes() {
-  const res = {};
-  res.status = jest.fn(() => res);
-  res.json = jest.fn(() => res);
+  const res: {
+    status: jest.Mock;
+    json: jest.Mock;
+  } = {
+    status: jest.fn(() => res as unknown as any),
+    json: jest.fn(() => res as unknown as any),
+  };
   return res;
 }
 
@@ -23,10 +29,10 @@ describe("/api/routeData", () => {
     const req = {
       method: "GET",
       query: { routeID: "../etc/passwd" },
-    };
+    } as any;
     const res = createMockRes();
 
-    await handler(req, res);
+    await handler(req, res as any);
 
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({ error: "Invalid routeID" });
@@ -37,12 +43,12 @@ describe("/api/routeData", () => {
     const req = {
       method: "GET",
       query: { routeID: "TLV1-variant" },
-    };
+    } as any;
     const res = createMockRes();
 
     mockedFs.readFileSync.mockReturnValueOnce('{"foo":"bar"}');
 
-    await handler(req, res);
+    await handler(req, res as any);
 
     expect(mockedFs.readFileSync).toHaveBeenCalledTimes(1);
     expect(res.status).toHaveBeenCalledWith(200);
@@ -54,14 +60,14 @@ describe("/api/routeData", () => {
     const req = {
       method: "GET",
       query: { routeID: "TLV1" },
-    };
+    } as any;
     const res = createMockRes();
 
     mockedFs.readFileSync.mockImplementationOnce(() => {
       throw new Error("fs error");
     });
 
-    await handler(req, res);
+    await handler(req, res as any);
 
     expect(res.status).toHaveBeenCalledWith(500);
     expect(res.json).toHaveBeenCalledWith({
@@ -70,3 +76,4 @@ describe("/api/routeData", () => {
     consoleSpy.mockRestore();
   });
 });
+

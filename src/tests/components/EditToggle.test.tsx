@@ -11,14 +11,20 @@ describe("EditToggle", () => {
       <EditToggle isInEditMode={false} setIsInEditMode={setIsInEditMode} />
     );
 
-    expect(screen.getByRole("button", { name: /edit/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /edit/i })
+    ).toBeInTheDocument();
   });
 
   it("renders Finish when in edit mode", () => {
     const setIsInEditMode = jest.fn();
-    render(<EditToggle isInEditMode={true} setIsInEditMode={setIsInEditMode} />);
+    render(
+      <EditToggle isInEditMode={true} setIsInEditMode={setIsInEditMode} />
+    );
 
-    expect(screen.getByRole("button", { name: /finish/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /finish/i })
+    ).toBeInTheDocument();
   });
 
   it("calls setIsInEditMode with toggled value on click", () => {
@@ -32,3 +38,4 @@ describe("EditToggle", () => {
     expect(setIsInEditMode).toHaveBeenCalledWith(true);
   });
 });
+

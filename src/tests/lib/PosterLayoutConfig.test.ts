@@ -9,12 +9,12 @@ const VALID_VARIANTS = [
   "posterGeoLogoA0",
   "posterFullMapLogo",
   "posterBigFrameNoLogo",
-];
+] as const;
 
 describe("PosterLayoutConfig", () => {
   it("exports config for all 6 poster variants", () => {
     expect(Object.keys(POSTER_LAYOUT_CONFIGS)).toEqual(
-      expect.arrayContaining(VALID_VARIANTS)
+      expect.arrayContaining(VALID_VARIANTS as readonly string[])
     );
     expect(Object.keys(POSTER_LAYOUT_CONFIGS)).toHaveLength(6);
   });
@@ -68,3 +68,4 @@ describe("PosterLayoutConfig", () => {
     expect(config.showStopLabels).toBe(true);
   });
 });
+

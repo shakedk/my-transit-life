@@ -5,12 +5,18 @@ import fs from "fs";
 
 jest.mock("fs");
 
-const mockedFs = fs;
+const mockedFs = fs as unknown as {
+  readFileSync: jest.Mock;
+};
 
 function createMockRes() {
-  const res = {};
-  res.status = jest.fn(() => res);
-  res.json = jest.fn(() => res);
+  const res: {
+    status: jest.Mock;
+    json: jest.Mock;
+  } = {
+    status: jest.fn(() => res as unknown as any),
+    json: jest.fn(() => res as unknown as any),
+  };
   return res;
 }
 
@@ -23,10 +29,10 @@ describe("/api/routeDesignConfigGeoNoLogo", () => {
     const req = {
       method: "GET",
       query: { routeID: "../../../etc/passwd" },
-    };
+    } as any;
     const res = createMockRes();
 
-    await handler(req, res);
+    await handler(req, res as any);
 
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({ error: "Invalid routeID" });
@@ -37,10 +43,10 @@ describe("/api/routeDesignConfigGeoNoLogo", () => {
     const req = {
       method: "GET",
       query: { routeID: "route;id" },
-    };
+    } as any;
     const res = createMockRes();
 
-    await handler(req, res);
+    await handler(req, res as any);
 
     expect(res.status).toHaveBeenCalledWith(400);
     expect(mockedFs.readFileSync).not.toHaveBeenCalled();
@@ -50,12 +56,12 @@ describe("/api/routeDesignConfigGeoNoLogo", () => {
     const req = {
       method: "GET",
       query: { routeID: "TLV1" },
-    };
+    } as any;
     const res = createMockRes();
 
     mockedFs.readFileSync.mockReturnValueOnce('{"colors":{}}');
 
-    await handler(req, res);
+    await handler(req, res as any);
 
     expect(mockedFs.readFileSync).toHaveBeenCalledTimes(1);
     expect(res.status).toHaveBeenCalledWith(200);
@@ -66,12 +72,13 @@ describe("/api/routeDesignConfigGeoNoLogo", () => {
     const req = {
       method: "POST",
       query: { routeID: "TLV1" },
-    };
+    } as any;
     const res = createMockRes();
 
-    await handler(req, res);
+    await handler(req, res as any);
 
     expect(res.status).toHaveBeenCalledWith(405);
     expect(mockedFs.readFileSync).not.toHaveBeenCalled();
   });
 });
+
