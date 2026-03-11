@@ -1,9 +1,5 @@
 import { useRouter } from "next/router";
-import React, {
-  useCallback,
-  useEffect,
-  useState,
-} from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { server } from "../../config";
 
 import Head from "next/head";
@@ -14,6 +10,9 @@ import PosterSizeSelector, {
 } from "../../components/PosterSizeSelector";
 import PosterLayout from "../../components/posters/PosterLayout";
 import { createPosterInDB, getPosterIDInDB } from "../../src/lib/posters/utils";
+import DesignControls, {
+  type DesignConfig,
+} from "../../components/DesignControls";
 import stylesGeoNoLogo from "./posterGeoNoLogo.module.css";
 import stylesGeoLogo from "./posterGeoLogo.module.css";
 import stylesGeoLogoHorizontal from "./posterGeoLogoHorizontal.module.css";
@@ -70,6 +69,16 @@ export default function Page(props) {
     const [displayedPatternsFromDB, setDisplayedPatternsFromDB] = useState({});
     const [patternsForSelection, setPatternsForSelection] =
       useState<IPattern[]>([]);
+    const [designHistory, setDesignHistory] = useState<{
+      history: DesignConfig[];
+      index: number;
+    }>({
+      history: [routeDesignConfig as DesignConfig],
+      index: 0,
+    });
+    const autoSaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+      null
+    );
 
     /**
      * Get pattern options from routeData and selected patterns from
@@ -133,10 +142,91 @@ export default function Page(props) {
         setPosterID(id);
         setStopDataFromDB(res.data.stops || {});
         handlePatternsOnLoad(res.data.patterns);
+        const designOverrides: DesignConfig =
+          (res.data.designConfig as DesignConfig) || {};
+        const mergedDesign: DesignConfig = {
+          ...(routeDesignConfig as DesignConfig),
+          ...designOverrides,
+        };
+        setDesignHistory({
+          history: [mergedDesign],
+          index: 0,
+        });
         setIsLoading(false);
       }
       getData();
-    }, [router.query, handlePatternsOnLoad]);
+    }, [router.query, handlePatternsOnLoad, routeDesignConfig]);
+
+    useEffect(() => {
+      return () => {
+        if (autoSaveTimeoutRef.current) {
+          clearTimeout(autoSaveTimeoutRef.current);
+        }
+      };
+    }, []);
+
+    const currentDesignConfig: DesignConfig =
+      designHistory.history[designHistory.index] ||
+      (routeDesignConfig as DesignConfig);
+
+    const scheduleAutoSave = useCallback(
+      (nextConfig: DesignConfig) => {
+        if (!posterID) return;
+        if (autoSaveTimeoutRef.current) {
+          clearTimeout(autoSaveTimeoutRef.current);
+        }
+        autoSaveTimeoutRef.current = setTimeout(() => {
+          getAuthAxios().put(`/api/poster/${posterID}`, {
+            posterID,
+            designConfig: nextConfig,
+          });
+        }, 500);
+      },
+      [posterID]
+    );
+
+    const handleDesignChange = useCallback(
+      (nextConfig: DesignConfig) => {
+        setDesignHistory((prev) => {
+          const baseHistory = prev.history.slice(0, prev.index + 1);
+          const nextHistory = [...baseHistory, nextConfig];
+          return {
+            history: nextHistory,
+            index: nextHistory.length - 1,
+          };
+        });
+        scheduleAutoSave(nextConfig);
+      },
+      [scheduleAutoSave]
+    );
+
+    const handleUndo = useCallback(() => {
+      setDesignHistory((prev) => {
+        if (prev.index <= 0) return prev;
+        const nextIndex = prev.index - 1;
+        const nextState = {
+          history: prev.history,
+          index: nextIndex,
+        };
+        const config = prev.history[nextIndex];
+        scheduleAutoSave(config);
+        return nextState;
+      });
+    }, [scheduleAutoSave]);
+
+    const handleRedo = useCallback(() => {
+      setDesignHistory((prev) => {
+        if (prev.index >= prev.history.length - 1) return prev;
+        const nextIndex = prev.index + 1;
+        const nextState = {
+          history: prev.history,
+          index: nextIndex,
+        };
+        const config = prev.history[nextIndex];
+        scheduleAutoSave(config);
+        return nextState;
+      });
+    }, [scheduleAutoSave]);
 
     const posterLayouts: Record<
       string,
@@ -182,7 +272,11 @@ export default function Page(props) {
         return (
           <PosterLayout
             routeData={routeData}
-            routeDesignConfig={routeDesignConfig as React.ComponentProps<typeof PosterLayout>["routeDesignConfig"]}
+            routeDesignConfig={
+              currentDesignConfig as React.ComponentProps<
+                typeof PosterLayout
+              >["routeDesignConfig"]
+            }
             isInEditMode={isInEditMode}
             isPrintMode={isPrintMode}
             stopDataFromDB={stopDataFromDB}
@@ -195,7 +289,7 @@ export default function Page(props) {
       },
       [
         routeData,
-        routeDesignConfig,
+        currentDesignConfig,
         isInEditMode,
         isPrintMode,
         displayedPatternsFromDB,
@@ -228,6 +322,17 @@ export default function Page(props) {
             disabled={isPrintMode}
           />
           <OpenForPrintButton />
+        </div>
+        <div style={{ marginBottom: 12 }}>
+          <DesignControls
+            value={currentDesignConfig}
+            canUndo={designHistory.index > 0}
+            canRedo={designHistory.index < designHistory.history.length - 1}
+            disabled={isPrintMode}
+            onChange={handleDesignChange}
+            onUndo={handleUndo}
+            onRedo={handleRedo}
+          />
         </div>
         {/* <div
           style={{

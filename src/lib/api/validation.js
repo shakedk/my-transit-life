@@ -73,6 +73,20 @@ export function sanitizePosterUpdateBody(body) {
         }
       }
       allowed.stops = stops;
+    } else if (key === "designConfig" && value && typeof value === "object") {
+      const designConfig = {};
+      for (const [cfgKey, cfgValue] of Object.entries(value)) {
+        if (
+          typeof cfgValue === "string" ||
+          typeof cfgValue === "number" ||
+          typeof cfgValue === "boolean"
+        ) {
+          designConfig[cfgKey] = cfgValue;
+        }
+      }
+      if (Object.keys(designConfig).length > 0) {
+        allowed.designConfig = designConfig;
+      }
     } else if (key.startsWith(elementPrefix) && value && typeof value === "object") {
       if (typeof value.x === "number" && typeof value.y === "number") {
         allowed[key] = { x: value.x, y: value.y };
