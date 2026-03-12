@@ -14,6 +14,7 @@ import DesignControls, {
   type DesignConfig,
 } from "../../components/DesignControls";
 import PrintExportButtons from "../../components/posters/PrintExportButtons";
+import OrderPrintButton from "../../components/OrderPrintButton";
 import stylesGeoNoLogo from "./posterGeoNoLogo.module.css";
 import stylesGeoLogo from "./posterGeoLogo.module.css";
 import stylesGeoLogoHorizontal from "./posterGeoLogoHorizontal.module.css";
@@ -359,6 +360,7 @@ export default function Page(props) {
             disabled={isPrintMode}
           />
           <OpenForPrintButton />
+          <OrderPrintButton />
         </div>
         <div style={{ marginBottom: 12 }}>
           <DesignControls
