@@ -18,6 +18,16 @@ const CustomDrag = (props) => {
     async function getData() {
       const posterType = router.query.posterType;
       const _routeID = router.query.routeID;
+
+      if (
+        !posterType ||
+        !_routeID ||
+        Array.isArray(posterType) ||
+        Array.isArray(_routeID)
+      ) {
+        return;
+      }
+
       const id = await getPosterIDInDB(posterType, _routeID);
       setPosterID(id);
       const res = await axios.get(`/api/poster/${id}`);

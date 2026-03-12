@@ -13,6 +13,7 @@ import { createPosterInDB, getPosterIDInDB } from "../../src/lib/posters/utils";
 import DesignControls, {
   type DesignConfig,
 } from "../../components/DesignControls";
+import PrintExportButtons from "../../components/posters/PrintExportButtons";
 import stylesGeoNoLogo from "./posterGeoNoLogo.module.css";
 import stylesGeoLogo from "./posterGeoLogo.module.css";
 import stylesGeoLogoHorizontal from "./posterGeoLogoHorizontal.module.css";
@@ -25,15 +26,21 @@ import { getAuthAxios } from "../../src/lib/api/apiClient";
 import { IPattern } from "../../src/types";
 
 export async function getServerSideProps(context) {
+  const rawPosterType = context?.query?.posterType;
+  const rawRouteID = context?.query?.routeID;
+  if (!rawPosterType || Array.isArray(rawPosterType) || !rawRouteID || Array.isArray(rawRouteID)) {
+    return { redirect: { destination: "/", permanent: false } };
+  }
+
   const routeData = await fetch(
-    `${server}/api/routeData?routeID=${context.query.routeID}`
+    `${server}/api/routeData?routeID=${rawRouteID}`
   );
 
   const routeDesignConfig = await fetch(
-    `${server}/api/routeDesignConfig${context.query.posterType.replace(
+    `${server}/api/routeDesignConfig${rawPosterType.replace(
       /poster/i,
       ""
-    )}?routeID=${context.query.routeID}`
+    )}?routeID=${rawRouteID}`
   );
 
   const routeDataJson = await routeData.json();
@@ -52,12 +59,21 @@ export default function Page(props) {
   const { posterType } = router.query;
   const routeData = JSON.parse(props.routeData.routeData);
   const routeDesignConfig = JSON.parse(props.routeDesignConfig.routeData);
-  const [isLoading,setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
 
   const PosterTemplate = () => {
     React.useEffect(() => {
+      if (
+        !routeID ||
+        !posterType ||
+        Array.isArray(routeID) ||
+        Array.isArray(posterType)
+      ) {
+        return;
+      }
+
       createPosterInDB(posterType, routeID);
-    }, [routeID]);
+    }, [routeID, posterType]);
     const isPrintMode = router.query.printMode === "true";
 
     const [isInEditMode, setIsInEditMode] = useState(!isPrintMode);
@@ -92,13 +108,14 @@ export default function Page(props) {
       }) => {
         const allPatterns = routeData.patterns;
         if (!selectedPatternsFromDB) {
-          return
+          return;
         }
         setPatternsForSelection(
           allPatterns.map((p) => ({
             patternId: p.properties.route_id,
             patternName: p.properties.route_long_name,
-            toDisplay: selectedPatternsFromDB[p.properties.route_id]?.toDisplay,
+            toDisplay:
+              selectedPatternsFromDB[p.properties.route_id]?.toDisplay,
           }))
         );
 
@@ -125,16 +142,28 @@ export default function Page(props) {
         posterID: posterID,
         patterns: {},
       };
-      Object.entries(displayedPatterns).forEach(([routeId, toDisplay]) => {params.patterns[routeId] = {
-        toDisplay,
-      };})
+      Object.entries(displayedPatterns).forEach(([routeId, toDisplay]) => {
+        params.patterns[routeId] = {
+          toDisplay,
+        };
+      });
       getAuthAxios().put(`/api/poster/${posterID}`, params);
     };
     useEffect(() => {
       async function getData() {
-        const posterType = router.query.posterType;
-        const _routeID = router.query.routeID;
-        const id = await getPosterIDInDB(posterType, _routeID);
+        const qPosterType = router.query.posterType;
+        const qRouteID = router.query.routeID;
+
+        if (
+          !qPosterType ||
+          !qRouteID ||
+          Array.isArray(qPosterType) ||
+          Array.isArray(qRouteID)
+        ) {
+          return;
+        }
+
+        const id = await getPosterIDInDB(qPosterType, qRouteID);
 
         console.log("POSTER ID (from DB):", id);
 
@@ -300,7 +329,7 @@ export default function Page(props) {
     );
 
     const editPosterTemplate = (
-      <>
+      <div style={{ position: "relative" }}>
         {patternsForSelection && (
           <DataSelector
             routeData={routeData}
@@ -311,7 +340,15 @@ export default function Page(props) {
         <Head>
           <title>{routeID}</title>
         </Head>
-        <div style={{ display: "flex", gap: 16, alignItems: "center", flexWrap: "wrap", marginBottom: 8 }}>
+        <div
+          style={{
+            display: "flex",
+            gap: 16,
+            alignItems: "center",
+            flexWrap: "wrap",
+            marginBottom: 8,
+          }}
+        >
           <EditToggle
             isInEditMode={isInEditMode}
             setIsInEditMode={setIsInEditMode}
@@ -403,19 +440,24 @@ export default function Page(props) {
             )}
           </div>
         </div>
-      </>
+      </div>
     );
     return (
       <React.Fragment>
-        {!isLoading && isPrintMode
-          ? getPosterByType(
+        {!isLoading && isPrintMode ? (
+          <>
+            {getPosterByType(
               posterType as string,
               routeData,
               routeDesignConfig,
               isInEditMode,
               isPrintMode
-            )
-          : !isLoading && editPosterTemplate}
+            )}
+            <PrintExportButtons />
+          </>
+        ) : (
+          !isLoading && editPosterTemplate
+        )}
       </React.Fragment>
     );
   };

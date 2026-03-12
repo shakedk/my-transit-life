@@ -1,5 +1,6 @@
 import React from "react";
 import PosterLayout from "../../components/posters/PosterLayout";
+import PrintExportButtons from "../../components/posters/PrintExportButtons";
 import { getPosterServerSideProps } from "../../src/lib/posters/utils";
 import styles from "./posterGeoNoLogoA0.module.css";
 
@@ -26,16 +27,19 @@ export default function Page(props: {
   if (!routeData || !routeDesignConfig) return null;
 
   return (
-    <PosterLayout
-      routeData={routeData}
-      routeDesignConfig={routeDesignConfig}
-      isInEditMode={props.isInEditMode ?? false}
-      isPrintMode={props.isPrintMode ?? false}
-      stopDataFromDB={props.stopDataFromDB ?? {}}
-      posterID={props.posterID ?? null}
-      displayedPatternsFromDB={props.displayedPatternsFromDB ?? {}}
-      layout="posterGeoNoLogo"
-      styles={styles}
-    />
+    <>
+      <PosterLayout
+        routeData={routeData}
+        routeDesignConfig={routeDesignConfig}
+        isInEditMode={props.isInEditMode ?? false}
+        isPrintMode={props.isPrintMode ?? false}
+        stopDataFromDB={props.stopDataFromDB ?? {}}
+        posterID={props.posterID ?? null}
+        displayedPatternsFromDB={props.displayedPatternsFromDB ?? {}}
+        layout="posterGeoNoLogo"
+        styles={styles}
+      />
+      <PrintExportButtons />
+    </>
   );
 }

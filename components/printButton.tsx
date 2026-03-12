@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { useRouter } from "next/router";
 import React from "react";
 
@@ -7,11 +6,13 @@ import { server } from "../config";
 
 const OpenForPrintButton = () => {
   const router = useRouter();
-  const url = `${server}${router.asPath}&printMode=true`;
+  const asPath = router.asPath || "/";
+  const joiner = asPath.includes("?") ? "&" : "?";
+  const url = `${server}${asPath}${joiner}printMode=true`;
   return (
-    <Link href={url} target="_blank">
+    <a href={url} target="_blank" rel="noreferrer">
       <Button>Open for Print</Button>
-    </Link>
+    </a>
   );
 };
 export default OpenForPrintButton;
