@@ -1,4 +1,5 @@
 import { useRouter } from "next/router";
+import Link from "next/link";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { server } from "../../config";
 
@@ -33,23 +34,66 @@ export async function getServerSideProps(context) {
     return { redirect: { destination: "/", permanent: false } };
   }
 
-  const routeData = await fetch(
-    `${server}/api/routeData?routeID=${rawRouteID}`
-  );
+  const [routeData, routeDesignConfig] = await Promise.all([
+    fetch(`${server}/api/routeData?routeID=${rawRouteID}`),
+    fetch(
+      `${server}/api/routeDesignConfig${rawPosterType.replace(
+        /poster/i,
+        ""
+      )}?routeID=${rawRouteID}`
+    ),
+  ]);
 
-  const routeDesignConfig = await fetch(
-    `${server}/api/routeDesignConfig${rawPosterType.replace(
-      /poster/i,
-      ""
-    )}?routeID=${rawRouteID}`
-  );
+  let routeDataJson: unknown = null;
+  let routeDesignConfigJson: unknown = null;
+  let hasValidRouteData = false;
+  let hasValidDesignConfig = false;
 
-  const routeDataJson = await routeData.json();
-  const routeDesignConfigJson = await routeDesignConfig.json();
+  if (routeData.ok) {
+    routeDataJson = await routeData.json();
+    const dataString = (routeDataJson as { routeData?: unknown }).routeData;
+    if (typeof dataString === "string") {
+      try {
+        JSON.parse(dataString);
+        hasValidRouteData = true;
+      } catch {
+        hasValidRouteData = false;
+      }
+    }
+  } else {
+    try {
+      routeDataJson = await routeData.json();
+    } catch {
+      routeDataJson = null;
+    }
+  }
+
+  if (routeDesignConfig.ok) {
+    routeDesignConfigJson = await routeDesignConfig.json();
+    const cfgString = (routeDesignConfigJson as { routeData?: unknown })
+      .routeData;
+    if (typeof cfgString === "string") {
+      try {
+        JSON.parse(cfgString);
+        hasValidDesignConfig = true;
+      } catch {
+        hasValidDesignConfig = false;
+      }
+    }
+  } else {
+    try {
+      routeDesignConfigJson = await routeDesignConfig.json();
+    } catch {
+      routeDesignConfigJson = null;
+    }
+  }
+
   return {
     props: {
       routeData: routeDataJson,
       routeDesignConfig: routeDesignConfigJson,
+      hasValidRouteData,
+      hasValidDesignConfig,
     }, // will be passed to the page component as props
   };
 }
@@ -58,8 +102,115 @@ export default function Page(props) {
   const router = useRouter();
   const { routeID } = router.query;
   const { posterType } = router.query;
-  const routeData = JSON.parse(props.routeData.routeData);
-  const routeDesignConfig = JSON.parse(props.routeDesignConfig.routeData);
+  const routeDataString =
+    props?.routeData && typeof props.routeData.routeData === "string"
+      ? props.routeData.routeData
+      : null;
+  const routeDesignConfigString =
+    props?.routeDesignConfig &&
+    typeof props.routeDesignConfig.routeData === "string"
+      ? props.routeDesignConfig.routeData
+      : null;
+
+  let routeData: unknown = null;
+  let routeDesignConfig: unknown = null;
+
+  try {
+    routeData = routeDataString ? JSON.parse(routeDataString) : null;
+  } catch {
+    routeData = null;
+  }
+
+  try {
+    routeDesignConfig = routeDesignConfigString
+      ? JSON.parse(routeDesignConfigString)
+      : null;
+  } catch {
+    routeDesignConfig = null;
+  }
+
+  const hasValidRouteData =
+    props.hasValidRouteData && routeData !== null && routeData !== undefined;
+  const hasValidDesignConfig =
+    props.hasValidDesignConfig &&
+    routeDesignConfig !== null &&
+    routeDesignConfig !== undefined;
+
+  if (!hasValidRouteData || !hasValidDesignConfig) {
+    return (
+      <main
+        style={{
+          minHeight: "100vh",
+          margin: "0 auto",
+          padding: "56px 24px 64px",
+          maxWidth: 800,
+          fontFamily:
+            "system-ui, -apple-system, BlinkMacSystemFont, 'Heebo', sans-serif",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+        }}
+      >
+        <Head>
+          <title>Poster unavailable</title>
+        </Head>
+        <h1
+          style={{
+            fontSize: "clamp(2rem, 4vw, 2.6rem)",
+            lineHeight: 1.1,
+            fontWeight: 600,
+            letterSpacing: "-0.03em",
+            marginBottom: 16,
+            color: "#020617",
+          }}
+        >
+          This poster is missing data or design config.
+        </h1>
+        <p
+          style={{
+            fontSize: "1rem",
+            lineHeight: 1.7,
+            color: "#4b5563",
+            marginBottom: 24,
+          }}
+        >
+          We couldn&apos;t load the underlying route data or design configuration
+          for this combination. It may be a work‑in‑progress route or an
+          internal testing layout.
+        </p>
+        <p
+          style={{
+            fontSize: 14,
+            color: "#6b7280",
+            marginBottom: 24,
+          }}
+        >
+          Try picking a different layout or route from the route selector.
+        </p>
+        <Link
+          href="/routeSelector"
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "12px 22px",
+            borderRadius: 999,
+            background:
+              "linear-gradient(135deg, #020617 0%, #0f172a 40%, #4338ca 100%)",
+            color: "white",
+            fontWeight: 600,
+            fontSize: 13,
+            letterSpacing: "0.14em",
+            textTransform: "uppercase",
+            textDecoration: "none",
+            boxShadow: "0 18px 40px rgba(15, 23, 42, 0.35)",
+          }}
+        >
+          Back to route selector
+        </Link>
+      </main>
+    );
+  }
   const [isLoading, setIsLoading] = useState(true);
 
   const PosterTemplate = () => {
