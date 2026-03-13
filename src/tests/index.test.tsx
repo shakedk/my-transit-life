@@ -7,14 +7,16 @@ describe("HomePage", () => {
   it("renders without crashing", () => {
     render(<HomePage />);
     expect(
-      screen.getByRole("heading", { name: "My Transit Life" })
+      screen.getByRole("heading", {
+        name: /turn your daily commute into/i,
+      })
     ).toBeInTheDocument();
   });
 
   it("renders links to route selector and example posters", () => {
     render(<HomePage />);
     expect(
-      screen.getByRole("link", { name: /browse all routes/i })
+      screen.getByRole("link", { name: /browse all available routes/i })
     ).toHaveAttribute("href", "/routeSelector");
     expect(
       screen.getByRole("link", { name: /nyc subway/i })

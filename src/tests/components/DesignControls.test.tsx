@@ -38,9 +38,9 @@ describe("DesignControls", () => {
     setup();
 
     // Section headings
-    expect(screen.getByText(/colors/i)).toBeInTheDocument();
-    expect(screen.getByText(/typography/i)).toBeInTheDocument();
-    expect(screen.getByText(/map & stops/i)).toBeInTheDocument();
+    expect(screen.getByText(/^colors$/i)).toBeInTheDocument();
+    expect(screen.getByText(/^typography$/i)).toBeInTheDocument();
+    expect(screen.getByText(/^map & stops$/i)).toBeInTheDocument();
 
     // Key labels (we don't rely on label->control association because of layout)
     expect(screen.getByText(/^Background$/i)).toBeInTheDocument();
