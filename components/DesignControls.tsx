@@ -81,21 +81,106 @@ export default function DesignControls({
   return (
     <Box
       sx={{
-        display: "flex",
-        flexDirection: ["column", "row"],
-        gap: 3,
-        flexWrap: "wrap",
-        alignItems: ["stretch", "flex-end"],
         width: "100%",
-        borderRadius: 6,
+        borderRadius: 5,
         border: "1px solid",
-        borderColor: "muted",
-        padding: 2,
-        backgroundColor: "background",
+        borderColor: "rgba(148, 163, 184, 0.4)",
+        padding: [2, 3],
+        backgroundColor: "rgba(255, 255, 255, 0.96)",
+        boxShadow: "0 18px 40px rgba(15, 23, 42, 0.14)",
+        display: "flex",
+        flexDirection: "column",
+        gap: 3,
       }}
     >
-      <Flex sx={{ flexDirection: "column", gap: 2, minWidth: 220 }}>
-        <Label sx={{ fontSize: 1, fontWeight: 600 }}>Colors</Label>
+      <Flex
+        sx={{
+          justifyContent: "space-between",
+          alignItems: ["flex-start", "center"],
+          gap: 2,
+          flexWrap: "wrap",
+        }}
+      >
+        <Box>
+          <Label
+            sx={{
+              fontSize: 1,
+              fontWeight: 600,
+              textTransform: "uppercase",
+              letterSpacing: "0.14em",
+              color: "#020617",
+            }}
+          >
+            Design controls
+          </Label>
+          <Box
+            as="p"
+            sx={{
+              mt: 1,
+              fontSize: 0,
+              color: "#6b7280",
+              maxWidth: 360,
+            }}
+          >
+            Fine‑tune colors, typography, and map styling to match your poster.
+          </Box>
+        </Box>
+
+        <Flex
+          sx={{
+            flexDirection: "row",
+            gap: 2,
+            alignItems: "center",
+            justifyContent: "flex-end",
+          }}
+        >
+          <Button
+            variant="secondary"
+            onClick={onUndo}
+            disabled={!canUndo || disabled}
+          >
+            Undo
+          </Button>
+          <Button
+            variant="secondary"
+            onClick={onRedo}
+            disabled={!canRedo || disabled}
+          >
+            Redo
+          </Button>
+        </Flex>
+      </Flex>
+
+      <Box
+        as="hr"
+        sx={{
+          border: "none",
+          borderTop: "1px solid rgba(226, 232, 240, 0.9)",
+          my: 2,
+        }}
+      />
+
+      <Flex
+        sx={{
+          flexDirection: ["column", "row"],
+          gap: 3,
+          alignItems: ["stretch", "flex-start"],
+          flexWrap: "wrap",
+        }}
+      >
+        <Flex
+          sx={{
+            flexDirection: "column",
+            gap: 2,
+            minWidth: 220,
+            flex: 1,
+            p: 2,
+            borderRadius: 4,
+            backgroundColor: "rgba(248, 250, 252, 0.96)",
+            border: "1px solid rgba(148, 163, 184, 0.35)",
+          }}
+        >
+          <Label sx={{ fontSize: 1, fontWeight: 600 }}>Colors</Label>
         <Flex sx={{ gap: 2, alignItems: "center" }}>
           <Label sx={{ fontSize: 0, minWidth: 80 }}>Background</Label>
           <Input
@@ -158,10 +243,21 @@ export default function DesignControls({
             placeholder="#000000"
           />
         </Flex>
-      </Flex>
+        </Flex>
 
-      <Flex sx={{ flexDirection: "column", gap: 2, minWidth: 220 }}>
-        <Label sx={{ fontSize: 1, fontWeight: 600 }}>Typography</Label>
+        <Flex
+          sx={{
+            flexDirection: "column",
+            gap: 2,
+            minWidth: 220,
+            flex: 1,
+            p: 2,
+            borderRadius: 4,
+            backgroundColor: "rgba(248, 250, 252, 0.96)",
+            border: "1px solid rgba(148, 163, 184, 0.35)",
+          }}
+        >
+          <Label sx={{ fontSize: 1, fontWeight: 600 }}>Typography</Label>
         <Label sx={{ fontSize: 0 }}>
           Font family
           <Select
@@ -256,10 +352,21 @@ export default function DesignControls({
             />
           </Label>
         </Flex>
-      </Flex>
+        </Flex>
 
-      <Flex sx={{ flexDirection: "column", gap: 2, minWidth: 260 }}>
-        <Label sx={{ fontSize: 1, fontWeight: 600 }}>Map & stops</Label>
+        <Flex
+          sx={{
+            flexDirection: "column",
+            gap: 2,
+            minWidth: 260,
+            flex: 1.1,
+            p: 2,
+            borderRadius: 4,
+            backgroundColor: "rgba(248, 250, 252, 0.96)",
+            border: "1px solid rgba(148, 163, 184, 0.35)",
+          }}
+        >
+          <Label sx={{ fontSize: 1, fontWeight: 600 }}>Map & stops</Label>
         <Label sx={{ fontSize: 0 }}>
           Tile style
           <Select
@@ -390,31 +497,7 @@ export default function DesignControls({
             Show stop labels
           </Label>
         </Flex>
-      </Flex>
-
-      <Flex
-        sx={{
-          flexDirection: "row",
-          gap: 2,
-          alignItems: "center",
-          justifyContent: "flex-end",
-          ml: "auto",
-        }}
-      >
-        <Button
-          variant="secondary"
-          onClick={onUndo}
-          disabled={!canUndo || disabled}
-        >
-          Undo
-        </Button>
-        <Button
-          variant="secondary"
-          onClick={onRedo}
-          disabled={!canRedo || disabled}
-        >
-          Redo
-        </Button>
+        </Flex>
       </Flex>
     </Box>
   );

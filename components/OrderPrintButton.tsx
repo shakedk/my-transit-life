@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
-import { Button, Flex, Label, Select, Text } from "theme-ui";
+import { Button, Flex, Label, Select, Text, Box } from "theme-ui";
 import { useRouter } from "next/router";
 import { useAuth } from "../src/context/AuthContext";
 
@@ -57,22 +57,56 @@ export default function OrderPrintButton({
   };
 
   return (
-    <Flex sx={{ alignItems: "center", gap: 2, flexWrap: "wrap" }}>
-      <Label sx={{ fontSize: 0 }}>
-        <Text as="span" sx={{ mr: 2 }}>
-          Print provider
-        </Text>
-        <Select
-          value={provider}
-          onChange={(e) => setProvider(e.target.value as Provider)}
-          sx={{ fontSize: 0, minWidth: 140, mt: 1 }}
-        >
-          <option value="printful">Printful</option>
-          <option value="gelato">Gelato</option>
-          <option value="manual">Other / manual</option>
-        </Select>
-      </Label>
-      <Button onClick={handleClick} disabled={loading}>
+    <Flex
+      sx={{
+        alignItems: "center",
+        gap: 3,
+        flexWrap: "wrap",
+        justifyContent: ["flex-start", "flex-end"],
+      }}
+    >
+      <Box sx={{ minWidth: 220 }}>
+        <Label sx={{ fontSize: 0, display: "block" }}>
+          <Text as="span" sx={{ mr: 2, fontWeight: 500 }}>
+            Print provider
+          </Text>
+          <Select
+            value={provider}
+            onChange={(e) => setProvider(e.target.value as Provider)}
+            sx={{
+              fontSize: 0,
+              minWidth: 160,
+              mt: 1,
+              borderRadius: 999,
+              borderColor: "rgba(148, 163, 184, 0.8)",
+              bg: "rgba(248, 250, 252, 0.96)",
+            }}
+          >
+            <option value="printful">Printful</option>
+            <option value="gelato">Gelato</option>
+            <option value="manual">Other / manual</option>
+          </Select>
+        </Label>
+      </Box>
+      <Button
+        onClick={handleClick}
+        disabled={loading}
+        sx={{
+          px: 3,
+          py: 2,
+          borderRadius: 999,
+          fontSize: 0,
+          textTransform: "uppercase",
+          letterSpacing: "0.16em",
+          fontWeight: 600,
+          bg:
+            fulfillmentType === "print"
+              ? "linear-gradient(135deg, #020617, #0f172a, #4338ca)"
+              : "#0f172a",
+          color: "white",
+          boxShadow: "0 16px 40px rgba(15, 23, 42, 0.6)",
+        }}
+      >
         {loading
           ? "Redirecting..."
           : fulfillmentType === "print"

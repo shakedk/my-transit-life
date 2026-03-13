@@ -31,8 +31,20 @@ const PatternSelectorOnMap = ({ patterns, onSelectChange }: PatternSelectorOnMap
   };
 
   return (
-    <div>
-      <label htmlFor="pattern-select">Select Patterns:</label>
+    <div style={{ marginBottom: 12 }}>
+      <label
+        htmlFor="pattern-select"
+        style={{
+          display: "block",
+          marginBottom: 4,
+          fontSize: 12,
+          textTransform: "uppercase",
+          letterSpacing: "0.16em",
+          color: "#6b7280",
+        }}
+      >
+        Select patterns
+      </label>
       <Select
         isMulti
         id="pattern-select"

@@ -22,13 +22,28 @@ export default function PosterSizeSelector({
   disabled = false,
 }: PosterSizeSelectorProps) {
   return (
-    <Label sx={{ alignItems: "center", gap: 2, display: "flex" }}>
-      <span>Preview:</span>
+    <Label
+      sx={{
+        alignItems: "center",
+        gap: 2,
+        display: "flex",
+        fontSize: 0,
+        color: "#4b5563",
+      }}
+    >
+      <span style={{ fontWeight: 500 }}>Preview</span>
       <Select
         value={value}
         onChange={(e) => onChange(e.target.value as PosterSizeOption)}
         disabled={disabled}
-        sx={{ width: "auto", minWidth: 120 }}
+        sx={{
+          width: "auto",
+          minWidth: 140,
+          borderRadius: 999,
+          fontSize: 0,
+          borderColor: "rgba(148, 163, 184, 0.8)",
+          bg: "rgba(248, 250, 252, 0.96)",
+        }}
       >
         {OPTIONS.map((opt) => (
           <option key={opt.value} value={opt.value}>

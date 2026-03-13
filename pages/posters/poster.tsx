@@ -329,7 +329,7 @@ export default function Page(props) {
       ]
     );
 
-    const editPosterTemplate = (
+        const editPosterTemplate = (
       <div style={{ position: "relative" }}>
         {patternsForSelection && (
           <DataSelector
@@ -344,23 +344,41 @@ export default function Page(props) {
         <div
           style={{
             display: "flex",
-            gap: 16,
-            alignItems: "center",
-            flexWrap: "wrap",
-            marginBottom: 8,
+            flexDirection: "column",
+            gap: 8,
+            marginBottom: 12,
           }}
         >
-          <EditToggle
-            isInEditMode={isInEditMode}
-            setIsInEditMode={setIsInEditMode}
-          />
-          <PosterSizeSelector
-            value={previewScale}
-            onChange={setPreviewScale}
-            disabled={isPrintMode}
-          />
-          <OpenForPrintButton />
-          <OrderPrintButton />
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              gap: 16,
+              flexWrap: "wrap",
+            }}
+          >
+            <EditToggle
+              isInEditMode={isInEditMode}
+              setIsInEditMode={setIsInEditMode}
+            />
+            <PosterSizeSelector
+              value={previewScale}
+              onChange={setPreviewScale}
+              disabled={isPrintMode}
+            />
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 12,
+                flexWrap: "wrap",
+              }}
+            >
+              <OpenForPrintButton />
+              <OrderPrintButton />
+            </div>
+          </div>
         </div>
         <div style={{ marginBottom: 12 }}>
           <DesignControls
