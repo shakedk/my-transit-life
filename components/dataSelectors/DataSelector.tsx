@@ -29,7 +29,7 @@ const DataSelector = ({ routeData, patternsForSelection, setPatternsForSelection
     <div>
       <NetworkSelect onSelectChange={handleNetworkSelectChange} />
       {selectedNetwork && (
-        <RouteSelector networkId={selectedNetwork.networkId} />
+        <RouteSelector networkId={selectedNetwork.networkId} lat={selectedNetwork.lat} lon={selectedNetwork.lon} />
       )}
       {/* <PatternSelectorOnMap
         patterns={[

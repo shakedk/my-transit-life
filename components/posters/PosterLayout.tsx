@@ -85,6 +85,9 @@ export interface PosterLayoutProps {
   displayedPatternsFromDB: Record<string, { toDisplay?: boolean }>;
   layout: PosterVariant;
   styles: Record<string, string>;
+  onMapViewChange?: (longitude: number, latitude: number, zoom: number) => void;
+  /** When route shape is stub (null island), use this so the map shows the correct region. */
+  mapFallbackCenter?: { longitude: number; latitude: number };
 }
 
 function containsHeb(str: string): boolean {
@@ -97,10 +100,12 @@ export default function PosterLayout({
   isInEditMode,
   isPrintMode,
   stopDataFromDB,
+  mapFallbackCenter,
   posterID,
   displayedPatternsFromDB,
   layout,
   styles: css,
+  onMapViewChange,
 }: PosterLayoutProps) {
   const config: PosterLayoutConfig = POSTER_LAYOUT_CONFIGS[layout];
   const GeoMap = useMap();
@@ -579,7 +584,13 @@ export default function PosterLayout({
         tileLayerName={routeDesignConfig.tileLayerName}
         pathColor={routeDesignConfig.pathColor}
         pathWeight={routeDesignConfig.pathWeight}
-        mapZoom={(routeDesignConfig.mapZoom ?? 10) + config.mapZoomOffset}
+        mapZoom={
+          routeDesignConfig.mapCenterLongitude != null &&
+          routeDesignConfig.mapCenterLatitude != null &&
+          typeof routeDesignConfig.mapZoom === "number"
+            ? (routeDesignConfig.mapZoom as number)
+            : (routeDesignConfig.mapZoom ?? 10) + config.mapZoomOffset
+        }
         font={routeDesignConfig.font}
         showGeoLayer={config.showGeoLayer}
         smoothFactor={config.smoothFactor}
@@ -610,6 +621,10 @@ export default function PosterLayout({
             : undefined
         }
         showStopLabels={config.showStopLabels || routeDesignConfig.showStopLabels}
+        mapCenterLongitude={routeDesignConfig.mapCenterLongitude as number | undefined}
+        mapCenterLatitude={routeDesignConfig.mapCenterLatitude as number | undefined}
+        onMapViewChange={onMapViewChange}
+        mapFallbackCenter={mapFallbackCenter}
       />
       {config.agencyLogoOverMap && renderAgencyLogo()}
     </div>

@@ -130,6 +130,10 @@ const RouteMap = ({
   routeOverlayPatternNumber = undefined,
   routeOverlayPatternColor = undefined,
   showStopLabels = false,
+  mapCenterLongitude,
+  mapCenterLatitude,
+  onMapViewChange,
+  mapFallbackCenter,
 }: {
   multiPolyLine?: [number, number][][];
   patterns?: Array<{
@@ -181,8 +185,13 @@ const RouteMap = ({
   routeOverlayPatternNumber?: number;
   routeOverlayPatternColor?: string;
   showStopLabels?: boolean;
+  mapCenterLongitude?: number;
+  mapCenterLatitude?: number;
+  onMapViewChange?: (longitude: number, latitude: number, zoom: number) => void;
+  mapFallbackCenter?: { longitude: number; latitude: number };
 }) => {
   const mapRef = useRef<MapRef | null>(null);
+  const hasReportedInitialCenter = useRef(false);
 
   const initialDisplayedStops = useMemo(() => {
     return stops.reduce(
@@ -403,33 +412,114 @@ const RouteMap = ({
     stopCircleSize,
   ]);
 
-  const anyRoute = useMemo(() => {
+  const rawRoute = useMemo(() => {
     if (multiPolyLine) return multiPolyLine;
     if (patterns?.[0]) return [patterns[0].geometry.coordinates];
     return [[]];
   }, [patterns, multiPolyLine]);
+
+  /**
+   * Normalize to [lng, lat] for Mapbox/GeoJSON.
+   * Swap only when some point has |coord[1]| > 90 (second is lng) and none has |coord[0]| > 90 (first is lat).
+   */
+  const anyRoute = useMemo(() => {
+    const coords = rawRoute.flat();
+    if (coords.length === 0) return rawRoute;
+    const someSecondLooksLikeLng = coords.some((c) => Math.abs(c[1]) > 90);
+    const anyFirstLooksLikeLng = coords.some((c) => Math.abs(c[0]) > 90);
+    const shouldSwap = someSecondLooksLikeLng && !anyFirstLooksLikeLng;
+    if (!shouldSwap) return rawRoute;
+    return rawRoute.map((ring) =>
+      ring.map(([lat, lng]) => [lng, lat] as [number, number])
+    ) as [number, number][][];
+  }, [rawRoute]);
 
   const routeGeoJSON = useMemo(
     () => coordinatesToGeoJSON(anyRoute),
     [anyRoute]
   );
 
-  const middleCoord =
-    anyRoute[0]?.length > 0
-      ? anyRoute[0][Math.round(anyRoute[0].length / 2)]
-      : [0, 0];
+  /** Centroid of the route (center of all points) for initial pan when no saved center. */
+  const routeCenter = useMemo(() => {
+    const coords = anyRoute.flat();
+    if (coords.length === 0) return { longitude: 0, latitude: 0 };
+    const sumLng = coords.reduce((a, c) => a + c[0], 0);
+    const sumLat = coords.reduce((a, c) => a + c[1], 0);
+    return {
+      longitude: sumLng / coords.length,
+      latitude: sumLat / coords.length,
+    };
+  }, [anyRoute]);
+
+  const hasSavedCenter =
+    typeof mapCenterLongitude === "number" &&
+    Number.isFinite(mapCenterLongitude) &&
+    typeof mapCenterLatitude === "number" &&
+    Number.isFinite(mapCenterLatitude);
+
+  /** When route is stub (null island), use fallback so the map shows the correct region. */
+  const isStubCenter =
+    Math.abs(routeCenter.longitude - 0.005) < 1e-6 &&
+    Math.abs(routeCenter.latitude - 0.005) < 1e-6;
+  const effectiveCenter =
+    !hasSavedCenter && isStubCenter && mapFallbackCenter
+      ? mapFallbackCenter
+      : routeCenter;
+
   const initialViewState = useMemo(
     () => ({
-      longitude: middleCoord[0],
-      latitude: middleCoord[1],
+      longitude: hasSavedCenter ? mapCenterLongitude! : effectiveCenter.longitude,
+      latitude: hasSavedCenter ? mapCenterLatitude! : effectiveCenter.latitude,
       zoom: mapZoom ?? 12,
     }),
-    [middleCoord[0], middleCoord[1], mapZoom]
+    [
+      hasSavedCenter,
+      mapCenterLongitude,
+      mapCenterLatitude,
+      effectiveCenter.longitude,
+      effectiveCenter.latitude,
+      mapZoom,
+    ]
   );
 
+  const [viewState, setViewState] = useState(initialViewState);
+  const effectiveViewState = hasSavedCenter && viewState.longitude !== undefined
+    ? viewState
+    : initialViewState;
+
   useEffect(() => {
-    const map = mapRef.current?.getMap?.();
-    if (map && anyRoute.length > 0 && anyRoute[0].length > 0) {
+    if (hasSavedCenter) {
+      setViewState({
+        longitude: mapCenterLongitude!,
+        latitude: mapCenterLatitude!,
+        zoom: mapZoom ?? 12,
+      });
+    }
+  }, [hasSavedCenter, mapCenterLongitude, mapCenterLatitude, mapZoom]);
+
+  useEffect(() => {
+    if (anyRoute.length === 0 || anyRoute[0].length === 0) return;
+
+    const runWhenStyleLoaded = (map: ReturnType<MapRef["getMap"]>) => {
+      if (!map?.style) return;
+      if (hasSavedCenter) {
+        map.jumpTo({
+          center: [mapCenterLongitude!, mapCenterLatitude!],
+          zoom: mapZoom ?? 12,
+        });
+        return;
+      }
+      if (isStubCenter && mapFallbackCenter) {
+        map.jumpTo({
+          center: [mapFallbackCenter.longitude, mapFallbackCenter.latitude],
+          zoom: mapZoom ?? 12,
+        });
+        if (onMapViewChange && !hasReportedInitialCenter.current) {
+          hasReportedInitialCenter.current = true;
+          onMapViewChange(mapFallbackCenter.longitude, mapFallbackCenter.latitude, mapZoom ?? 12);
+        }
+        return;
+      }
       const bounds = anyRoute.flat().reduce(
         (acc, coord) => {
           acc[0] = Math.min(acc[0], coord[0]);
@@ -447,8 +537,37 @@ const RouteMap = ({
         ],
         { maxZoom: mapZoom ?? 12, padding: 20 }
       );
+      if (onMapViewChange && !hasReportedInitialCenter.current) {
+        hasReportedInitialCenter.current = true;
+        const center = map.getCenter();
+        const zoom = map.getZoom();
+        onMapViewChange(center.lng, center.lat, zoom);
+      }
+    };
+
+    const apply = (map: ReturnType<MapRef["getMap"]> | null) => {
+      if (!map) return;
+      if (map.isStyleLoaded && map.isStyleLoaded()) {
+        runWhenStyleLoaded(map);
+      } else {
+        map.once("load", () => runWhenStyleLoaded(map));
+      }
+    };
+
+    const map = mapRef.current?.getMap?.();
+    if (map) {
+      if (map.isStyleLoaded && map.isStyleLoaded()) {
+        runWhenStyleLoaded(map);
+      } else {
+        const onLoad = () => runWhenStyleLoaded(map);
+        map.once("load", onLoad);
+        return () => map.off("load", onLoad);
+      }
+    } else {
+      const id = setTimeout(() => apply(mapRef.current?.getMap?.() ?? null), 150);
+      return () => clearTimeout(id);
     }
-  }, [anyRoute, mapZoom]);
+  }, [anyRoute, mapZoom, hasSavedCenter, mapCenterLongitude, mapCenterLatitude, onMapViewChange, isStubCenter, mapFallbackCenter]);
 
   useEffect(() => {
     const newDisplayedStops: Record<string, boolean> = {};
@@ -508,11 +627,23 @@ const RouteMap = ({
         ref={mapRef}
         mapboxAccessToken={MAPBOX_ACCESS_TOKEN}
         initialViewState={initialViewState}
+        viewState={isInEditMode && onMapViewChange && hasSavedCenter ? effectiveViewState : undefined}
+        onMove={isInEditMode && onMapViewChange ? (evt) => setViewState(evt.viewState) : undefined}
+        onMoveEnd={
+          isInEditMode && onMapViewChange
+            ? (evt) => {
+                const v = evt.viewState;
+                if (v && typeof v.longitude === "number" && typeof v.latitude === "number") {
+                  onMapViewChange(v.longitude, v.latitude, v.zoom ?? mapZoom ?? 12);
+                }
+              }
+            : undefined
+        }
         mapStyle={mapStyle}
         style={{ width: "100%", height: "100%" }}
         scrollZoom={false}
         doubleClickZoom={false}
-        dragPan={false}
+        dragPan={isInEditMode && !!onMapViewChange}
         dragRotate={false}
         touchZoomRotate={false}
         attributionControl={false}

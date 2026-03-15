@@ -22,7 +22,9 @@ async function handler(req, res) {
     if (!isPathWithinBase(filePath, CONFIG_DIR)) {
       return sendError(res, 400, "Invalid routeID");
     }
-
+    if (!fs.existsSync(filePath)) {
+      return sendError(res, 404, "Design config not found for this route");
+    }
     const routeData = fs.readFileSync(filePath, "utf8");
     return res.status(200).json({ routeData });
   } catch (e) {

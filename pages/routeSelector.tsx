@@ -2,6 +2,7 @@ import Link from "next/link";
 import React from "react";
 import Head from "next/head";
 import { server } from "../config";
+import TransitApiRoutePicker from "../components/TransitApiRoutePicker";
 
 const POSTER_LAYOUTS = [
   { id: "PosterGeoLogo", label: "Geo WITH Logo" },
@@ -260,9 +261,12 @@ export default function RouteSelectorPage({
         >
           Start from real transit routes we&apos;ve prepared, then choose a
           layout to open in the editor. Routes or layouts that are missing
-          underlying data or design config are grouped separately.
+          underlying data or design config are grouped separately. You can also
+          fetch route data live from the Transit API below.
         </p>
       </section>
+
+      <TransitApiRoutePicker />
 
       {renderSection(
         "Ready to design",

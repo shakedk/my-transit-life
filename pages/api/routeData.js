@@ -29,7 +29,9 @@ async function handler(req, res) {
     if (!isPathWithinBase(filePath, DATA_DIR)) {
       return sendError(res, 400, "Invalid routeID");
     }
-
+    if (!fs.existsSync(filePath)) {
+      return sendError(res, 404, "Route data not found");
+    }
     const routeData = fs.readFileSync(filePath, "utf8");
     return res.status(200).json({ routeData });
   } catch (e) {

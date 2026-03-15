@@ -5,9 +5,12 @@ import axios from "axios";
 
 interface RouteSelectorProps {
   networkId: string;
+  lat?: number;
+  lon?: number;
+  onRouteSelect?: (option: { value: string; label: string } | null) => void;
 }
 
-const RouteSelector = ({ networkId }: RouteSelectorProps) => {
+const RouteSelector = ({ networkId, lat, lon, onRouteSelect }: RouteSelectorProps) => {
   const [ptRoutes, setPtRoutes] = useState<IRoute[]>([]);
   const [selectedRoute, setSelectedRoute] = useState<{
     value: string;
@@ -18,8 +21,11 @@ const RouteSelector = ({ networkId }: RouteSelectorProps) => {
   useEffect(() => {
     const fetchRoutes = async (networkId: string) => {
       try {
+        const params = new URLSearchParams({ networkId });
+        if (lat != null) params.set("lat", String(lat));
+        if (lon != null) params.set("lon", String(lon));
         const res = await axios.get<IRoute[]>(
-          `/api/dataProvider/ptRoutes?networkId=${networkId}`
+          `/api/dataProvider/ptRoutes?${params.toString()}`
         );
         setPtRoutes(res.data);
       } catch (error) {
@@ -30,7 +36,7 @@ const RouteSelector = ({ networkId }: RouteSelectorProps) => {
     if (networkId) {
       fetchRoutes(networkId);
     }
-  }, [networkId]);
+  }, [networkId, lat, lon]);
 
   const fetchRouteData = async (routeId: string) => {
     try {
@@ -48,6 +54,7 @@ const RouteSelector = ({ networkId }: RouteSelectorProps) => {
     selectedOption: { value: string; label: string } | null
   ) => {
     setSelectedRoute(selectedOption);
+    onRouteSelect?.(selectedOption);
     if (selectedOption) {
       fetchRouteData(selectedOption.value);
     } else {

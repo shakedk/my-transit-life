@@ -4,8 +4,11 @@ import {
   withMethod,
   sendError,
 } from "../../../../src/lib/api/validation";
+import { z } from "zod";
 
 const transitDataAccess = new TransitDataAccess();
+
+const coordSchema = z.coerce.number().finite();
 
 async function handler(req, res) {
   const networkIdResult = networkIdSchema.safeParse(req.query.networkId);
@@ -13,9 +16,16 @@ async function handler(req, res) {
     return sendError(res, 400, "Invalid networkId");
   }
 
+  const latResult = coordSchema.safeParse(req.query.lat);
+  const lonResult = coordSchema.safeParse(req.query.lon);
+  const lat = latResult.success ? latResult.data : undefined;
+  const lon = lonResult.success ? lonResult.data : undefined;
+
   try {
     const data = await transitDataAccess.getRoutesbyNetworkId(
-      networkIdResult.data
+      networkIdResult.data,
+      lat,
+      lon,
     );
     return res.status(200).json(data);
   } catch (e) {

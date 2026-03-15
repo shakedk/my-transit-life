@@ -30,6 +30,7 @@ const CustomDrag = (props) => {
 
       const id = await getPosterIDInDB(posterType, _routeID);
       setPosterID(id);
+      if (!id) return;
       const res = await axios.get(`/api/poster/${id}`);
       if (res.data[`element_${props.id}`]) {
         const pos = res.data[`element_${props.id}`];
@@ -45,6 +46,7 @@ const CustomDrag = (props) => {
     x: number,
     y: number
   ) => {
+    if (!posterID) return;
     const params = {
       posterID: posterID,
     };

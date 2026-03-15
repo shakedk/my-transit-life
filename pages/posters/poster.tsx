@@ -27,11 +27,73 @@ import axios from "axios";
 import { getAuthAxios } from "../../src/lib/api/apiClient";
 import { IPattern } from "../../src/types";
 
+const DEFAULT_DESIGN_CONFIG = {
+  backgroundColor: "#ffffff",
+  pathColor: "#000000",
+  tileLayerName: "",
+  font: "Oswald",
+  routeTitleSize: 80,
+  mapZoom: 12,
+  mapOpacity: 1,
+  stopFontSize: 12,
+  stopFontColor: "#000000",
+  stopColor: "#000000",
+  stopCircleSize: 8,
+  stopBackgroundColor: "#ffffff",
+  creditFontSize: 14,
+  showStopLabels: true,
+};
+
 export async function getServerSideProps(context) {
   const rawPosterType = context?.query?.posterType;
   const rawRouteID = context?.query?.routeID;
+  const source = context?.query?.source;
+  const isTransitApi = source === "transit";
+
   if (!rawPosterType || Array.isArray(rawPosterType) || !rawRouteID || Array.isArray(rawRouteID)) {
     return { redirect: { destination: "/", permanent: false } };
+  }
+
+  if (isTransitApi) {
+    const routeDataRes = await fetch(
+      `${server}/api/dataProvider/routeData?routeId=${encodeURIComponent(rawRouteID)}`
+    );
+    let routeDataJson: unknown = null;
+    let hasValidRouteData = false;
+    let routeNameFromApi: string | null = null;
+    if (routeDataRes.ok) {
+      try {
+        const json = await routeDataRes.json() as { routeData?: unknown; routeName?: string; routeCenterHint?: { longitude: number; latitude: number } };
+        routeDataJson = json;
+        const dataString = json.routeData;
+        if (typeof dataString === "string") {
+          JSON.parse(dataString);
+          hasValidRouteData = true;
+        }
+        if (typeof json.routeName === "string") {
+          routeNameFromApi = json.routeName;
+        }
+      } catch {
+        routeDataJson = null;
+      }
+    }
+    const designConfigWithName = {
+      ...DEFAULT_DESIGN_CONFIG,
+      routeName: routeNameFromApi || String(rawRouteID),
+      routeType: "",
+      routeDesc: "",
+    };
+    const routeDesignConfigJson = {
+      routeData: JSON.stringify(designConfigWithName),
+    };
+    return {
+      props: {
+        routeData: routeDataJson,
+        routeDesignConfig: routeDesignConfigJson,
+        hasValidRouteData,
+        hasValidDesignConfig: true,
+      },
+    };
   }
 
   const [routeData, routeDesignConfig] = await Promise.all([
@@ -106,6 +168,7 @@ export default function Page(props) {
     props?.routeData && typeof props.routeData.routeData === "string"
       ? props.routeData.routeData
       : null;
+  const routeCenterHint = (props?.routeData as { routeCenterHint?: { longitude: number; latitude: number } } | undefined)?.routeCenterHint;
   const routeDesignConfigString =
     props?.routeDesignConfig &&
     typeof props.routeDesignConfig.routeData === "string"
@@ -315,9 +378,37 @@ export default function Page(props) {
           return;
         }
 
-        const id = await getPosterIDInDB(qPosterType, qRouteID);
+        let id = await getPosterIDInDB(qPosterType, qRouteID);
+        if (!id) {
+          await createPosterInDB(qPosterType, qRouteID);
+          id = await getPosterIDInDB(qPosterType, qRouteID);
+        }
 
-        console.log("POSTER ID (from DB):", id);
+        if (!id) {
+          const rd = routeData as { patterns?: Array<{ properties: { route_id: string } }> } | null | undefined;
+          const patterns = rd?.patterns ?? [];
+          setPosterID(null);
+          setStopDataFromDB({});
+          if (patterns.length > 0) {
+            const defaultPatterns = patterns.reduce(
+              (acc, p) => {
+                acc[p.properties.route_id] = { toDisplay: true };
+                return acc;
+              },
+              {} as Record<string, { toDisplay: boolean }>
+            );
+            handlePatternsOnLoad(defaultPatterns);
+          } else {
+            setPatternsForSelection([]);
+            setDisplayedPatternsFromDB({});
+          }
+          setDesignHistory({
+            history: [routeDesignConfig as DesignConfig],
+            index: 0,
+          });
+          setIsLoading(false);
+          return;
+        }
 
         const res = await axios.get(`/api/poster/${id}`);
         setPosterID(id);
@@ -379,6 +470,18 @@ export default function Page(props) {
         scheduleAutoSave(nextConfig);
       },
       [scheduleAutoSave]
+    );
+
+    const handleMapViewChange = useCallback(
+      (longitude: number, latitude: number, zoom: number) => {
+        handleDesignChange({
+          ...currentDesignConfig,
+          mapCenterLongitude: longitude,
+          mapCenterLatitude: latitude,
+          mapZoom: zoom,
+        });
+      },
+      [currentDesignConfig, handleDesignChange]
     );
 
     const handleUndo = useCallback(() => {
@@ -445,7 +548,9 @@ export default function Page(props) {
         routeData: Record<string, unknown>,
         routeDesignConfig: Record<string, unknown>,
         isInEditMode: boolean,
-        isPrintMode: boolean
+        isPrintMode: boolean,
+        onMapViewChange?: (longitude: number, latitude: number, zoom: number) => void,
+        mapFallbackCenter?: { longitude: number; latitude: number }
       ) => {
         const config = posterLayouts[posterType.toLocaleLowerCase()];
         if (!config) return null;
@@ -465,6 +570,8 @@ export default function Page(props) {
             displayedPatternsFromDB={displayedPatternsFromDB}
             layout={config.layout}
             styles={config.styles}
+            onMapViewChange={onMapViewChange}
+            mapFallbackCenter={mapFallbackCenter}
           />
         );
       },
@@ -477,6 +584,7 @@ export default function Page(props) {
         stopDataFromDB,
         posterID,
         posterType,
+        routeCenterHint,
       ]
     );
 
@@ -578,7 +686,9 @@ export default function Page(props) {
                     routeData,
                     routeDesignConfig,
                     isInEditMode,
-                    isPrintMode
+                    isPrintMode,
+                    handleMapViewChange,
+                    routeCenterHint
                   )}
                 </TransformComponent>
               </>
@@ -607,7 +717,9 @@ export default function Page(props) {
               routeData,
               routeDesignConfig,
               isInEditMode,
-              isPrintMode
+              isPrintMode,
+              handleMapViewChange,
+              routeCenterHint
             )}
           </div>
         </div>
@@ -622,7 +734,9 @@ export default function Page(props) {
               routeData,
               routeDesignConfig,
               isInEditMode,
-              isPrintMode
+              isPrintMode,
+              handleMapViewChange,
+              routeCenterHint
             )}
             <PrintExportButtons />
           </>

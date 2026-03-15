@@ -8,10 +8,14 @@ export interface IRoute {
   routeId: string;
   stops: IStop[];
   shape: [number, number][];
+  /** When shape is stub (e.g. [[0,0],[0.01,0.01]]), use this so the map shows the right region instead of null island. */
+  centerHint?: { longitude: number; latitude: number };
 }
 export interface IPtNetwork {
   networkName: string,
-  networkId: string
+  networkId: string,
+  lat?: number,
+  lon?: number,
 }
 export interface IPattern {
   patternId: string,

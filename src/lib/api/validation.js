@@ -24,11 +24,14 @@ export const posterIdSchema = z
   .max(128, "id too long")
   .regex(/^[a-zA-Z0-9_-]+$/, "id contains invalid characters");
 
+// Transit API network IDs can contain spaces, pipes, apostrophes, and
+// accented characters (e.g. "1st Bus Stop Ltd|Guildford"). Block only
+// control characters and common injection vectors.
 export const networkIdSchema = z
   .string()
   .min(1, "networkId is required")
   .max(200, "networkId too long")
-  .regex(/^[a-zA-Z0-9._-]+$/, "networkId contains invalid characters");
+  .regex(/^[^\x00-\x1f<>"\\`]+$/, "networkId contains invalid characters");
 
 export const posterCreateSchema = z.object({
   slug: slugSchema,
