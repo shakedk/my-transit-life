@@ -1,6 +1,7 @@
 import { IPtNetwork, IRoute } from "../../types";
 import { IDataAccess } from "./dataAccess";
 import db from "../db";
+import { transitHttpGet } from "./transitHttp";
 
 export class TransitDataAccess implements IDataAccess {
   initialized = false;
@@ -35,17 +36,9 @@ export class TransitDataAccess implements IDataAccess {
     }
     const apiKey = apiKeyOverride || (typeof process !== "undefined" ? process.env?.TRANSIT_API_KEY : undefined) || this.API_KEY;
     const url = `${this.BASE_URL}/available_networks`;
-    const req = {
-      method: "GET",
-      headers: new Headers({
-        apiKey,
-      }),
-    };
-    const response = await fetch(url, req);
-    const responseData = await response.json().catch(() => ({}));
-    const rawNetworks = response.ok && Array.isArray(responseData?.networks)
-      ? responseData.networks
-      : [];
+    const { ok, data: responseData } = await transitHttpGet(url, { apiKey });
+    const body = (responseData ?? {}) as { networks?: unknown[] };
+    const rawNetworks = ok && Array.isArray(body.networks) ? body.networks : [];
     const networkData = rawNetworks.map((network: {
       network_name?: string;
       network_id?: string;
@@ -81,6 +74,8 @@ export class TransitDataAccess implements IDataAccess {
       networkDataDeduped.push({
         networkId: "demo",
         networkName: "Demo (static routes — no API key required)",
+        lat: undefined,
+        lon: undefined,
       });
     }
     return networkDataDeduped;
@@ -105,12 +100,9 @@ export class TransitDataAccess implements IDataAccess {
     // The Transit API v3 public API does not have a routes_for_network endpoint.
     // We use nearby_routes at the network's center to discover routes instead.
     const url = `${this.BASE_URL}/nearby_routes?lat=${lat}&lon=${lon}&max_distance=1500`;
-    const response = await fetch(url, {
-      method: "GET",
-      headers: new Headers({ apiKey: this.API_KEY }),
-    });
-    const data = await response.json().catch(() => ({}));
-    const routes = response.ok && Array.isArray(data?.routes) ? data.routes : [];
+    const { ok, data } = await transitHttpGet(url, { apiKey: this.API_KEY });
+    const routesBody = (data ?? {}) as { routes?: unknown[] };
+    const routes = ok && Array.isArray(routesBody.routes) ? routesBody.routes : [];
     return routes
       .map((route: { route_short_name?: string; route_long_name?: string; global_route_id?: string }) => ({
         routeName: `${route.route_short_name ?? ""} - ${route.route_long_name ?? ""}`.trim() || "Unknown",
@@ -183,41 +175,45 @@ export class TransitDataAccess implements IDataAccess {
 
     try {
       const url = `${this.BASE_URL}/route_detail?route_id=${encodeURIComponent(routeId)}`;
-      const response = await fetch(url, {
-        method: "GET",
-        headers: apiKey ? new Headers({ apiKey }) : undefined,
-      });
+      const { ok, data } = await transitHttpGet(
+        url,
+        apiKey ? { apiKey } : {}
+      );
 
-      if (response.ok) {
-        const data = await response.json();
-        const shape: [number, number][] = Array.isArray(data.shape)
-          ? data.shape
-          : Array.isArray(data.geometry?.coordinates)
-            ? data.geometry.coordinates
+      if (ok && data && typeof data === "object") {
+        const d = data as {
+          shape?: unknown;
+          geometry?: { coordinates?: unknown };
+          stops?: unknown;
+          route_name?: string;
+          route_long_name?: string;
+        };
+        const shape: [number, number][] = Array.isArray(d.shape)
+          ? (d.shape as [number, number][])
+          : Array.isArray(d.geometry?.coordinates)
+            ? (d.geometry?.coordinates as [number, number][])
             : [];
         const stops: { stopId: string; stopName: string; location: [number, number] }[] =
-          Array.isArray(data.stops)
-            ? data.stops.map(
-                (s: {
-                  stop_id?: string;
-                  stop_name?: string;
-                  stop_lat?: number;
-                  stop_lon?: number;
-                  id?: string;
-                  name?: string;
-                }) => ({
-                  stopId: s.stop_id ?? s.id ?? "",
-                  stopName: s.stop_name ?? s.name ?? "",
-                  location: [
-                    typeof s.stop_lon === "number" ? s.stop_lon : 0,
-                    typeof s.stop_lat === "number" ? s.stop_lat : 0,
-                  ] as [number, number],
-                })
-              )
+          Array.isArray(d.stops)
+            ? (d.stops as Array<{
+                stop_id?: string;
+                stop_name?: string;
+                stop_lat?: number;
+                stop_lon?: number;
+                id?: string;
+                name?: string;
+              }>).map((s) => ({
+                stopId: s.stop_id ?? s.id ?? "",
+                stopName: s.stop_name ?? s.name ?? "",
+                location: [
+                  typeof s.stop_lon === "number" ? s.stop_lon : 0,
+                  typeof s.stop_lat === "number" ? s.stop_lat : 0,
+                ] as [number, number],
+              }))
             : [];
         return {
           routeId,
-          routeName: data.route_name ?? data.route_long_name ?? routeId,
+          routeName: d.route_name ?? d.route_long_name ?? routeId,
           shape,
           stops,
         };
@@ -253,42 +249,13 @@ export class TransitDataAccess implements IDataAccess {
     apiKey: string
   ): Promise<IRoute | null> {
     const center = TransitDataAccess.getCenterForRouteId(routeId);
-    // #region agent log
-    fetch("http://127.0.0.1:7242/ingest/b35c7edc-47d9-449a-9920-64ed8e20325a", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        location: "transitDataAccess.ts:getRouteDataFromV4Nearby:entry",
-        message: "v4 fallback entry",
-        data: { routeId, hasCenter: !!center, apiKeyLen: apiKey?.length ?? 0 },
-        timestamp: Date.now(),
-        hypothesisId: "v4why",
-      }),
-    }).catch(() => {});
-    // #endregion
     if (!center || !apiKey) return null;
 
     const v4Url = `https://external.transitapp.com/v4/public/nearby_routes?lat=${center.lat}&lon=${center.lon}&max_distance=10000&include_stops_and_shapes=true`;
-    const res = await fetch(v4Url, {
-      method: "GET",
-      headers: new Headers({ apiKey }),
-    }).catch(() => null);
-    // #region agent log
-    fetch("http://127.0.0.1:7242/ingest/b35c7edc-47d9-449a-9920-64ed8e20325a", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        location: "transitDataAccess.ts:getRouteDataFromV4Nearby:afterFetch",
-        message: "v4 response",
-        data: { status: res?.status, ok: res?.ok, routeId },
-        timestamp: Date.now(),
-        hypothesisId: "v4why",
-      }),
-    }).catch(() => {});
-    // #endregion
-    if (!res?.ok) return null;
+    const { ok, data: rawData } = await transitHttpGet(v4Url, { apiKey });
+    if (!ok) return null;
 
-    const data = (await res.json().catch(() => null)) as {
+    const data = rawData as {
       nearby_routes?: Array<{
         global_route_id?: string;
         route_long_name?: string;
@@ -320,26 +287,6 @@ export class TransitDataAccess implements IDataAccess {
       }
       return false;
     });
-    const routeIdsSample = routes.slice(0, 10).map((r) => r.global_route_id);
-    // #region agent log
-    fetch("http://127.0.0.1:7242/ingest/b35c7edc-47d9-449a-9920-64ed8e20325a", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        location: "transitDataAccess.ts:getRouteDataFromV4Nearby:findRoute",
-        message: "route match",
-        data: {
-          routeId,
-          routesCount: routes.length,
-          found: !!route,
-          routeIdsSample,
-          mergedItinerariesLen: route?.merged_itineraries?.length ?? 0,
-        },
-        timestamp: Date.now(),
-        hypothesisId: "v4why",
-      }),
-    }).catch(() => {});
-    // #endregion
     if (!route?.merged_itineraries?.length) return null;
 
     let shape: [number, number][] = [];
@@ -379,7 +326,8 @@ export class TransitDataAccess implements IDataAccess {
     const routeName = [route.route_short_name, route.route_long_name].filter(Boolean).join(" - ") || routeId;
     if (shape.length === 0 && stops.length === 0) return null;
 
-    const outShape = shape.length > 0 ? shape : [[0, 0], [0.01, 0.01]];
+    const outShape: [number, number][] =
+      shape.length > 0 ? shape : [[0, 0], [0.01, 0.01]];
     return {
       routeId,
       routeName,

@@ -13,6 +13,7 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import styles from "./map.module.css";
 import StopLabel from "./stopLabel";
 import { getAuthAxios } from "../src/lib/api/apiClient";
+import { firstLastStopIdsForRouteStops } from "../src/lib/posters/newPosterDefaults";
 
 const MAPBOX_ACCESS_TOKEN =
   process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN || "";
@@ -35,6 +36,10 @@ const tileNameToRasterUrl: Record<string, string> = {
     "https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}.png",
 };
 
+/** Fallback raster URL when Mapbox token is missing so the map is never gray. */
+const FALLBACK_RASTER_URL =
+  "https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png";
+
 function getMapStyle(
   showGeoLayer: boolean,
   tileLayerName: string | undefined,
@@ -56,19 +61,21 @@ function getMapStyle(
       ],
     };
   }
-  if (tileLayerName === "Mapbox") {
+  const hasMapboxToken = Boolean(MAPBOX_ACCESS_TOKEN?.trim());
+  if (tileLayerName === "Mapbox" && hasMapboxToken) {
     return `mapbox://styles/${MAPBOX_STYLE_ID}`;
   }
   const rasterUrl = tileLayerName
     ? tileNameToRasterUrl[tileLayerName]
     : null;
-  if (rasterUrl) {
+  const url = rasterUrl || (!hasMapboxToken ? FALLBACK_RASTER_URL : null);
+  if (url) {
     return {
       version: 8,
       sources: {
         "raster-tiles": {
           type: "raster",
-          tiles: [rasterUrl],
+          tiles: [url],
           tileSize: 256,
         },
       },
@@ -82,7 +89,25 @@ function getMapStyle(
       ],
     };
   }
-  return "mapbox://styles/mapbox/light-v11";
+  // Default (empty tileLayerName): use raster so map never gray when Mapbox style fails to load
+  return {
+    version: 8,
+    sources: {
+      "raster-tiles": {
+        type: "raster",
+        tiles: [FALLBACK_RASTER_URL],
+        tileSize: 256,
+      },
+    },
+    layers: [
+      {
+        id: "raster-layer",
+        type: "raster",
+        source: "raster-tiles",
+        paint: { "raster-opacity": mapOpacity },
+      },
+    ],
+  };
 }
 
 function coordinatesToGeoJSON(
@@ -193,20 +218,25 @@ const RouteMap = ({
   const mapRef = useRef<MapRef | null>(null);
   const hasReportedInitialCenter = useRef(false);
 
+  /** Config list if set; otherwise terminal stops only (matches new-poster defaults). */
+  const effectiveStopIdsForDisplay = useMemo(() => {
+    if (stopIDsToDisplayFromConfig && stopIDsToDisplayFromConfig.length > 0) {
+      return stopIDsToDisplayFromConfig;
+    }
+    return firstLastStopIdsForRouteStops(stops) ?? [];
+  }, [stops, stopIDsToDisplayFromConfig]);
+
   const initialDisplayedStops = useMemo(() => {
     return stops.reduce(
       (stopObj: Record<string, boolean>, stop) => {
-        if (
-          !stopIDsToDisplayFromConfig ||
-          stopIDsToDisplayFromConfig.includes(stop.stop_id)
-        ) {
+        if (effectiveStopIdsForDisplay.includes(stop.stop_id)) {
           stopObj[stop.stop_id] = true;
         }
         return stopObj;
       },
       {}
     );
-  }, [stops, stopIDsToDisplayFromConfig]);
+  }, [stops, effectiveStopIdsForDisplay]);
 
   const [displayedStops, setDisplayedStops] =
     useState<Record<string, boolean>>(initialDisplayedStops);
@@ -224,20 +254,24 @@ const RouteMap = ({
 
   const stopMarkerCircleChangedHandler = useCallback(
     (posterID: string, stopID: string, marker_lat: number, marker_lon: number) => {
-      getAuthAxios().put(`/api/poster/${posterID}`, {
-        posterID,
-        stops: { [stopID]: { marker_lat, marker_lon } },
-      });
+      if (posterID) {
+        getAuthAxios().put(`/api/poster/${posterID}`, {
+          posterID,
+          stops: { [stopID]: { marker_lat, marker_lon } },
+        });
+      }
     },
     []
   );
 
   const stopDisplayToggleHandler = useCallback(
     (posterID: string, stopID: string, toDisplay: boolean) => {
-      getAuthAxios().put(`/api/poster/${posterID}`, {
-        posterID,
-        stops: { [stopID]: { toDisplay } },
-      });
+      if (posterID) {
+        getAuthAxios().put(`/api/poster/${posterID}`, {
+          posterID,
+          stops: { [stopID]: { toDisplay } },
+        });
+      }
       setDisplayedStops((prev) => ({ ...prev, [stopID]: toDisplay }));
     },
     []
@@ -254,19 +288,21 @@ const RouteMap = ({
       stopOriginalName: string,
       stopModifiedName: string
     ) => {
-      getAuthAxios().put(`/api/poster/${posterID}`, {
-        posterID,
-        stops: {
-          [stopID]: {
-            stopOriginalName,
-            stopModifiedName,
-            label_lat,
-            label_lon,
-            labelWidth,
-            labelHeight,
+      if (posterID) {
+        getAuthAxios().put(`/api/poster/${posterID}`, {
+          posterID,
+          stops: {
+            [stopID]: {
+              stopOriginalName,
+              stopModifiedName,
+              label_lat,
+              label_lon,
+              labelWidth,
+              labelHeight,
+            },
           },
-        },
-      });
+        });
+      }
     },
     []
   );
@@ -571,7 +607,9 @@ const RouteMap = ({
 
   useEffect(() => {
     const newDisplayedStops: Record<string, boolean> = {};
-    if (stopDataFromDB && Object.keys(stopDataFromDB).length > 0) {
+    const hasStopPrefs =
+      stopDataFromDB && Object.keys(stopDataFromDB).length > 0;
+    if (hasStopPrefs) {
       Object.keys(stopDataFromDB).forEach((stop_id) => {
         if (
           stopDataFromDB[stop_id]?.toDisplay &&
@@ -581,12 +619,12 @@ const RouteMap = ({
           newDisplayedStops[stop_id] = true;
         }
       });
-    }
-    if (stopIDsToDisplayFromConfig) {
-      stopIDsToDisplayFromConfig.forEach((stop_id) => {
+    } else {
+      effectiveStopIdsForDisplay.forEach((stop_id) => {
         const stopExists = stops.some((s) => s.stop_id === stop_id);
         if (
           stopExists &&
+          stop_id !== "OPTIBUS_background" &&
           (!stopDataFromDB?.[stop_id] ||
             stopDataFromDB[stop_id]?.toDisplay !== false)
         ) {
@@ -595,7 +633,12 @@ const RouteMap = ({
       });
     }
     setDisplayedStops(newDisplayedStops);
-  }, [stopDataFromDB, stopIDsToDisplayFromConfig, stops]);
+  }, [
+    stopDataFromDB,
+    stopIDsToDisplayFromConfig,
+    stops,
+    effectiveStopIdsForDisplay,
+  ]);
 
   const displayedPatterns =
     patterns?.filter(
@@ -650,8 +693,8 @@ const RouteMap = ({
         preserveDrawingBuffer={true}
       >
 
-        {/* Route polylines */}
-        {!patterns && anyRoute[0]?.length > 0 && (
+        {/* Route polylines (use multiPolyLine when no patterns or patterns empty) */}
+        {(!patterns || patterns.length === 0) && anyRoute[0]?.length > 0 && (
           <>
             <Source id="route-outline" type="geojson" data={routeGeoJSON}>
               <Layer

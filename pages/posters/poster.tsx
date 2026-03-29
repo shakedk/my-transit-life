@@ -26,6 +26,100 @@ import DataSelector from "../../components/dataSelectors/DataSelector";
 import axios from "axios";
 import { getAuthAxios } from "../../src/lib/api/apiClient";
 import { IPattern } from "../../src/types";
+import { applyNewPosterDefaults } from "../../src/lib/posters/newPosterDefaults";
+
+/** Parsed `routeData` JSON passed into the poster editor and layouts. */
+type PosterRouteData = Record<string, unknown> & {
+  patterns?: Array<{
+    properties: {
+      route_id: string;
+      route_long_name?: string;
+    };
+  }>;
+};
+
+/** First string from Next.js query (handles `routeID` vs `routeId` and array duplicates). */
+function firstQueryString(
+  value: string | string[] | undefined
+): string | undefined {
+  if (typeof value === "string" && value.length > 0) return value;
+  if (Array.isArray(value) && typeof value[0] === "string" && value[0].length > 0) {
+    return value[0];
+  }
+  return undefined;
+}
+
+/** First matching value using case-insensitive keys (e.g. PosterType vs posterType). */
+function firstQueryStringCI(
+  query: Record<string, string | string[] | undefined>,
+  ...keyNames: string[]
+): string | undefined {
+  const lowerToOriginal = new Map<string, string>();
+  for (const k of Object.keys(query)) {
+    lowerToOriginal.set(k.toLowerCase(), k);
+  }
+  for (const want of keyNames) {
+    const orig = lowerToOriginal.get(want.toLowerCase());
+    if (orig !== undefined) {
+      const v = firstQueryString(query[orig]);
+      if (v) return v;
+    }
+  }
+  return undefined;
+}
+
+/**
+ * Merge `context.query` with search params from:
+ * - `req.url` (sometimes has no `?` on internal /_next/data requests)
+ * - `resolvedUrl` (Next.js: normalized pathname + query for this page)
+ */
+function mergeQueryFromRequestUrl(context: {
+  query?: Record<string, string | string[] | undefined>;
+  req?: { url?: string };
+  resolvedUrl?: string;
+}): Record<string, string | string[] | undefined> {
+  const merged: Record<string, string | string[] | undefined> = {
+    ...(context.query ?? {}),
+  };
+  const appendSearch = (search: string) => {
+    try {
+      const params = new URLSearchParams(search);
+      params.forEach((value, key) => {
+        if (merged[key] === undefined && value.length > 0) {
+          merged[key] = value;
+        }
+      });
+    } catch {
+      // ignore malformed query
+    }
+  };
+  const tryParseUrlLike = (urlLike: string) => {
+    const qMark = urlLike.indexOf("?");
+    if (qMark === -1) return;
+    appendSearch(urlLike.slice(qMark + 1).split("#")[0]);
+  };
+  if (typeof context.req?.url === "string") tryParseUrlLike(context.req.url);
+  if (typeof context.resolvedUrl === "string") tryParseUrlLike(context.resolvedUrl);
+  return merged;
+}
+
+/** Same host/port as this request so SSR fetch hits the running dev server (not a hardcoded port). */
+function apiBaseFromRequest(context: {
+  req?: { headers?: Record<string, string | string[] | undefined> };
+}): string | null {
+  const headers = context.req?.headers;
+  if (!headers) return null;
+  const xfProto = headers["x-forwarded-proto"];
+  const proto =
+    (typeof xfProto === "string" ? xfProto.split(",")[0]?.trim() : null) ||
+    "http";
+  const xfHost = headers["x-forwarded-host"];
+  const host =
+    (typeof xfHost === "string" ? xfHost.split(",")[0]?.trim() : null) ||
+    (typeof headers.host === "string" ? headers.host : null);
+  if (!host) return null;
+  return `${proto}://${host}`;
+}
 
 const DEFAULT_DESIGN_CONFIG = {
   backgroundColor: "#ffffff",
@@ -45,18 +139,59 @@ const DEFAULT_DESIGN_CONFIG = {
 };
 
 export async function getServerSideProps(context) {
-  const rawPosterType = context?.query?.posterType;
-  const rawRouteID = context?.query?.routeID;
-  const source = context?.query?.source;
-  const isTransitApi = source === "transit";
+  const query = mergeQueryFromRequestUrl(context);
+  const rawPosterType =
+    firstQueryString(query.posterType) ??
+    firstQueryStringCI(query, "posterType", "poster_type");
+  const rawRouteID =
+    firstQueryString(query.routeID ?? query.routeId) ??
+    firstQueryStringCI(query, "routeID", "routeId", "route_id");
+  const source =
+    firstQueryString(query.source) ?? firstQueryStringCI(query, "source");
+  const isTransitApi =
+    source === "transit" ||
+    (Array.isArray(query.source) && query.source.includes("transit"));
+  const apiBase = apiBaseFromRequest(context) ?? server;
 
-  if (!rawPosterType || Array.isArray(rawPosterType) || !rawRouteID || Array.isArray(rawRouteID)) {
-    return { redirect: { destination: "/", permanent: false } };
+  if (!rawPosterType || !rawRouteID) {
+    // #region agent log
+    try {
+      const fs = require("node:fs");
+      const path = require("node:path");
+      const logPath = path.join(process.cwd(), ".cursor", "debug.log");
+      const line = JSON.stringify({
+        location: "poster.tsx:getServerSideProps:missingQuery",
+        message: "posterType or routeID still missing after merge",
+        data: {
+          reqUrl: context.req?.url ?? null,
+          resolvedUrl: context.resolvedUrl ?? null,
+          queryKeys: Object.keys(context.query ?? {}),
+          mergedKeys: Object.keys(query),
+          rawPosterType: rawPosterType ?? null,
+          rawRouteID: rawRouteID ?? null,
+        },
+        timestamp: Date.now(),
+        hypothesisId: "missing-q",
+      });
+      fs.appendFileSync(logPath, `${line}\n`);
+    } catch {
+      // ignore logging failures
+    }
+    // #endregion
+    return {
+      props: {
+        missingQueryParams: true,
+        routeData: null,
+        routeDesignConfig: null,
+        hasValidRouteData: false,
+        hasValidDesignConfig: false,
+      },
+    };
   }
 
   if (isTransitApi) {
     const routeDataRes = await fetch(
-      `${server}/api/dataProvider/routeData?routeId=${encodeURIComponent(rawRouteID)}`
+      `${apiBase}/api/dataProvider/routeData?routeId=${encodeURIComponent(rawRouteID)}`
     );
     let routeDataJson: unknown = null;
     let hasValidRouteData = false;
@@ -97,9 +232,9 @@ export async function getServerSideProps(context) {
   }
 
   const [routeData, routeDesignConfig] = await Promise.all([
-    fetch(`${server}/api/routeData?routeID=${rawRouteID}`),
+    fetch(`${apiBase}/api/routeData?routeID=${rawRouteID}`),
     fetch(
-      `${server}/api/routeDesignConfig${rawPosterType.replace(
+      `${apiBase}/api/routeDesignConfig${rawPosterType.replace(
         /poster/i,
         ""
       )}?routeID=${rawRouteID}`
@@ -164,6 +299,101 @@ export default function Page(props) {
   const router = useRouter();
   const { routeID } = router.query;
   const { posterType } = router.query;
+  const [missingRecoveryPending, setMissingRecoveryPending] = useState(false);
+  const missingRecoveryDoneRef = useRef(false);
+
+  useEffect(() => {
+    if (
+      !props.missingQueryParams ||
+      missingRecoveryDoneRef.current ||
+      !router.isReady
+    ) {
+      return;
+    }
+    const pathOnly = router.asPath.split("#")[0];
+    const qIdx = pathOnly.indexOf("?");
+    if (qIdx === -1) return;
+    const sp = new URLSearchParams(pathOnly.slice(qIdx + 1));
+    const pt = sp.get("posterType");
+    const rid = sp.get("routeID") || sp.get("routeId");
+    if (pt && rid) {
+      missingRecoveryDoneRef.current = true;
+      setMissingRecoveryPending(true);
+      void router.replace(pathOnly, pathOnly, { scroll: false });
+    }
+  }, [props.missingQueryParams, router.isReady, router.asPath, router]);
+
+  if (props.missingQueryParams) {
+    return (
+      <main
+        style={{
+          minHeight: "100vh",
+          margin: "0 auto",
+          padding: "56px 24px 64px",
+          maxWidth: 720,
+          fontFamily:
+            "system-ui, -apple-system, BlinkMacSystemFont, 'Heebo', sans-serif",
+        }}
+      >
+        <Head>
+          <title>Poster link incomplete</title>
+        </Head>
+        {missingRecoveryPending ? (
+          <p style={{ color: "#64748b", marginBottom: 16 }}>
+            Loading poster from your link…
+          </p>
+        ) : null}
+        <h1
+          style={{
+            fontSize: "clamp(1.75rem, 4vw, 2.25rem)",
+            fontWeight: 600,
+            marginBottom: 16,
+            color: "#020617",
+          }}
+        >
+          This poster link is missing details
+        </h1>
+        <p style={{ lineHeight: 1.7, color: "#4b5563", marginBottom: 20 }}>
+          The poster editor needs both{" "}
+          <code style={{ background: "#f1f5f9", padding: "2px 6px" }}>
+            posterType
+          </code>{" "}
+          and{" "}
+          <code style={{ background: "#f1f5f9", padding: "2px 6px" }}>
+            routeID
+          </code>{" "}
+          in the URL. Some apps strip query parameters when you open a link; try
+          copying the full URL from the address bar instead.
+        </p>
+        <p style={{ lineHeight: 1.7, color: "#4b5563", marginBottom: 24 }}>
+          For live transit routes, include{" "}
+          <code style={{ background: "#f1f5f9", padding: "2px 6px" }}>
+            source=transit
+          </code>
+          .
+        </p>
+        <Link
+          href="/routeSelector"
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "12px 22px",
+            borderRadius: 999,
+            background:
+              "linear-gradient(135deg, #020617 0%, #0f172a 40%, #4338ca 100%)",
+            color: "white",
+            fontWeight: 600,
+            fontSize: 13,
+            textDecoration: "none",
+          }}
+        >
+          Open route selector
+        </Link>
+      </main>
+    );
+  }
+
   const routeDataString =
     props?.routeData && typeof props.routeData.routeData === "string"
       ? props.routeData.routeData
@@ -175,11 +405,13 @@ export default function Page(props) {
       ? props.routeDesignConfig.routeData
       : null;
 
-  let routeData: unknown = null;
+  let routeData: PosterRouteData | null = null;
   let routeDesignConfig: unknown = null;
 
   try {
-    routeData = routeDataString ? JSON.parse(routeDataString) : null;
+    routeData = routeDataString
+      ? (JSON.parse(routeDataString) as PosterRouteData)
+      : null;
   } catch {
     routeData = null;
   }
@@ -198,6 +430,12 @@ export default function Page(props) {
     props.hasValidDesignConfig &&
     routeDesignConfig !== null &&
     routeDesignConfig !== undefined;
+
+  const routeNameHintFromProps =
+    props.routeData &&
+    typeof (props.routeData as { routeName?: string }).routeName === "string"
+      ? (props.routeData as { routeName: string }).routeName.trim() || undefined
+      : undefined;
 
   if (!hasValidRouteData || !hasValidDesignConfig) {
     return (
@@ -274,6 +512,9 @@ export default function Page(props) {
       </main>
     );
   }
+
+  const routeDataParsed: PosterRouteData = routeData!;
+
   const [isLoading, setIsLoading] = useState(true);
 
   const PosterTemplate = () => {
@@ -321,22 +562,22 @@ export default function Page(props) {
           toDisplay: boolean;
         };
       }) => {
-        const allPatterns = routeData.patterns;
+        const allPatterns = routeDataParsed.patterns ?? [];
         if (!selectedPatternsFromDB) {
           return;
         }
         setPatternsForSelection(
           allPatterns.map((p) => ({
             patternId: p.properties.route_id,
-            patternName: p.properties.route_long_name,
+            patternName: p.properties.route_long_name ?? "",
             toDisplay:
-              selectedPatternsFromDB[p.properties.route_id]?.toDisplay,
+              selectedPatternsFromDB[p.properties.route_id]?.toDisplay ?? true,
           }))
         );
 
         setDisplayedPatternsFromDB(selectedPatternsFromDB || {});
       },
-      [routeData]
+      [routeDataParsed]
     );
     //
 
@@ -385,8 +626,7 @@ export default function Page(props) {
         }
 
         if (!id) {
-          const rd = routeData as { patterns?: Array<{ properties: { route_id: string } }> } | null | undefined;
-          const patterns = rd?.patterns ?? [];
+          const patterns = routeDataParsed.patterns ?? [];
           setPosterID(null);
           setStopDataFromDB({});
           if (patterns.length > 0) {
@@ -402,8 +642,14 @@ export default function Page(props) {
             setPatternsForSelection([]);
             setDisplayedPatternsFromDB({});
           }
+          const newPosterDesign = applyNewPosterDefaults(
+            routeDesignConfig as DesignConfig,
+            routeDataParsed,
+            String(qRouteID),
+            { routeNameHint: routeNameHintFromProps }
+          );
           setDesignHistory({
-            history: [routeDesignConfig as DesignConfig],
+            history: [newPosterDesign],
             index: 0,
           });
           setIsLoading(false);
@@ -576,7 +822,7 @@ export default function Page(props) {
         );
       },
       [
-        routeData,
+        routeDataParsed,
         currentDesignConfig,
         isInEditMode,
         isPrintMode,
@@ -592,7 +838,7 @@ export default function Page(props) {
       <div style={{ position: "relative" }}>
         {patternsForSelection && (
           <DataSelector
-            routeData={routeData}
+            routeData={routeDataParsed}
             patternsForSelection={patternsForSelection}
             setPatternsForSelection={handlePatternSelection}
           />
@@ -683,7 +929,7 @@ export default function Page(props) {
                 <TransformComponent>
                   {getPosterByType(
                     posterType as string,
-                    routeData,
+                    routeDataParsed,
                     routeDesignConfig,
                     isInEditMode,
                     isPrintMode,
@@ -714,8 +960,8 @@ export default function Page(props) {
           >
             {getPosterByType(
               posterType as string,
-              routeData,
-              routeDesignConfig,
+              routeDataParsed,
+              routeDesignConfig as Record<string, unknown>,
               isInEditMode,
               isPrintMode,
               handleMapViewChange,
@@ -731,8 +977,8 @@ export default function Page(props) {
           <>
             {getPosterByType(
               posterType as string,
-              routeData,
-              routeDesignConfig,
+              routeDataParsed,
+              routeDesignConfig as Record<string, unknown>,
               isInEditMode,
               isPrintMode,
               handleMapViewChange,

@@ -32,16 +32,6 @@ function readTransitApiKeyFromEnvFile() {
 async function handler(req, res) {
   try {
     const apiKey = process.env.TRANSIT_API_KEY || readTransitApiKeyFromEnvFile() || undefined;
-    fetch("http://127.0.0.1:7242/ingest/b35c7edc-47d9-449a-9920-64ed8e20325a", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        location: "ptNetworks/index.js:handler",
-        message: "Env in API route",
-        data: { apiKeyLengthInHandler: apiKey?.length ?? 0, runId: "post-fix" },
-        timestamp: Date.now(),
-      }),
-    }).catch(() => {});
     const data = await transitDataAccess.getAvailableNetworks(apiKey);
     return res.status(200).json(data);
   } catch (e) {

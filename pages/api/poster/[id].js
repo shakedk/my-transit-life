@@ -8,6 +8,12 @@ import {
 import { withAuth } from "../../../src/lib/auth/requireAuth";
 
 async function handler(req, res) {
+  // CORS preflight: browser sends OPTIONS before PUT when Authorization header is present
+  if (req.method === "OPTIONS") {
+    res.setHeader("Allow", "GET, PUT, DELETE, OPTIONS");
+    return res.status(200).end();
+  }
+
   const idResult = posterIdSchema.safeParse(req.query.id);
   if (!idResult.success) {
     return sendError(res, 400, "Invalid poster id");
@@ -52,6 +58,6 @@ async function handler(req, res) {
 }
 
 export default withMethod(
-  ["GET", "PUT", "DELETE"],
+  ["GET", "PUT", "DELETE", "OPTIONS"],
   withAuth(["PUT", "DELETE"], handler)
 );
