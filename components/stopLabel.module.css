@@ -1,10 +1,104 @@
 .markerTooltip {
   z-index: 1000;
-  border: none;
-  box-shadow: none;
-  background-color: transparent;
-
-  font-family: 'Roboto';
-
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial,
+    sans-serif;
 }
 
+.markerTooltip.mapboxgl-popup {
+  max-width: none !important;
+}
+
+.markerTooltip .mapboxgl-popup-content {
+  padding: 0 !important;
+  margin: 0;
+  background: transparent !important;
+  box-shadow: none !important;
+  border-radius: 0;
+}
+
+/* Custom pointer is drawn on the label card; hide Mapbox’s default tip */
+.markerTooltip .mapboxgl-popup-tip {
+  display: none;
+}
+
+.stopLabelOuter {
+  position: relative;
+  box-sizing: border-box;
+  padding: 10px;
+  border-radius: 18px;
+  /* Soft outer card shadow (mockup) */
+  box-shadow:
+    0 6px 24px rgba(15, 23, 42, 0.14),
+    0 0 0 1px rgba(15, 23, 42, 0.05);
+}
+
+.stopLabelPointer {
+  position: absolute;
+  left: -9px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 7px 9px 7px 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.stopLabelInner {
+  position: relative;
+  box-sizing: border-box;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.65);
+  background: rgba(255, 255, 255, 0.98);
+  min-width: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stopLabelReadonly {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 12px 18px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  hyphens: auto;
+  text-align: center;
+  width: 100%;
+}
+
+.stopLabelEdit {
+  box-sizing: border-box;
+  margin: 0;
+  display: block;
+  width: 100%;
+  min-width: 120px;
+  min-height: 2.75em;
+}
+
+/* Subtle resize affordance (edit mode), bottom-right of inner card */
+.stopLabelResizeHint::after {
+  content: "";
+  position: absolute;
+  right: 5px;
+  bottom: 5px;
+  width: 10px;
+  height: 10px;
+  opacity: 0.35;
+  background: linear-gradient(
+    135deg,
+    transparent 45%,
+    rgba(15, 23, 42, 0.45) 45%,
+    rgba(15, 23, 42, 0.45) 50%,
+    transparent 50%
+  ),
+    linear-gradient(
+      135deg,
+      transparent 60%,
+      rgba(15, 23, 42, 0.35) 60%,
+      rgba(15, 23, 42, 0.35) 65%,
+      transparent 65%
+    );
+  pointer-events: none;
+}

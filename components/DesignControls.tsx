@@ -16,6 +16,7 @@ export type DesignConfig = {
   pathColor?: string;
   mapOpacity?: number;
   tileLayerName?: string;
+  previewScale?: string;
   font?: string;
   routeTitleSize?: number;
   routeNameAndTypeSize?: number;
@@ -33,10 +34,12 @@ interface DesignControlsProps {
   value: DesignConfig;
   canUndo: boolean;
   canRedo: boolean;
+  canResetMapControls?: boolean;
   disabled?: boolean;
   onChange: (next: DesignConfig) => void;
   onUndo: () => void;
   onRedo: () => void;
+  onResetMapControls?: () => void;
 }
 
 const FONT_OPTIONS = [
@@ -69,10 +72,12 @@ export default function DesignControls({
   value,
   canUndo,
   canRedo,
+  canResetMapControls = false,
   disabled = false,
   onChange,
   onUndo,
   onRedo,
+  onResetMapControls,
 }: DesignControlsProps) {
   const handleFieldChange = (patch: Partial<DesignConfig>) => {
     onChange({ ...value, ...patch });
@@ -147,6 +152,14 @@ export default function DesignControls({
             disabled={!canRedo || disabled}
           >
             Redo
+          </Button>
+          <Button
+            variant="secondary"
+            onClick={onResetMapControls}
+            disabled={!canResetMapControls || disabled || !onResetMapControls}
+            title="Restore map controls to route defaults"
+          >
+            Reset map controls
           </Button>
         </Flex>
       </Flex>

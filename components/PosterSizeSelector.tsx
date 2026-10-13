@@ -1,7 +1,11 @@
 import React from "react";
 import { Label, Select } from "theme-ui";
 
-export type PosterSizeOption = "fit" | "50" | "75" | "100";
+/** Discrete poster preview zoom levels in the editor (percent of full size, except `fit` = scale to preview width). */
+const ZOOM_PERCENTAGES = [25, 33, 50, 66, 75, 100, 125, 150, 200] as const;
+
+export type PosterZoomPercent = `${(typeof ZOOM_PERCENTAGES)[number]}`;
+export type PosterSizeOption = "fit" | PosterZoomPercent;
 
 interface PosterSizeSelectorProps {
   value: PosterSizeOption;
@@ -10,10 +14,11 @@ interface PosterSizeSelectorProps {
 }
 
 const OPTIONS: { value: PosterSizeOption; label: string }[] = [
-  { value: "fit", label: "Fit to screen" },
-  { value: "50", label: "50%" },
-  { value: "75", label: "75%" },
-  { value: "100", label: "100%" },
+  { value: "fit", label: "Fit to width" },
+  ...ZOOM_PERCENTAGES.map((n) => ({
+    value: String(n) as PosterZoomPercent,
+    label: `${n}%`,
+  })),
 ];
 
 export default function PosterSizeSelector({
@@ -31,7 +36,7 @@ export default function PosterSizeSelector({
         color: "#4b5563",
       }}
     >
-      <span style={{ fontWeight: 500 }}>Preview</span>
+      <span style={{ fontWeight: 500 }}>Zoom</span>
       <Select
         value={value}
         onChange={(e) => onChange(e.target.value as PosterSizeOption)}

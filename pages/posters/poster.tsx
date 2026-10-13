@@ -1,6 +1,12 @@
 import { useRouter } from "next/router";
 import Link from "next/link";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import { server } from "../../config";
 
 import Head from "next/head";
@@ -35,6 +41,11 @@ type PosterRouteData = Record<string, unknown> & {
       route_id: string;
       route_long_name?: string;
     };
+  }>;
+  stops?: Array<{
+    stop_id: string;
+    stop_lat: number;
+    stop_lon: number;
   }>;
 };
 
@@ -138,6 +149,57 @@ const DEFAULT_DESIGN_CONFIG = {
   showStopLabels: true,
 };
 
+const MAP_CONTROL_KEYS = [
+  "tileLayerName",
+  "mapOpacity",
+  "mapZoom",
+  "mapCenterLongitude",
+  "mapCenterLatitude",
+  "pathColor",
+  "pathWeight",
+  "stopFontSize",
+  "stopFontColor",
+  "stopColor",
+  "stopCircleSize",
+  "stopBackgroundColor",
+  "showStopLabels",
+  "stopIDsToDisplayFromConfig",
+  "isSingleDot",
+  "isSimpleDot",
+  "routeOverlayPatternNumber",
+  "routeOverlayPatternColor",
+] as const;
+
+function mapControlDefaultsFromBase(
+  baseDesign: DesignConfig | null | undefined
+): Partial<DesignConfig> {
+  const out: Partial<DesignConfig> = {};
+  MAP_CONTROL_KEYS.forEach((key) => {
+    if (baseDesign && key in baseDesign) {
+      (out as Record<string, unknown>)[key] = baseDesign[key];
+      return;
+    }
+    if (key in DEFAULT_DESIGN_CONFIG) {
+      (out as Record<string, unknown>)[key] =
+        DEFAULT_DESIGN_CONFIG[key as keyof typeof DEFAULT_DESIGN_CONFIG];
+      return;
+    }
+    // Remove user override when neither route config nor app defaults define this key.
+    (out as Record<string, unknown>)[key] = undefined;
+  });
+  return out;
+}
+
+function normalizePreviewScale(
+  value: unknown
+): PosterSizeOption {
+  if (value === "fit") return "fit";
+  if (typeof value === "string" && /^(25|33|50|66|75|100|125|150|200)$/.test(value)) {
+    return value as PosterSizeOption;
+  }
+  return "fit";
+}
+
 export async function getServerSideProps(context) {
   const query = mergeQueryFromRequestUrl(context);
   const rawPosterType =
@@ -154,30 +216,6 @@ export async function getServerSideProps(context) {
   const apiBase = apiBaseFromRequest(context) ?? server;
 
   if (!rawPosterType || !rawRouteID) {
-    // #region agent log
-    try {
-      const fs = require("node:fs");
-      const path = require("node:path");
-      const logPath = path.join(process.cwd(), ".cursor", "debug.log");
-      const line = JSON.stringify({
-        location: "poster.tsx:getServerSideProps:missingQuery",
-        message: "posterType or routeID still missing after merge",
-        data: {
-          reqUrl: context.req?.url ?? null,
-          resolvedUrl: context.resolvedUrl ?? null,
-          queryKeys: Object.keys(context.query ?? {}),
-          mergedKeys: Object.keys(query),
-          rawPosterType: rawPosterType ?? null,
-          rawRouteID: rawRouteID ?? null,
-        },
-        timestamp: Date.now(),
-        hypothesisId: "missing-q",
-      });
-      fs.appendFileSync(logPath, `${line}\n`);
-    } catch {
-      // ignore logging failures
-    }
-    // #endregion
     return {
       props: {
         missingQueryParams: true,
@@ -533,8 +571,18 @@ export default function Page(props) {
     const isPrintMode = router.query.printMode === "true";
 
     const [isInEditMode, setIsInEditMode] = useState(!isPrintMode);
-    const [previewScale, setPreviewScale] = useState<PosterSizeOption>("fit");
+    const previewViewportRef = useRef<HTMLDivElement>(null);
+    const previewPosterRef = useRef<HTMLDivElement>(null);
+    /** CSS transform scale when "Fit to screen" is selected (computed from viewport vs poster size). */
+    const [fitScaleMultiplier, setFitScaleMultiplier] = useState(0.25);
+    /** Unscaled poster layout size (for sizing the wrapper so scale() does not leave huge scroll gaps). */
+    const [posterIntrinsicSize, setPosterIntrinsicSize] = useState({
+      w: 1240,
+      h: 1754,
+    });
     const [posterID, setPosterID] = useState(null);
+    const [isResettingStops, setIsResettingStops] = useState(false);
+    const [isSavingDesign, setIsSavingDesign] = useState(false);
     const [stopDataFromDB, setStopDataFromDB] = useState({});
     // DB returneד only true/false for which pattern (route id) to display
     // Might be able to remove this down the road.
@@ -548,9 +596,80 @@ export default function Page(props) {
       history: [routeDesignConfig as DesignConfig],
       index: 0,
     });
+    const routeMapDefaultsRef = useRef<Partial<DesignConfig>>(
+      mapControlDefaultsFromBase(routeDesignConfig as DesignConfig)
+    );
     const autoSaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
       null
     );
+    const pendingDesignSaveRef = useRef<DesignConfig | null>(null);
+    const latestDesignConfigRef = useRef<DesignConfig>(
+      routeDesignConfig as DesignConfig
+    );
+    const designSaveSeqRef = useRef(0);
+    const currentDesignConfig: DesignConfig =
+      designHistory.history[designHistory.index] ||
+      (routeDesignConfig as DesignConfig);
+    const previewScale = normalizePreviewScale(currentDesignConfig.previewScale);
+
+    const syncPosterIntrinsicSize = useCallback(() => {
+      const posterEl = previewPosterRef.current;
+      if (!posterEl) return;
+      const pw = posterEl.offsetWidth;
+      const ph = posterEl.offsetHeight;
+      if (pw >= 1 && ph >= 1) {
+        setPosterIntrinsicSize({ w: pw, h: ph });
+      }
+    }, []);
+
+    const recomputePosterFitScale = useCallback(() => {
+      const vp = previewViewportRef.current;
+      const posterEl = previewPosterRef.current;
+      if (!vp || !posterEl) return;
+      let vw = vp.clientWidth;
+      let vh = vp.clientHeight;
+      if (typeof window !== "undefined") {
+        if (vw < 48) vw = Math.max(200, window.innerWidth - 48);
+        if (vh < 48)
+          vh = Math.max(200, Math.round(window.innerHeight * 0.45));
+      }
+      const pw = posterEl.offsetWidth;
+      const ph = posterEl.offsetHeight;
+      if (pw >= 1 && ph >= 1) {
+        setPosterIntrinsicSize({ w: pw, h: ph });
+      }
+      if (pw < 1 || ph < 1) return;
+      const pad = 40;
+      // Fit to viewport width; tall posters scroll vertically in the preview pane.
+      const scaleByWidth = (vw - pad) / pw;
+      setFitScaleMultiplier(Math.max(0.02, Math.min(scaleByWidth, 4)));
+    }, []);
+
+    useLayoutEffect(() => {
+      if (previewScale !== "fit" || isLoading) return;
+      recomputePosterFitScale();
+      const vp = previewViewportRef.current;
+      const posterEl = previewPosterRef.current;
+      if (!vp || !posterEl) return;
+      const ro = new ResizeObserver(() => {
+        requestAnimationFrame(recomputePosterFitScale);
+      });
+      ro.observe(vp);
+      ro.observe(posterEl);
+      return () => ro.disconnect();
+    }, [previewScale, isLoading, posterType, recomputePosterFitScale]);
+
+    useLayoutEffect(() => {
+      if (previewScale === "fit" || isLoading) return;
+      syncPosterIntrinsicSize();
+      const posterEl = previewPosterRef.current;
+      if (!posterEl) return;
+      const ro = new ResizeObserver(() => {
+        requestAnimationFrame(syncPosterIntrinsicSize);
+      });
+      ro.observe(posterEl);
+      return () => ro.disconnect();
+    }, [previewScale, isLoading, posterType, syncPosterIntrinsicSize]);
 
     /**
      * Get pattern options from routeData and selected patterns from
@@ -643,7 +762,10 @@ export default function Page(props) {
             setDisplayedPatternsFromDB({});
           }
           const newPosterDesign = applyNewPosterDefaults(
-            routeDesignConfig as DesignConfig,
+            {
+              ...DEFAULT_DESIGN_CONFIG,
+              ...(routeDesignConfig as DesignConfig),
+            },
             routeDataParsed,
             String(qRouteID),
             { routeNameHint: routeNameHintFromProps }
@@ -663,9 +785,13 @@ export default function Page(props) {
         const designOverrides: DesignConfig =
           (res.data.designConfig as DesignConfig) || {};
         const mergedDesign: DesignConfig = {
+          ...DEFAULT_DESIGN_CONFIG,
           ...(routeDesignConfig as DesignConfig),
           ...designOverrides,
         };
+        routeMapDefaultsRef.current = mapControlDefaultsFromBase(
+          routeDesignConfig as DesignConfig
+        );
         setDesignHistory({
           history: [mergedDesign],
           index: 0,
@@ -680,28 +806,76 @@ export default function Page(props) {
         if (autoSaveTimeoutRef.current) {
           clearTimeout(autoSaveTimeoutRef.current);
         }
+        setIsSavingDesign(false);
       };
     }, []);
 
-    const currentDesignConfig: DesignConfig =
-      designHistory.history[designHistory.index] ||
-      (routeDesignConfig as DesignConfig);
-
     const scheduleAutoSave = useCallback(
       (nextConfig: DesignConfig) => {
-        if (!posterID) return;
+        latestDesignConfigRef.current = nextConfig;
+        setIsSavingDesign(true);
+        if (!posterID) {
+          pendingDesignSaveRef.current = nextConfig;
+          return;
+        }
         if (autoSaveTimeoutRef.current) {
           clearTimeout(autoSaveTimeoutRef.current);
         }
+        const saveSeq = ++designSaveSeqRef.current;
         autoSaveTimeoutRef.current = setTimeout(() => {
-          getAuthAxios().put(`/api/poster/${posterID}`, {
-            posterID,
-            designConfig: nextConfig,
-          });
+          void getAuthAxios()
+            .put(`/api/poster/${posterID}`, {
+              posterID,
+              designConfig: nextConfig,
+            })
+            .catch((error) => {
+              console.error("Failed to save poster design config", error);
+            })
+            .finally(() => {
+              if (designSaveSeqRef.current === saveSeq) {
+                setIsSavingDesign(false);
+              }
+            });
         }, 500);
       },
       [posterID]
     );
+
+    useEffect(() => {
+      if (!posterID || !pendingDesignSaveRef.current) return;
+      const pending = pendingDesignSaveRef.current;
+      pendingDesignSaveRef.current = null;
+      scheduleAutoSave(pending);
+    }, [posterID, scheduleAutoSave]);
+
+    useEffect(() => {
+      if (!posterID) return;
+      const flushPendingDesignSave = () => {
+        const latest = latestDesignConfigRef.current;
+        if (!latest) return;
+        if (autoSaveTimeoutRef.current) {
+          clearTimeout(autoSaveTimeoutRef.current);
+          autoSaveTimeoutRef.current = null;
+        }
+        getAuthAxios().put(`/api/poster/${posterID}`, {
+          posterID,
+          designConfig: latest,
+        });
+      };
+
+      const onVisibilityChange = () => {
+        if (document.visibilityState === "hidden") {
+          flushPendingDesignSave();
+        }
+      };
+
+      window.addEventListener("beforeunload", flushPendingDesignSave);
+      document.addEventListener("visibilitychange", onVisibilityChange);
+      return () => {
+        window.removeEventListener("beforeunload", flushPendingDesignSave);
+        document.removeEventListener("visibilitychange", onVisibilityChange);
+      };
+    }, [posterID]);
 
     const handleDesignChange = useCallback(
       (nextConfig: DesignConfig) => {
@@ -757,6 +931,73 @@ export default function Page(props) {
         return nextState;
       });
     }, [scheduleAutoSave]);
+
+    const resetMapControlsToDefaults = useCallback(() => {
+      const mapDefaults = routeMapDefaultsRef.current;
+      handleDesignChange({
+        ...currentDesignConfig,
+        ...mapDefaults,
+      });
+    }, [currentDesignConfig, handleDesignChange]);
+
+    const handlePreviewScaleChange = useCallback(
+      (nextScale: PosterSizeOption) => {
+        handleDesignChange({
+          ...currentDesignConfig,
+          previewScale: nextScale,
+        });
+      },
+      [currentDesignConfig, handleDesignChange]
+    );
+
+    const resetStopLabelsAndMarkers = useCallback(async () => {
+      if (!posterID || isPrintMode || isResettingStops) return;
+      const routeStops = routeDataParsed.stops ?? [];
+      if (routeStops.length === 0) return;
+      const resetStopsPayload = routeStops.reduce(
+        (acc, stop) => {
+          acc[stop.stop_id] = {
+            marker_lat: stop.stop_lat,
+            marker_lon: stop.stop_lon,
+            label_lat: stop.stop_lat,
+            label_lon: stop.stop_lon,
+          };
+          return acc;
+        },
+        {} as Record<
+          string,
+          {
+            marker_lat: number;
+            marker_lon: number;
+            label_lat: number;
+            label_lon: number;
+          }
+        >
+      );
+
+      setIsResettingStops(true);
+      try {
+        await getAuthAxios().put(`/api/poster/${posterID}`, {
+          posterID,
+          stops: resetStopsPayload,
+        });
+        setStopDataFromDB((prev) => {
+          const prevStops = prev as Record<string, Record<string, unknown>>;
+          const nextStops: Record<string, Record<string, unknown>> = {
+            ...prevStops,
+          };
+          Object.entries(resetStopsPayload).forEach(([stopID, coords]) => {
+            nextStops[stopID] = {
+              ...(nextStops[stopID] || {}),
+              ...coords,
+            };
+          });
+          return nextStops;
+        });
+      } finally {
+        setIsResettingStops(false);
+      }
+    }, [posterID, isPrintMode, isResettingStops, routeDataParsed.stops]);
 
     const posterLayouts: Record<
       string,
@@ -834,8 +1075,67 @@ export default function Page(props) {
       ]
     );
 
-        const editPosterTemplate = (
-      <div style={{ position: "relative" }}>
+    const previewTransformScale =
+      previewScale === "fit"
+        ? fitScaleMultiplier
+        : Number(previewScale) / 100;
+
+    const editPosterTemplate = (
+      <div
+        style={{
+          position: "relative",
+          display: "flex",
+          flexDirection: "column",
+          minHeight: "100dvh",
+          width: "100%",
+          boxSizing: "border-box",
+        }}
+      >
+        {isSavingDesign && (
+          <div
+            style={{
+              position: "fixed",
+              inset: 0,
+              zIndex: 3000,
+              background: "rgba(15, 23, 42, 0.28)",
+              backdropFilter: "blur(2px)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <div
+              style={{
+                background: "rgba(255, 255, 255, 0.98)",
+                border: "1px solid rgba(148, 163, 184, 0.35)",
+                boxShadow: "0 18px 40px rgba(15, 23, 42, 0.2)",
+                borderRadius: 14,
+                padding: "18px 24px",
+                minWidth: 220,
+                textAlign: "center",
+              }}
+            >
+              <div
+                style={{
+                  fontSize: 14,
+                  fontWeight: 700,
+                  color: "#020617",
+                  marginBottom: 6,
+                }}
+              >
+                Saving changes...
+              </div>
+              <div
+                style={{
+                  fontSize: 12,
+                  color: "#475569",
+                }}
+              >
+                Please wait before refreshing or continuing.
+              </div>
+            </div>
+          </div>
+        )}
         {patternsForSelection && (
           <DataSelector
             routeData={routeDataParsed}
@@ -867,11 +1167,6 @@ export default function Page(props) {
               isInEditMode={isInEditMode}
               setIsInEditMode={setIsInEditMode}
             />
-            <PosterSizeSelector
-              value={previewScale}
-              onChange={setPreviewScale}
-              disabled={isPrintMode}
-            />
             <div
               style={{
                 display: "flex",
@@ -880,6 +1175,31 @@ export default function Page(props) {
                 flexWrap: "wrap",
               }}
             >
+              <button
+                type="button"
+                onClick={() => {
+                  void resetStopLabelsAndMarkers();
+                }}
+                disabled={isPrintMode || !posterID || isResettingStops}
+                style={{
+                  border: "1px solid rgba(15, 23, 42, 0.2)",
+                  background: "rgba(255, 255, 255, 0.95)",
+                  borderRadius: 8,
+                  padding: "8px 12px",
+                  fontSize: 12,
+                  fontWeight: 600,
+                  cursor:
+                    isPrintMode || !posterID || isResettingStops
+                      ? "not-allowed"
+                      : "pointer",
+                  opacity: isPrintMode || !posterID ? 0.55 : 1,
+                }}
+                title="Reset stop labels and markers to route-data coordinates"
+              >
+                {isResettingStops
+                  ? "Resetting stop positions..."
+                  : "Reset stop positions"}
+              </button>
               <OpenForPrintButton />
               <OrderPrintButton />
             </div>
@@ -890,10 +1210,25 @@ export default function Page(props) {
             value={currentDesignConfig}
             canUndo={designHistory.index > 0}
             canRedo={designHistory.index < designHistory.history.length - 1}
+            canResetMapControls={!isPrintMode}
             disabled={isPrintMode}
             onChange={handleDesignChange}
             onUndo={handleUndo}
             onRedo={handleRedo}
+            onResetMapControls={resetMapControlsToDefaults}
+          />
+        </div>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "flex-start",
+            marginBottom: 12,
+          }}
+        >
+          <PosterSizeSelector
+            value={previewScale}
+            onChange={handlePreviewScaleChange}
+            disabled={isPrintMode}
           />
         </div>
         {/* <div
@@ -942,31 +1277,46 @@ export default function Page(props) {
           </TransformWrapper>
         </div> */}
         <div
+          ref={previewViewportRef}
           style={{
+            flex: 1,
+            minHeight: "min(55dvh, 720px)",
+            width: "100%",
+            boxSizing: "border-box",
             overflow: "auto",
             display: "flex",
             justifyContent: "center",
             alignItems: "flex-start",
-            minHeight: 400,
+            padding: "24px 28px 48px",
           }}
         >
           <div
             style={{
-              transform: `scale(${
-                previewScale === "fit" ? 0.25 : Number(previewScale) / 100
-              })`,
-              transformOrigin: "top center",
+              width: posterIntrinsicSize.w * previewTransformScale,
+              height: posterIntrinsicSize.h * previewTransformScale,
+              overflow: "hidden",
+              flexShrink: 0,
             }}
           >
-            {getPosterByType(
-              posterType as string,
-              routeDataParsed,
-              routeDesignConfig as Record<string, unknown>,
-              isInEditMode,
-              isPrintMode,
-              handleMapViewChange,
-              routeCenterHint
-            )}
+            <div
+              ref={previewPosterRef}
+              style={{
+                display: "inline-block",
+                verticalAlign: "top",
+                transform: `scale(${previewTransformScale})`,
+                transformOrigin: "top left",
+              }}
+            >
+              {getPosterByType(
+                posterType as string,
+                routeDataParsed,
+                routeDesignConfig as Record<string, unknown>,
+                isInEditMode,
+                isPrintMode,
+                handleMapViewChange,
+                routeCenterHint
+              )}
+            </div>
           </div>
         </div>
       </div>

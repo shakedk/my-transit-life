@@ -42,7 +42,8 @@ async function handler(req, res) {
       if (!doc.exists) {
         return res.status(404).json({ error: "Poster not found" });
       }
-      return res.status(200).json(doc.data());
+      const data = doc.data();
+      return res.status(200).json(data);
     }
 
     if (req.method === "DELETE") {

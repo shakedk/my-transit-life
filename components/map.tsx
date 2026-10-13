@@ -1,6 +1,7 @@
-/* eslint-disable react/react-in-jsx-scope */
+ 
 "use client";
 
+import type { FC } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { StyleSpecification } from "mapbox-gl";
 import Map, {
@@ -11,7 +12,10 @@ import Map, {
 } from "react-map-gl/mapbox-legacy";
 import "mapbox-gl/dist/mapbox-gl.css";
 import styles from "./map.module.css";
-import StopLabel from "./stopLabel";
+import StopLabelImport, { type StopLabelProps } from "./stopLabel";
+
+/** PropTypes-inferred typings omit newer props; keep full editor/TS contract. */
+const StopLabel = StopLabelImport as FC<StopLabelProps>;
 import { getAuthAxios } from "../src/lib/api/apiClient";
 import { firstLastStopIdsForRouteStops } from "../src/lib/posters/newPosterDefaults";
 
@@ -124,6 +128,16 @@ function coordinatesToGeoJSON(
   return { type: "FeatureCollection", features };
 }
 
+/** DB / JSON sometimes stores lat/lon as strings; keep circle and label resolution identical. */
+function asFiniteNumber(v: unknown): number | undefined {
+  if (typeof v === "number" && Number.isFinite(v)) return v;
+  if (typeof v === "string" && v.trim() !== "") {
+    const n = Number(v);
+    if (Number.isFinite(n)) return n;
+  }
+  return undefined;
+}
+
 const RouteMap = ({
   multiPolyLine,
   patterns,
@@ -136,7 +150,7 @@ const RouteMap = ({
   mapZoom,
   font,
   showGeoLayer = true,
-  smoothFactor = 5, // eslint-disable-line @typescript-eslint/no-unused-vars -- was for Leaflet; Mapbox renders natively
+  smoothFactor = 5,  
   showMarkers = false,
   isInEditMode,
   stopFontSize,
@@ -255,9 +269,12 @@ const RouteMap = ({
   const stopMarkerCircleChangedHandler = useCallback(
     (posterID: string, stopID: string, marker_lat: number, marker_lon: number) => {
       if (posterID) {
+        // Keep label anchor in sync with the stop circle (legacy data often had only label_* or only marker_*).
         getAuthAxios().put(`/api/poster/${posterID}`, {
           posterID,
-          stops: { [stopID]: { marker_lat, marker_lon } },
+          stops: {
+            [stopID]: { marker_lat, marker_lon, label_lat: marker_lat, label_lon: marker_lon },
+          },
         });
       }
     },
@@ -297,6 +314,8 @@ const RouteMap = ({
               stopModifiedName,
               label_lat,
               label_lon,
+              marker_lat: label_lat,
+              marker_lon: label_lon,
               labelWidth,
               labelHeight,
             },
@@ -312,15 +331,14 @@ const RouteMap = ({
     return stops
       .map((stop) => {
         const markerLat =
-          stopDataFromDB[stop.stop_id]?.label_lat ?? stop.stop_lat;
+          asFiniteNumber(stopDataFromDB[stop.stop_id]?.marker_lat) ??
+          asFiniteNumber(stopDataFromDB[stop.stop_id]?.label_lat) ??
+          asFiniteNumber(stop.stop_lat);
         const markerLon =
-          stopDataFromDB[stop.stop_id]?.label_lon ?? stop.stop_lon;
-        if (
-          typeof markerLat !== "number" ||
-          typeof markerLon !== "number" ||
-          isNaN(markerLat) ||
-          isNaN(markerLon)
-        ) {
+          asFiniteNumber(stopDataFromDB[stop.stop_id]?.marker_lon) ??
+          asFiniteNumber(stopDataFromDB[stop.stop_id]?.label_lon) ??
+          asFiniteNumber(stop.stop_lon);
+        if (markerLat === undefined || markerLon === undefined) {
           return null;
         }
         return (
@@ -343,6 +361,7 @@ const RouteMap = ({
             stopFontColor={stopFontColor}
             isInEditMode={isInEditMode ?? false}
             stopBackgroundColor={stopBackgroundColor}
+            labelOffsetXPx={Math.round(((stopCircleSize || 10) + 34) / 2 + 4)}
           />
         );
       })
@@ -359,6 +378,7 @@ const RouteMap = ({
     stopFontColor,
     isInEditMode,
     stopBackgroundColor,
+    stopCircleSize,
   ]);
 
   const stopCircleSvg = isSingleDot
@@ -374,12 +394,12 @@ const RouteMap = ({
         <circle id="2" cx="34" cy="34" r="0.5" fill="${stopColor}" />
     </g>
     </svg>`
-    : `<svg xmlns="http://www.w3.org/2000/svg" width="67" height="67">
+    : `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 44 44" width="44" height="44">
     <g>
-      <circle id="1" cx="34" cy="34" r="3.2" stroke="snow" stroke-width="1.5" fill="none"/>
-      <circle id="1" cx="34" cy="34" r="3" stroke="${stopColor}" stroke-width="1.5" fill="none"/>
-      <circle id="2" cx="34" cy="34" r="1" fill="${stopColor}" />
-  </g>
+      <circle cx="22" cy="22" r="14" fill="${stopBackgroundColor || "#ffffff"}" />
+      <circle cx="22" cy="22" r="11" fill="${stopColor || "#000000"}" />
+      <circle cx="22" cy="22" r="3.2" fill="${stopBackgroundColor || "#ffffff"}" />
+    </g>
   </svg>`;
 
   const circleIconUrl = encodeURI(
@@ -396,15 +416,14 @@ const RouteMap = ({
           return null;
         }
         const markerLat =
-          stopDataFromDB?.[stop.stop_id]?.marker_lat ?? stop.stop_lat;
+          asFiniteNumber(stopDataFromDB?.[stop.stop_id]?.marker_lat) ??
+          asFiniteNumber(stopDataFromDB?.[stop.stop_id]?.label_lat) ??
+          asFiniteNumber(stop.stop_lat);
         const markerLon =
-          stopDataFromDB?.[stop.stop_id]?.marker_lon ?? stop.stop_lon;
-        if (
-          typeof markerLat !== "number" ||
-          typeof markerLon !== "number" ||
-          isNaN(markerLat) ||
-          isNaN(markerLon)
-        ) {
+          asFiniteNumber(stopDataFromDB?.[stop.stop_id]?.marker_lon) ??
+          asFiniteNumber(stopDataFromDB?.[stop.stop_id]?.label_lon) ??
+          asFiniteNumber(stop.stop_lon);
+        if (markerLat === undefined || markerLon === undefined) {
           return null;
         }
         return (
@@ -518,16 +537,26 @@ const RouteMap = ({
     ]
   );
 
-  const [viewState, setViewState] = useState(initialViewState);
-  const effectiveViewState = hasSavedCenter && viewState.longitude !== undefined
-    ? viewState
-    : initialViewState;
+  const canShowZoomControls = Boolean(isInEditMode && onMapViewChange && !isPrintMode);
+
+  const handleZoomChange = useCallback(
+    (delta: number) => {
+      const map = mapRef.current?.getMap?.();
+      if (!map || !onMapViewChange) return;
+      const center = map.getCenter();
+      const currentZoom = map.getZoom();
+      const nextZoom = Math.max(1, Math.min(22, currentZoom + delta));
+      map.easeTo({ center, zoom: nextZoom, duration: 150 });
+    },
+    [onMapViewChange]
+  );
 
   useEffect(() => {
     if (hasSavedCenter) {
-      setViewState({
-        longitude: mapCenterLongitude!,
-        latitude: mapCenterLatitude!,
+      const map = mapRef.current?.getMap?.();
+      if (!map) return;
+      map.jumpTo({
+        center: [mapCenterLongitude!, mapCenterLatitude!],
         zoom: mapZoom ?? 12,
       });
     }
@@ -610,12 +639,24 @@ const RouteMap = ({
     const hasStopPrefs =
       stopDataFromDB && Object.keys(stopDataFromDB).length > 0;
     if (hasStopPrefs) {
-      Object.keys(stopDataFromDB).forEach((stop_id) => {
+      const candidateStopIds =
+        stopIDsToDisplayFromConfig && stopIDsToDisplayFromConfig.length > 0
+          ? stopIDsToDisplayFromConfig
+          : effectiveStopIdsForDisplay;
+      candidateStopIds.forEach((stop_id) => {
+        const stopExists = stops.some((s) => s.stop_id === stop_id);
         if (
-          stopDataFromDB[stop_id]?.toDisplay &&
-          (!stopIDsToDisplayFromConfig ||
-            stopIDsToDisplayFromConfig.includes(stop_id))
+          stopExists &&
+          stop_id !== "OPTIBUS_background" &&
+          stopDataFromDB[stop_id]?.toDisplay !== false
         ) {
+          newDisplayedStops[stop_id] = true;
+        }
+      });
+
+      // Preserve explicit user opt-ins for non-candidate stops.
+      Object.keys(stopDataFromDB).forEach((stop_id) => {
+        if (stopDataFromDB[stop_id]?.toDisplay === true) {
           newDisplayedStops[stop_id] = true;
         }
       });
@@ -666,12 +707,61 @@ const RouteMap = ({
         position: "relative",
       }}
     >
+      {canShowZoomControls && (
+        <div
+          style={{
+            position: "absolute",
+            top: 10,
+            left: 10,
+            zIndex: 1000,
+            display: "flex",
+            flexDirection: "column",
+            gap: 6,
+            pointerEvents: "auto",
+          }}
+        >
+          <button
+            type="button"
+            aria-label="Zoom in"
+            onClick={() => handleZoomChange(0.5)}
+            style={{
+              width: 34,
+              height: 34,
+              borderRadius: 8,
+              border: "1px solid rgba(15, 23, 42, 0.2)",
+              background: "rgba(255, 255, 255, 0.96)",
+              fontSize: 20,
+              lineHeight: "20px",
+              cursor: "pointer",
+              boxShadow: "0 2px 8px rgba(0, 0, 0, 0.15)",
+            }}
+          >
+            +
+          </button>
+          <button
+            type="button"
+            aria-label="Zoom out"
+            onClick={() => handleZoomChange(-0.5)}
+            style={{
+              width: 34,
+              height: 34,
+              borderRadius: 8,
+              border: "1px solid rgba(15, 23, 42, 0.2)",
+              background: "rgba(255, 255, 255, 0.96)",
+              fontSize: 20,
+              lineHeight: "20px",
+              cursor: "pointer",
+              boxShadow: "0 2px 8px rgba(0, 0, 0, 0.15)",
+            }}
+          >
+            −
+          </button>
+        </div>
+      )}
       <Map
         ref={mapRef}
         mapboxAccessToken={MAPBOX_ACCESS_TOKEN}
         initialViewState={initialViewState}
-        viewState={isInEditMode && onMapViewChange && hasSavedCenter ? effectiveViewState : undefined}
-        onMove={isInEditMode && onMapViewChange ? (evt) => setViewState(evt.viewState) : undefined}
         onMoveEnd={
           isInEditMode && onMapViewChange
             ? (evt) => {
